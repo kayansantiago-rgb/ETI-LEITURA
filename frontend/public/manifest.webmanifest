@@ -1,0 +1,15 @@
+{
+  "id": "/",
+  "name": "ETI LEITURA",
+  "short_name": "ETI LEITURA",
+  "lang": "pt-BR",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8f7fa",
+  "theme_color": "#6030c9",
+  "icons": [
+    {"src": "/icons/eti-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "/icons/eti-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}

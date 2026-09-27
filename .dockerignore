@@ -1,0 +1,12 @@
+.git
+.local
+.venv
+**/node_modules
+**/.npm-cache
+**/__pycache__
+**/.pytest_cache
+**/.env
+**/.env.*
+frontend/build
+backend/uploads
+docs
