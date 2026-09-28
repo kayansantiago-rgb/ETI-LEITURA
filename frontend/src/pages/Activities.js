@@ -5,7 +5,17 @@ import EmptyCollection from '@/components/EmptyCollection';
 import ActivityForm from '@/components/ActivityForm';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Plus, ClipboardList, ArrowRight, Award } from 'lucide-react';
+import {
+  Plus,
+  ClipboardList,
+  ArrowRight,
+  Award,
+  Clock,
+  TrendingUp,
+  BarChart3,
+  BookOpen,
+  FileCheck
+} from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { getUser } from '@/lib/auth';
@@ -15,8 +25,10 @@ export const deadline = value => (value ? new Date(value + 'T12:00:00').toLocale
 export const activityError = (e, fallback) => (typeof e.response?.data?.detail === 'string' ? e.response.data.detail : fallback);
 
 export default function Activities() {
-  const admin = ['admin', 'teacher'].includes(getUser()?.role);
+  const user = getUser();
+  const admin = ['admin', 'teacher'].includes(user?.role);
   const [params] = useSearchParams();
+
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
@@ -27,6 +39,10 @@ export default function Activities() {
       ? { titulo: '', valor_nota: 10, descricao: '', turma: params.get('turma'), perguntas: [{ enunciado: '', tipo: 'texto', alternativas: ['', ''] }] }
       : null
   );
+
+  // Filtros de Engajamento
+  const [selectedClassFilter, setSelectedClassFilter] = useState('TODAS');
+  const [selectedActivityId, setSelectedActivityId] = useState('');
 
   const load = async () => {
     setFailed(false);
@@ -46,34 +62,181 @@ export default function Activities() {
 
   const visibleItems = items.filter(a => !admin || (tab === 'scheduled' ? a.agendada : !a.agendada));
 
+  // Métricas do Professor (KPIs)
+  const totalElaborado = items.length;
+  const totalEntregas = items.reduce((sum, a) => sum + (a.entregas || 0), 0);
+  const totalCorrigidas = items.reduce((sum, a) => sum + (a.corrigidas || 0), 0);
+  const aguardandoCorrecao = Math.max(0, totalEntregas - totalCorrigidas);
+  const taxaCorrecao = totalEntregas > 0 ? Math.round((totalCorrigidas / totalEntregas) * 100) : 100;
+
+  // Filtro de Engajamento das Turmas
+  const filteredEngagementActivities = items.filter(
+    a => selectedClassFilter === 'TODAS' || a.turma === selectedClassFilter || a.turma === 'TODAS'
+  );
+
+  const activeEngagementActivity =
+    filteredEngagementActivities.find(a => a.id === selectedActivityId) || filteredEngagementActivities[0];
+
+  const entregasAtuais = activeEngagementActivity?.entregas || 0;
+  const totalEsperadoAlunos = 18; // Estimativa padrão por turma
+  const taxaEntregaPercent = Math.min(100, Math.round((entregasAtuais / totalEsperadoAlunos) * 100));
+
   return (
     <DashboardLayout>
-      <div>
-        <div className="teacher-heading">
-          <div>
-            <p className="eyebrow">{admin ? 'PLANEJAMENTO E APRENDIZAGEM' : 'SEU ESPAÇO DE APRENDIZAGEM'}</p>
-            <h1>{admin ? 'Atividades da escola' : 'Minhas atividades'}</h1>
-            <p className="text-muted-foreground mt-2 text-sm">
-              {admin
-                ? 'Prepare perguntas, atribua notas e acompanhe cada resposta dos estudantes.'
-                : 'Veja as propostas dos professores, responda e acompanhe seu feedback.'}
-            </p>
+      <div className="space-y-6">
+        {/* Cabeçalho do Professor (Imagem de Referência de Hoje) */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <ClipboardList size={26} />
+            </div>
+            <div>
+              <h1 className="text-2xl font-extrabold tracking-tight">
+                {admin ? 'Atividades Escolares' : 'Minhas atividades'}
+              </h1>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {admin
+                  ? 'Elabore tarefas escolares, gerencie agendamentos e avalie as entregas dos seus estudantes.'
+                  : 'Veja as propostas dos professores, responda e acompanhe seu feedback.'}
+              </p>
+            </div>
           </div>
-          {admin && !creating && tab !== 'models' && (
-            <Button onClick={() => { setDraft(null); setCreating(true); }}>
-              <Plus size={16} className="mr-1" /> Criar atividade
+
+          {admin && !creating && (
+            <Button
+              onClick={() => { setDraft(null); setCreating(true); }}
+              className="hero-library-btn !w-auto !py-2.5 !px-5"
+            >
+              <span>📝 ELABORAR ATIVIDADE</span>
             </Button>
           )}
         </div>
 
+        {/* KPIs do Professor (3 Cards da Imagem de Referência) */}
         {admin && (
-          <div className="flex flex-wrap gap-2 mb-6" aria-label="Área de atividades">
+          <div className="teacher-kpi-grid">
+            <div className="teacher-kpi-card">
+              <div className="teacher-kpi-content">
+                <span>TOTAL ELABORADO</span>
+                <strong>{totalElaborado}</strong>
+                <p>Tarefas ativas e programadas</p>
+              </div>
+              <div className="teacher-kpi-icon-badge purple">
+                <FileCheck size={24} />
+              </div>
+            </div>
+
+            <div className="teacher-kpi-card">
+              <div className="teacher-kpi-content">
+                <span>AGUARDANDO CORREÇÃO</span>
+                <strong>{aguardandoCorrecao}</strong>
+                <p>Entregas prontas para nota e feedback</p>
+              </div>
+              <div className="teacher-kpi-icon-badge amber">
+                <Clock size={24} />
+              </div>
+            </div>
+
+            <div className="teacher-kpi-card">
+              <div className="teacher-kpi-content">
+                <span>TAXA DE CORREÇÃO</span>
+                <strong>{taxaCorrecao}%</strong>
+                <p>Aproveitamento das correções docentes</p>
+              </div>
+              <div className="teacher-kpi-icon-badge purple">
+                <TrendingUp size={24} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Card Engajamento das Turmas (Imagem de Referência de Hoje) */}
+        {admin && (
+          <section className="engagement-card">
+            <div className="engagement-header">
+              <div className="engagement-icon-badge">
+                <BarChart3 size={22} />
+              </div>
+              <div className="engagement-title">
+                <h2>
+                  📊 Engajamento das Turmas
+                </h2>
+                <p>Acompanhe o progresso de entregas em tempo real.</p>
+              </div>
+            </div>
+
+            <div className="engagement-filters-grid">
+              <div className="engagement-select-group">
+                <label htmlFor="select-class-filter">Selecionar Turma</label>
+                <select
+                  id="select-class-filter"
+                  className="native-select"
+                  value={selectedClassFilter}
+                  onChange={e => setSelectedClassFilter(e.target.value)}
+                >
+                  <option value="TODAS">Todas as Turmas</option>
+                  <option value="7º ANO">7º ANO</option>
+                  <option value="8º ANO">8º ANO</option>
+                  <option value="9º ANO">9º ANO</option>
+                  <option value="1º SÉRIE A">1º SÉRIE A</option>
+                  <option value="1º SÉRIE B">1º SÉRIE B</option>
+                  <option value="2º SÉRIE">2º SÉRIE</option>
+                  <option value="3º SÉRIE A">3º SÉRIE A</option>
+                  <option value="3º SÉRIE B">3º SÉRIE B</option>
+                </select>
+              </div>
+
+              <div className="engagement-select-group">
+                <label htmlFor="select-activity-filter">Selecionar Atividade</label>
+                <select
+                  id="select-activity-filter"
+                  className="native-select"
+                  value={activeEngagementActivity?.id || ''}
+                  onChange={e => setSelectedActivityId(e.target.value)}
+                  disabled={!filteredEngagementActivities.length}
+                >
+                  {!filteredEngagementActivities.length && <option value="">Nenhuma atividade para esta turma</option>}
+                  {filteredEngagementActivities.map(a => (
+                    <option key={a.id} value={a.id}>
+                      {a.titulo} ({a.turma})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {activeEngagementActivity ? (
+              <div className="engagement-rate-box">
+                <div className="engagement-rate-info">
+                  <span className="engagement-rate-label">
+                    <BookOpen size={16} className="text-primary" /> Taxa de Entrega:
+                  </span>
+                  <span className="engagement-rate-value">
+                    {taxaEntregaPercent}% ({entregasAtuais} de {totalEsperadoAlunos})
+                  </span>
+                </div>
+                <div className="engagement-progress-track">
+                  <div
+                    className="engagement-progress-fill"
+                    style={{ width: `${taxaEntregaPercent}%` }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">Nenhuma atividade selecionada para análise de engajamento.</p>
+            )}
+          </section>
+        )}
+
+        {/* Abas e Lista de Atividades */}
+        {admin && (
+          <div className="flex flex-wrap gap-2 mb-4" aria-label="Área de atividades">
             <Button
               variant={tab === 'published' ? 'default' : 'outline'}
               aria-pressed={tab === 'published'}
               onClick={() => { setTab('published'); setCreating(false); }}
             >
-              Publicadas
+              Publicadas ({items.filter(a => !a.agendada).length})
             </Button>
             <Button
               variant={tab === 'scheduled' ? 'default' : 'outline'}

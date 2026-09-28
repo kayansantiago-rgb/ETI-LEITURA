@@ -51,7 +51,6 @@
   gap: 20px;
 }
 
-/* Card Principal do Carrossel (Timeline) */
 .timeline-carousel-card {
   position: relative;
   min-height: 380px;
@@ -148,7 +147,6 @@
   margin: 0;
 }
 
-/* Setas de Navegação do Carrossel */
 .carousel-nav-btn {
   position: absolute;
   top: 50%;
@@ -182,7 +180,6 @@
 .carousel-nav-btn.prev { left: 16px; }
 .carousel-nav-btn.next { right: 16px; }
 
-/* Linha de Bolinhas (Pagination Dots Bar) */
 .timeline-dots-bar {
   position: absolute;
   bottom: 14px;
@@ -214,7 +211,6 @@
   width: 6px;
 }
 
-/* Painel Direito: Stats Grid & Banner Biblioteca (Imagem de Referência 4) */
 .hero-side-panel {
   display: flex;
   flex-direction: column;
@@ -273,7 +269,6 @@
   font-weight: 600;
 }
 
-/* Card Destaque Biblioteca */
 .hero-library-cta {
   background: linear-gradient(135deg, #f7f3ff 0%, #ede5ff 100%);
   border: 1px solid #e2d5ff;
@@ -359,277 +354,221 @@
 
 
 /* --------------------------------------------------------------------------
-   3. SEÇÃO CONTINUAR LEITURA + ADICIONADOS RECENTEMENTE & CALENDÁRIO (IMAGEM 3)
+   3. DASHBOARD DE ATIVIDADES DO PROFESSOR (IMAGEM DE REFERÊNCIA DE HOJE)
    -------------------------------------------------------------------------- */
-.study-section-grid {
+.teacher-kpi-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-  gap: 20px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin: 20px 0;
 }
 
-/* Card Esquerdo: Leitura Atual & Lançamentos */
-.reading-shelf-card {
+.teacher-kpi-card {
   background: #ffffff;
   border: 1px solid hsl(var(--border) / 0.8);
-  border-radius: 24px;
-  padding: 24px;
+  border-radius: 22px;
+  padding: 22px 24px;
   display: flex;
-  flex-direction: column;
-  gap: 22px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
 }
 
-.dark .reading-shelf-card {
+.dark .teacher-kpi-card {
   background: #181628;
 }
 
-.shelf-section-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
+.teacher-kpi-content span {
+  display: block;
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.06em;
-  color: hsl(var(--foreground));
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 6px;
 }
 
-/* Card Continuar Leitura */
-.continue-reading-banner {
+.teacher-kpi-content strong {
+  display: block;
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: hsl(var(--foreground));
+  letter-spacing: -0.03em;
+}
+
+.teacher-kpi-content p {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+  margin: 8px 0 0 0;
+}
+
+.teacher-kpi-icon-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 14px 18px;
-  border-radius: 18px;
-  background: #faf8ff;
-  border: 1px solid #eee7ff;
-  transition: border-color 0.2s;
-}
-
-.dark .continue-reading-banner {
-  background: #201a33;
-  border-color: #332852;
-}
-
-.continue-reading-cover {
-  width: 52px;
-  height: 68px;
-  border-radius: 10px;
-  object-fit: cover;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  justify-content: center;
   flex-shrink: 0;
 }
 
-.continue-reading-info {
-  flex: 1;
-  min-width: 0;
+.teacher-kpi-icon-badge.purple {
+  background: #f3e8ff;
+  color: #7c3aed;
 }
 
-.continue-reading-info h3 {
-  font-size: 14px;
+.dark .teacher-kpi-icon-badge.purple {
+  background: rgba(124, 58, 237, 0.2);
+  color: #d8b4fe;
+}
+
+.teacher-kpi-icon-badge.amber {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.dark .teacher-kpi-icon-badge.amber {
+  background: rgba(217, 119, 6, 0.2);
+  color: #fcd34d;
+}
+
+/* Card Engajamento das Turmas */
+.engagement-card {
+  background: #ffffff;
+  border: 1px solid hsl(var(--border) / 0.8);
+  border-radius: 24px;
+  padding: 26px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+  margin-bottom: 24px;
+}
+
+.dark .engagement-card {
+  background: #181628;
+}
+
+.engagement-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.engagement-icon-badge {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: #f3e8ff;
+  color: #7c3aed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dark .engagement-icon-badge {
+  background: rgba(124, 58, 237, 0.2);
+  color: #d8b4fe;
+}
+
+.engagement-title h2 {
+  font-size: 20px;
   font-weight: 800;
-  margin: 0 0 2px 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin: 0;
+  letter-spacing: -0.02em;
+  color: hsl(var(--foreground));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.engagement-title p {
+  font-size: 13px;
+  color: hsl(var(--muted-foreground));
+  margin: 2px 0 0 0;
+}
+
+.engagement-filters-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.engagement-select-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.engagement-select-group label {
+  font-size: 12px;
+  font-weight: 700;
   color: hsl(var(--foreground));
 }
 
-.continue-reading-info p {
-  font-size: 12px;
-  color: hsl(var(--muted-foreground));
-  margin: 0 0 8px 0;
-}
-
-.continue-progress-row {
+.engagement-rate-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 18px 22px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 10px;
 }
 
-.continue-progress-bar {
-  flex: 1;
-  height: 6px;
-  background: #e2d9f3;
-  border-radius: 10px;
-  overflow: hidden;
+.dark .engagement-rate-box {
+  background: #141222;
+  border-color: #2b2542;
 }
 
-.dark .continue-progress-bar {
-  background: #372a54;
-}
-
-.continue-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #7c3aed 0%, #a855f7 100%);
-  border-radius: 10px;
-}
-
-.continue-progress-percent {
-  font-size: 11px;
-  font-weight: 800;
-  color: #7c3aed;
-}
-
-/* Adicionados Recentemente - Carrossel Horizontal de Capas */
-.recent-books-scroll {
-  display: flex;
-  gap: 16px;
-  overflow-x: auto;
-  padding-bottom: 6px;
-}
-
-.recent-book-item {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 115px;
-  flex-shrink: 0;
-  text-decoration: none;
-  color: inherit;
-}
-
-.recent-book-cover {
-  width: 115px;
-  height: 160px;
-  border-radius: 14px;
-  object-fit: cover;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-  transition: transform 0.2s ease;
-}
-
-.recent-book-item:hover .recent-book-cover {
-  transform: translateY(-4px);
-}
-
-.recent-book-title {
-  font-size: 12px;
-  font-weight: 700;
-  text-center: center;
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Card Agenda / Calendário Interativo (Imagem de Referência 3) */
-.calendar-widget-card {
-  background: #ffffff;
-  border: 1px solid hsl(var(--border) / 0.8);
-  border-radius: 24px;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
-}
-
-.dark .calendar-widget-card {
-  background: #181628;
-}
-
-.calendar-header {
+.engagement-rate-info {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  font-size: 13px;
+  font-weight: 800;
 }
 
-.calendar-header h2 {
+.engagement-rate-label {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 16px;
-  font-weight: 800;
-  margin: 0;
   color: hsl(var(--foreground));
 }
 
-.calendar-month-name {
-  font-size: 12px;
-  font-weight: 700;
-  color: #7c3aed;
-  text-transform: capitalize;
+.engagement-rate-value {
+  color: #0d9488;
 }
 
-/* Grid de Dias do Mês */
-.calendar-grid-days {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
-  text-align: center;
+.dark .engagement-rate-value {
+  color: #14b8a6;
 }
 
-.calendar-weekday-header {
-  font-size: 11px;
-  font-weight: 700;
-  color: hsl(var(--muted-foreground));
-  padding-bottom: 6px;
-}
-
-.calendar-day-cell {
-  aspect-ratio: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 600;
-  border-radius: 12px;
-  color: hsl(var(--foreground));
-  position: relative;
-  transition: all 0.2s;
-}
-
-.calendar-day-cell.empty {
-  visibility: hidden;
-}
-
-/* Hoje em destaque (Verde Água / Teal conforme imagem 3) */
-.calendar-day-cell.today {
-  background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
-  color: #ffffff;
-  font-weight: 800;
-  box-shadow: 0 4px 14px rgba(20, 184, 166, 0.4);
-}
-
-.calendar-day-cell.has-deadline::after {
-  content: '';
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: #ef4444;
-  position: absolute;
-  bottom: 4px;
-}
-
-.calendar-day-cell.today.has-deadline::after {
-  background: #ffffff;
-}
-
-
-/* --------------------------------------------------------------------------
-   4. ATIVIDADES DO ALUNO (VALOR DA NOTA SEM DISCIPLINA)
-   -------------------------------------------------------------------------- */
-.activity-score-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  font-weight: 800;
-  color: #7c3aed;
-  background: #f3e8ff;
-  padding: 3px 9px;
+.engagement-progress-track {
+  width: 100%;
+  height: 10px;
+  background: #e2e8f0;
   border-radius: 10px;
+  overflow: hidden;
 }
 
-.dark .activity-score-badge {
-  color: #d8b4fe;
-  background: rgba(124, 58, 237, 0.25);
+.dark .engagement-progress-track {
+  background: #28233d;
+}
+
+.engagement-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0d9488 0%, #10b981 100%);
+  border-radius: 10px;
+  transition: width 0.4s ease;
 }
 
 
 /* --------------------------------------------------------------------------
-   5. LEITOR DE PDF 100% IMERSIVO (E-READER ESTILO APPLE BOOKS / KINDLE)
+   4. LEITOR DE PDF 100% IMERSIVO
    -------------------------------------------------------------------------- */
 .immersive-reader-page {
   display: flex;
@@ -638,7 +577,6 @@
   position: relative;
 }
 
-/* Header Discreto e Minimalista do Leitor */
 .immersive-reader-header {
   display: flex;
   align-items: center;
@@ -671,7 +609,6 @@
   margin: 0;
 }
 
-/* Área de Leitura Principal (Viewport Máximo) */
 .immersive-pdf-viewport {
   flex: 1;
   display: flex;
@@ -682,13 +619,11 @@
   min-height: 80vh;
 }
 
-/* Temas de Papel do Leitor Imersivo */
 .paper-original .immersive-pdf-viewport { background: #f0f2f7; }
 .paper-sepia .immersive-pdf-viewport { background: #ede2cf; }
 .paper-dark .immersive-pdf-viewport { background: #12111a; }
 .dark .paper-original .immersive-pdf-viewport { background: #181624; }
 
-/* Canvas do PDF sem caixas pesadas */
 .immersive-pdf-viewport .react-pdf__Page {
   box-shadow: 0 16px 45px rgba(0, 0, 0, 0.12) !important;
   border-radius: 8px !important;
@@ -704,7 +639,6 @@
   filter: invert(0.92) hue-rotate(180deg);
 }
 
-/* Dock Flutuante do Leitor no Rodapé (Apple Books style) */
 .floating-reader-dock {
   position: fixed;
   bottom: 24px;
@@ -782,7 +716,8 @@
 /* Responsividade Mobile */
 @media (max-width: 768px) {
   .hero-discovery-container,
-  .study-section-grid,
+  .teacher-kpi-grid,
+  .engagement-filters-grid,
   .hero-stats-grid {
     grid-template-columns: 1fr;
     gap: 16px;
