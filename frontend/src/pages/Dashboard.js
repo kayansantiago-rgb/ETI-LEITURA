@@ -154,8 +154,8 @@ export default function Dashboard() {
     .sort((a, b) => (b.updated_at || b.data || '').localeCompare(a.updated_at || a.data || ''))
     .slice(0, 3);
 
-  // Livros adicionados recentemente (últimos cadastrados)
-  const recentBooks = [...books].reverse().slice(0, 6);
+  // Livros adicionados recentemente (últimos 3 cadastrados)
+  const recentBooks = [...books].reverse().slice(0, 3);
 
   return (
     <DashboardLayout>

@@ -815,14 +815,197 @@
 }
 
 /* --------------------------------------------------------------------------
-   WIDGET DE CALENDÁRIO / AGENDA (ESTUDANTE - GRID DE 7 COLUNAS)
+   SEÇÃO DE ESTUDO DO ALUNO: CONTINUAR LEITURA, RECENTES & AGENDA (IMAGEM 1:1)
    -------------------------------------------------------------------------- */
+.study-section-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: stretch;
+  margin-top: 16px;
+}
+
+.reading-shelf-card {
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid hsl(var(--border) / 0.8);
+  padding: 24px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.dark .reading-shelf-card {
+  background: #181628;
+}
+
+.shelf-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #1e293b;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.dark .shelf-section-title {
+  color: #f1f5f9;
+}
+
+.continue-reading-banner {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+  text-decoration: none !important;
+}
+
+.dark .continue-reading-banner {
+  background: #121020;
+  border-color: #2a2740;
+}
+
+.continue-reading-banner:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  border-color: #cbd5e1;
+}
+
+.continue-reading-cover {
+  width: 58px;
+  height: 74px;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.continue-reading-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.continue-reading-info h3 {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dark .continue-reading-info h3 {
+  color: #f8fafc;
+}
+
+.continue-reading-info p {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  margin: 0 0 12px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.continue-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.continue-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: #f1f5f9;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.dark .continue-progress-bar {
+  background: #334155;
+}
+
+.continue-progress-fill {
+  height: 100%;
+  background: #8b5cf6;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.continue-progress-percent {
+  font-size: 12px;
+  font-weight: 800;
+  color: #7c3aed;
+  min-width: 32px;
+  text-align: right;
+}
+
+/* Adicionados Recentemente (Grade de 3 Posters) */
+.recent-books-scroll {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.recent-book-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none !important;
+  transition: transform 0.2s ease;
+}
+
+.recent-book-item:hover {
+  transform: translateY(-4px);
+}
+
+.recent-book-cover {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.recent-book-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1e293b;
+  text-align: center;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.dark .recent-book-title {
+  color: #e2e8f0;
+}
+
+/* WIDGET DE CALENDÁRIO / AGENDA DA ALUNO */
 .calendar-widget-card {
   background: #ffffff;
-  border-radius: 20px;
+  border-radius: 24px;
   border: 1px solid hsl(var(--border) / 0.8);
-  padding: 18px;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.03);
+  padding: 24px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.03);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
 }
 
 .dark .calendar-widget-card {
@@ -833,39 +1016,44 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 24px;
 }
 
 .calendar-header h2 {
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 800;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   margin: 0;
-  color: hsl(var(--foreground));
+  color: #0f172a;
+}
+
+.dark .calendar-header h2 {
+  color: #f8fafc;
 }
 
 .calendar-month-name {
   font-size: 13px;
-  font-weight: 600;
-  color: hsl(var(--muted-foreground));
+  font-weight: 700;
+  color: #64748b;
   text-transform: capitalize;
 }
 
 .calendar-grid-days {
   display: grid !important;
   grid-template-columns: repeat(7, 1fr) !important;
-  gap: 6px !important;
+  gap: 14px 8px !important;
   text-align: center;
   align-items: center !important;
+  margin-top: 8px;
 }
 
 .calendar-weekday-header {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  color: hsl(var(--muted-foreground));
-  padding-bottom: 4px;
+  color: #64748b;
+  padding-bottom: 8px;
   text-transform: uppercase;
 }
 
@@ -875,22 +1063,31 @@
   align-items: center;
   justify-content: center;
   border-radius: 10px;
-  font-size: 12px;
-  font-weight: 500;
-  color: hsl(var(--foreground));
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
   transition: all 0.2s ease;
   user-select: none;
 }
 
+.dark .calendar-day-cell {
+  color: #cbd5e1;
+}
+
 .calendar-day-cell:hover:not(.empty) {
-  background: hsl(var(--accent));
+  background: #f1f5f9;
+}
+
+.dark .calendar-day-cell:hover:not(.empty) {
+  background: #26233d;
 }
 
 .calendar-day-cell.today {
-  background: hsl(var(--primary)) !important;
-  color: hsl(var(--primary-foreground)) !important;
+  background: #00bba7 !important;
+  color: #000000 !important;
   font-weight: 800 !important;
-  box-shadow: 0 2px 8px hsl(var(--primary) / 0.35);
+  border-radius: 10px !important;
+  box-shadow: 0 4px 14px rgba(0, 187, 167, 0.4) !important;
 }
 
 .calendar-day-cell.has-deadline {
@@ -899,7 +1096,12 @@
   color: #7c3aed;
 }
 
+.dark .calendar-day-cell.has-deadline {
+  color: #c084fc;
+}
+
 .calendar-day-cell.empty {
   visibility: hidden;
 }
+
 
