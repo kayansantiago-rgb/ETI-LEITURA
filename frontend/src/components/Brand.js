@@ -1,5 +1,6 @@
-// Eight vector frames keep the existing logo crisp at every text size.
-const leaves=[null,'M16 8 Q20 5 25 7 L25 24 Q20 22 16 25','M16 8 Q18 4 22 6 L22 23 Q18 21 16 25','M16 8 Q17 3 18 5 L18 22 Q17 21 16 25','M16 8 Q15 3 14 5 L14 22 Q15 21 16 25','M16 8 Q12 4 10 6 L10 23 Q12 21 16 25','M16 8 Q10 5 7 7 L7 24 Q10 22 16 25',null];
 export default function Brand({ light = false }) {
-  return <div className={`brand ${light ? 'brand-light' : ''}`}><span className="brand-symbol"><svg className="brand-book-sprite" width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden="true"><g className="brand-sprite-frames">{leaves.map((leaf,i)=><g key={i} transform={`translate(${i*32} 0)`}><path d="M16 9 C12 6 7 6 3 7 V25 C7 24 12 24 16 27 C20 24 25 24 29 25 V7 C25 6 20 6 16 9 Z M16 9 V27" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>{leaf&&<path d={leaf} className="brand-sprite-page" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>}</g>)}</g></svg></span><span><strong>ETI <span>LEITURA</span></strong><small>CONHECIMENTO QUE TRANSFORMA</small></span></div>;
+  return <div className={`brand eti-brand ${light ? 'brand-light' : ''}`}>
+    <img className="eti-brand-mark" src="/eti-logo.svg" width="44" height="44" alt="" />
+    <span><strong>ETI <span>LEITURA</span></strong><small>LER, IMAGINAR, TRANSFORMAR</small></span>
+  </div>;
 }

@@ -89,7 +89,7 @@ export default function DashboardLayout({ children, focusMode = false }) {
 
   const teacher = [GraduationCap, 'Painel do professor', '/admin/professor'];
   const title =
-    [...(isAdmin ? management : learning), teacher].find(item => item[2] === location.pathname)?.[1] ||
+    [...learning, ...management, teacher].find(item => item[2] === location.pathname)?.[1] ||
     (location.pathname === '/profile' ? 'Meu perfil' : 'Espaço de leitura');
 
   useEffect(() => {
@@ -151,48 +151,15 @@ export default function DashboardLayout({ children, focusMode = false }) {
       </NavLink>
     ));
 
-  const groups = isAdmin
-    ? [
-        [
-          'Ensino',
-          [
-            [BookOpen, 'Biblioteca', '/library'],
-            ...management.filter(i =>
-              ['/admin/activities', '/admin/assistant', '/videos', '/admin/books', '/admin/add-book'].includes(i[2])
-            )
-          ]
-        ],
-        [
-          'Avaliações',
-          [
-            [ClipboardList, 'Pendências', '/workspace'],
-            ...management.filter(i =>
-              ['/gradebook', '/admin/rubrics', '/admin/reports', '/admin/summaries', '/admin/text-productions'].includes(
-                i[2]
-              )
-            )
-          ]
-        ],
-        [
-          'Gestão escolar',
-          management.filter(
-            i =>
-              ['/admin/classes', '/admin/users', '/admin/teachers', '/admin/mural', '/admin/calendar'].includes(i[2]) &&
-              (user?.role === 'admin' || ['/admin/users', '/admin/classes'].includes(i[2]))
-          )
-        ]
-      ]
-    : [
-        ['Meu aprendizado', learning.filter(i => ['/dashboard', '/activities', '/videos', '/library', '/text-productions'].includes(i[2]))],
-        ['Acompanhamento', learning.filter(i => ['/workspace', '/summaries'].includes(i[2]))]
-      ];
+  const staffLinks = [[LayoutDashboard, 'Início', '/dashboard'], [BookOpen, 'Biblioteca', '/library'], teacher];
+  const groups = isAdmin ? [['Navegação', staffLinks]] : [['Meu aprendizado', learning]];
 
   const mainLinks = isAdmin
-    ? [teacher, [Sparkles, 'Assistente IA', '/admin/assistant'], [Video, 'Vídeos', '/videos'], [ClipboardList, 'Pendências', '/workspace'], [ClipboardList, 'Atividades', '/admin/activities'], [Library, 'Biblioteca', '/library'], [ChartColumn, 'Relatórios', '/admin/reports']]
+    ? staffLinks
     : [[LayoutDashboard, 'Início', '/dashboard'], [ClipboardList, 'Atividades', '/activities'], [PenTool, 'Produção', '/text-productions'], [BookOpen, 'Biblioteca', '/library'], [ClipboardList, 'Pendências', '/workspace']];
 
   const mobileLinks = isAdmin
-    ? [[GraduationCap, 'Início', '/admin/professor'], [ClipboardList, 'Atividades', '/admin/activities'], [Sparkles, 'IA', '/admin/assistant'], [BookOpen, 'Livros', '/library']]
+    ? staffLinks
     : [[LayoutDashboard, 'Início', '/dashboard'], [ClipboardList, 'Atividades', '/activities'], [PenTool, 'Produção', '/text-productions'], [BookOpen, 'Livros', '/library']];
 
   const otherArea = !mobileLinks.some(([, , path]) => location.pathname === path || location.pathname.startsWith(path + '/'));
@@ -200,23 +167,23 @@ export default function DashboardLayout({ children, focusMode = false }) {
     ? ['/admin/professor', '/admin/classes', '/admin/activities', '/admin/assistant', '/videos', '/library', '/gradebook', '/admin/reports', '/admin/users']
     : ['/dashboard', '/activities', '/videos', '/library', '/text-productions', '/workspace'];
 
-  const railItems = railPaths.map(path => (isAdmin ? [teacher, ...management, [BookOpen, 'Biblioteca', '/library']] : learning).find(item => item[2] === path)).filter(Boolean);
+  const railItems = isAdmin ? staffLinks : railPaths.map(path => (isAdmin ? [teacher, ...management, [BookOpen, 'Biblioteca', '/library']] : learning).find(item => item[2] === path)).filter(Boolean);
 
   return (
-    <div className={`platform-shell studio-shell atlas-shell ${focusMode ? 'reading-focus' : ''}`}>
+    <div className={`platform-shell studio-shell atlas-shell ${isAdmin ? 'staff-shell' : ''} ${focusMode ? 'reading-focus' : ''}`}>
       <a href="#main-content" className="skip-link">
         Pular para o conteúdo
       </a>
       <aside className="desktop-rail" aria-label="Navegação permanente">
-        <Link className="rail-brand" to={isAdmin ? '/admin/professor' : '/dashboard'}>
+        <Link className="rail-brand" to="/dashboard">
           <Brand />
         </Link>
         <div className="rail-caption">{isAdmin ? 'ESPAÇO DO PROFESSOR' : 'MEU APRENDIZADO'}</div>
         <nav aria-label="Acessos rápidos">{links(railItems)}</nav>
-        <button className="rail-all" onClick={() => setOpen(true)}>
+        {!isAdmin && <button className="rail-all" onClick={() => setOpen(true)}>
           <Menu size={18} />
           Todas as áreas
-        </button>
+        </button>}
         <div className="rail-bottom">
           <span className="user-avatar">{user?.nome?.charAt(0)}</span>
           <div>
@@ -226,7 +193,7 @@ export default function DashboardLayout({ children, focusMode = false }) {
         </div>
       </aside>
       <header className="studio-header">
-        <Link to={isAdmin ? '/admin/professor' : '/dashboard'} aria-label="ETI LEITURA — início">
+        <Link to="/dashboard" aria-label="ETI LEITURA — início">
           <Brand />
         </Link>
         <span className="studio-role">{isAdmin ? 'ESPAÇO DO EDUCADOR' : 'ESPAÇO DO ALUNO'}</span>
@@ -247,10 +214,10 @@ export default function DashboardLayout({ children, focusMode = false }) {
       </header>
       <nav className="studio-tabs" aria-label="Áreas principais">
         {links(mainLinks)}
-        <button className="studio-all" onClick={() => setOpen(true)}>
+        {!isAdmin && <button className="studio-all" onClick={() => setOpen(true)}>
           <Menu size={16} />
           Todas as áreas
-        </button>
+        </button>}
       </nav>
       <nav className="mobile-dock" aria-label="Navegação do celular">
         {mobileLinks.map(([Icon, label, path]) => (
@@ -291,7 +258,7 @@ export default function DashboardLayout({ children, focusMode = false }) {
           </button>
         </div>
         <nav aria-label="Navegação principal" className="sidebar-nav">
-          {isAdmin && links([teacher])}
+
           {groups
             .filter(([, items]) => items.length)
             .map(([name, items]) => (

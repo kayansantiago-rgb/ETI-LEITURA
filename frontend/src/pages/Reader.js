@@ -14,14 +14,13 @@ import {
   Moon,
   Feather,
   ArrowLeft,
-  FileText,
-  Sparkles,
-  CheckCircle2
+  FileText
 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { getUser } from '@/lib/auth';
 import api from '@/lib/api';
 import '@/discovery.css';
+import '@/reader-room.css';
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
 
@@ -36,7 +35,8 @@ export default function Reader() {
   const [width, setWidth] = useState(650);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState('');
-  const [focus, setFocus] = useState(false);
+  const [focus, setFocus] = useState(true);
+  const [settings, setSettings] = useState(false);
   const [paper, setPaper] = useState(() => {
     try {
       return localStorage.getItem('eti-reader-paper') || 'original';
@@ -55,9 +55,13 @@ export default function Reader() {
       if (e.key === 'Escape') {
         setFocus(false);
       } else if (e.key === 'ArrowLeft' || e.key === 'a') {
+        e.preventDefault();
         setPage(v => Math.max(1, v - 1));
+        area.current?.scrollTo({ top: 0 });
       } else if (e.key === 'ArrowRight' || e.key === 'd') {
+        e.preventDefault();
         setPage(v => (count ? Math.min(count, v + 1) : v));
+        area.current?.scrollTo({ top: 0 });
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -84,7 +88,8 @@ export default function Reader() {
         try {
           local = JSON.parse(localStorage.getItem(key));
         } catch {}
-        setPage(local && local.at > Date.parse(p.data.updated_at || '1970-01-01') ? local.page : p.data.page);
+        const position = local && local.at > Date.parse(p.data.updated_at || '1970-01-01') ? local.page : p.data.page;
+        setPage(Number.isFinite(Number(position)) ? Math.max(1, Math.floor(Number(position))) : 1);
         setBook(b.data);
       })
       .catch(() => {
@@ -107,9 +112,11 @@ export default function Reader() {
   useEffect(() => {
     if (!book || !count) return;
     let active = true;
+    let localSaved = false;
     try {
       localStorage.setItem(key, JSON.stringify({ page, at: Date.now() }));
-      setSaved('Salvo');
+      localSaved = true;
+      setSaved('Salvo neste aparelho');
     } catch {
       setSaved('Salvando…');
     }
@@ -121,7 +128,7 @@ export default function Reader() {
             if (active) setSaved('Sincronizado');
           })
           .catch(() => {
-            if (active) setSaved('Salvo localmente');
+            if (active) setSaved(localSaved ? 'Salvo neste aparelho' : 'Não foi possível salvar a posição');
           }),
       400
     );
@@ -134,183 +141,44 @@ export default function Reader() {
   const url = book?.arquivo_url;
   const file = url?.startsWith('/api/uploads/') ? url + '?inline=true' : url;
 
+  const percentage = count ? Math.round(page / count * 100) : 0;
+  const turn = delta => {
+    setPage(v => Math.min(count || 1, Math.max(1, v + delta)));
+    area.current?.scrollTo({ top: 0, behavior: 'instant' });
+  };
   return (
     <DashboardLayout focusMode={focus}>
-      <div className={`immersive-reader-page paper-${paper}`}>
-        {/* Header Discreto e Minimalista (Sem Caixas Gigantes) */}
-        {!focus && (
-          <header className="immersive-reader-header">
-            <div className="flex items-center gap-3">
-              <Link to={`/book/${id}`} className="p-2 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground">
-                <ArrowLeft size={18} />
-              </Link>
-              <div className="immersive-reader-title">
-                <h1>{book?.titulo || 'Leitor de Livros'}</h1>
-                <p>{book?.autor || 'ETI LEITURA'}</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground flex items-center gap-1 hidden sm:inline-flex">
-                <CheckCircle2 size={13} className="text-emerald-500" /> {saved}
-              </span>
-              <Link to={`/editor/${id}`} className="hero-library-btn !py-2 !px-4 !text-xs">
-                <FileText size={14} /> Escrever resumo
-              </Link>
-            </div>
-          </header>
-        )}
-
-        {/* Mensagens de Erro */}
-        {error && (
-          <div role="alert" className="m-4 p-4 rounded-xl border border-red-300 bg-red-50 text-red-800 dark:bg-red-950/30 text-sm">
-            {error}{' '}
-            {url && (
-              <a className="text-primary underline ml-2 font-bold" href={url} target="_blank" rel="noreferrer">
-                Abrir PDF em nova aba ↗
-              </a>
-            )}
-          </div>
-        )}
-
-        {/* Área Principal de Leitura Imersiva (Visual do PDF em Destaque Absoluto) */}
-        <div ref={area} className="immersive-pdf-viewport">
-          {book && !url ? (
-            <div className="p-12 text-center text-muted-foreground">
-              Este livro ainda não possui um arquivo PDF cadastrado.
-            </div>
-          ) : (
-            book && (
-              <Document
-                file={file}
-                loading={
-                  <div className="p-12 text-center text-muted-foreground flex flex-col items-center gap-2">
-                    <Sparkles className="animate-spin text-primary" size={28} />
-                    <p>Carregando páginas do livro…</p>
-                  </div>
-                }
-                onLoadSuccess={({ numPages }) => {
-                  setCount(numPages);
-                  setPage(v => Math.min(numPages, Math.max(1, v)));
-                  setError('');
-                }}
-                onLoadError={() =>
-                  setError('O PDF não pôde ser exibido. Se for um link externo, verifique as permissões.')
-                }
-                error=""
-              >
-                <Page
-                  pageNumber={page}
-                  width={Math.max(280, width - 32) * zoom}
-                  loading={
-                    <div className="p-8 text-center text-muted-foreground text-sm">
-                      Preparando página {page}…
-                    </div>
-                  }
-                />
-              </Document>
-            )
-          )}
+      <div className={`reading-room paper-${paper}`}>
+        <header className="reading-room-header">
+          <Link to={`/book/${id}`} className="room-icon" aria-label="Voltar ao livro"><ArrowLeft size={20}/></Link>
+          <div className="room-book-title"><span>SEU MOMENTO DE LEITURA</span><h1>{book?.titulo || 'Preparando seu livro…'}</h1><p>{book?.autor}</p></div>
+          <button className="room-icon" onClick={() => setFocus(v => !v)} aria-label={focus ? 'Mostrar menu da plataforma' : 'Entrar no modo imersivo'}>{focus ? <Minimize2 size={19}/> : <Maximize2 size={19}/>}</button>
+        </header>
+        <div className="room-progress" role="progressbar" aria-label="Posição no livro" aria-valuenow={percentage} aria-valuemin={0} aria-valuemax={100}><span style={{width: percentage + '%'}}/></div>
+        {error && <div role="alert" className="room-error">{error} {url && <a href={url} target="_blank" rel="noreferrer">Abrir PDF em outra aba</a>}</div>}
+        <div className="room-stage" ref={area}>
+          {book && !url ? <p className="room-message">Este livro ainda não possui um PDF cadastrado.</p> : book && <Document file={file}
+            loading={<p className="room-message">Abrindo as portas desta história…</p>}
+            onLoadSuccess={({numPages}) => {setCount(numPages);setPage(v => Math.min(numPages, Math.max(1,v)));setError('');}}
+            onLoadError={() => setError('Não foi possível abrir o PDF. Tente novamente ou abra o arquivo em outra aba.')} error="">
+            <Page pageNumber={page} width={Math.max(240, Math.min(820, width - 48)) * zoom} loading={<p className="room-message">Preparando página {page}…</p>}/>
+          </Document>}
         </div>
-
-        {/* Dock Flutuante do Leitor no Rodapé (Estilo Apple Books / e-Reader) */}
-        {book && url && (
-          <div className="floating-reader-dock" role="toolbar" aria-label="Controles do leitor">
-            {/* Página Anterior */}
-            <button
-              disabled={page <= 1 || !count}
-              onClick={() => setPage(v => v - 1)}
-              title="Página anterior (Seta Esquerda)"
-            >
-              <ChevronLeft size={20} />
-            </button>
-
-            {/* Contador de Páginas */}
-            <div className="dock-page-pill">
-              <span>Página</span>
-              <input
-                aria-label="Página atual"
-                className="bg-transparent w-8 text-center font-bold text-white outline-none border-b border-white/30"
-                type="number"
-                min={1}
-                max={count || 1}
-                value={page}
-                onChange={e => {
-                  const n = Number(e.target.value);
-                  if (n >= 1 && n <= count) setPage(n);
-                }}
-              />
-              <span>de {count || '…'}</span>
-            </div>
-
-            {/* Próxima Página */}
-            <button
-              disabled={page >= count || !count}
-              onClick={() => setPage(v => v + 1)}
-              title="Próxima página (Seta Direita)"
-            >
-              <ChevronRight size={20} />
-            </button>
-
-            <span className="w-[1px] h-4 bg-white/20 mx-1 hidden sm:block" />
-
-            {/* Seleção de Papel */}
-            <div className="dock-paper-selector hidden sm:flex">
-              <button
-                className={`dock-paper-btn ${paper === 'original' ? 'active' : ''}`}
-                onClick={() => setPaper('original')}
-                title="Papel Claro"
-              >
-                <Sun size={12} className="inline mr-1" /> Claro
-              </button>
-              <button
-                className={`dock-paper-btn ${paper === 'sepia' ? 'active' : ''}`}
-                onClick={() => setPaper('sepia')}
-                title="Papel Sépia"
-              >
-                <Feather size={12} className="inline mr-1" /> Sépia
-              </button>
-              <button
-                className={`dock-paper-btn ${paper === 'dark' ? 'active' : ''}`}
-                onClick={() => setPaper('dark')}
-                title="Modo Noturno"
-              >
-                <Moon size={12} className="inline mr-1" /> Dark
-              </button>
-            </div>
-
-            <span className="w-[1px] h-4 bg-white/20 mx-1 hidden sm:block" />
-
-            {/* Zoom */}
-            <div className="items-center gap-1 hidden sm:flex">
-              <button
-                disabled={zoom <= 0.75}
-                onClick={() => setZoom(z => Math.max(0.75, Number((z - 0.25).toFixed(2))))}
-                title="Diminuir Zoom"
-              >
-                <ZoomOut size={16} />
-              </button>
-              <span className="text-xs font-bold w-10 text-center">{Math.round(zoom * 100)}%</span>
-              <button
-                disabled={zoom >= 2}
-                onClick={() => setZoom(z => Math.min(2, Number((z + 0.25).toFixed(2))))}
-                title="Aumentar Zoom"
-              >
-                <ZoomIn size={16} />
-              </button>
-            </div>
-
-            <span className="w-[1px] h-4 bg-white/20 mx-1" />
-
-            {/* Modo Imersivo */}
-            <button
-              onClick={() => setFocus(v => !v)}
-              title={focus ? 'Sair do modo imersivo (Esc)' : 'Ativar modo imersivo'}
-            >
-              {focus ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-            </button>
+        <footer className="room-footer">
+          <div className="room-position"><span>{count ? percentage + '% do livro' : 'ETI LEITURA'}</span><span role="status">{saved}</span></div>
+          <div className="room-controls" role="toolbar" aria-label="Controles de leitura">
+            <button className="room-icon" disabled={!count || page <= 1} onClick={() => turn(-1)} aria-label="Página anterior"><ChevronLeft/></button>
+            <label className="room-page">Página <input aria-label="Página atual" type="number" min="1" max={count || 1} value={page} onChange={e => {const n=Number(e.target.value);if(Number.isInteger(n) && n>=1 && n<=count){setPage(n);area.current?.scrollTo({top:0});}}}/> <span>de {count || '…'}</span></label>
+            <button className="room-icon" disabled={!count || page >= count} onClick={() => turn(1)} aria-label="Próxima página"><ChevronRight/></button>
+            <button className={`room-settings-button ${settings ? 'selected' : ''}`} aria-expanded={settings} aria-controls="reading-settings" onClick={() => setSettings(v=>!v)}><Sun size={18}/><span>Ajustes</span></button>
           </div>
-        )}
+          {settings && <section id="reading-settings" className="room-settings" aria-label="Conforto de leitura">
+            <div className="room-settings-heading"><strong>Do seu jeito</strong><button onClick={()=>setSettings(false)}>Fechar</button></div>
+            <span>Cor do papel</span><div className="room-paper-options">{[['original','Claro',Sun],['sepia','Sépia',Feather],['dark','Noturno',Moon]].map(([value,label,Icon])=><button key={value} aria-pressed={paper===value} onClick={()=>setPaper(value)}><Icon size={16}/>{label}</button>)}</div>
+            <div className="room-zoom"><span>Tamanho da página</span><button aria-label="Diminuir página" disabled={zoom<=.75} onClick={()=>setZoom(z=>Math.max(.75,z-.25))}><ZoomOut size={18}/></button><span>{Math.round(zoom*100)}%</span><button aria-label="Aumentar página" disabled={zoom>=2} onClick={()=>setZoom(z=>Math.min(2,z+.25))}><ZoomIn size={18}/></button></div>
+            <Link to={`/editor/${id}`} className="room-summary"><FileText size={16}/> Escrever sobre esta leitura</Link>
+          </section>}
+        </footer>
       </div>
     </DashboardLayout>
   );

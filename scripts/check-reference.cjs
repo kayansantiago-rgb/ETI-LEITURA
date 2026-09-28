@@ -29,6 +29,25 @@ await page.screenshot({path:'docs/aluno-referencia-mobile.png',fullPage:true});
 const columns=await page.locator('.study-section-grid').evaluate(e=>getComputedStyle(e).gridTemplateColumns);if(columns.split(' ').length!==1)throw Error('Mobile study sections must stack');
 await page.getByRole('button',{name:'Ativar tema claro'}).click();
 await page.screenshot({path:'docs/aluno-referencia-claro.png',fullPage:true});
+for(const role of ['admin','teacher']) {
+await page.evaluate(u=>localStorage.setItem('user',JSON.stringify(u)),{...user,role});
+await page.setViewportSize({width:1440,height:1050});
+await page.goto('http://127.0.0.1:4173/dashboard');
+await page.getByText('CONTINUAR LEITURA',{exact:false}).waitFor();
+const nav=page.getByRole('navigation',{name:'Acessos rápidos'});
+if(await nav.getByRole('link').count()!==3)throw Error('Staff navigation must contain exactly three links');
+await nav.getByRole('link',{name:'Painel do professor',exact:true}).click();
+await page.getByTestId('teacher-panel').waitFor();
+for(const path of ['/workspace','/gradebook','/admin/rubrics','/admin/add-book','/admin/summaries','/admin/users']) {
+if(!await page.locator('main a[href="'+path+'"]').count())throw Error('Missing panel tool: '+path);
+}
+await page.waitForTimeout(400);
+await page.screenshot({path:'docs/painel-simplificado-'+role+'.png',fullPage:true});
+await page.setViewportSize({width:390,height:844});
+await page.getByRole('navigation',{name:'Navegação do celular'}).getByRole('link',{name:'Início',exact:true}).click();
+await page.getByText('CONTINUAR LEITURA',{exact:false}).waitFor();
+if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('Staff mobile overflow');
+}
 if(errors.length)throw Error(errors.join('\n'));
 console.log('PASS: student dashboard desktop/mobile, library navigation, book detail, light/dark themes, no overflow or runtime errors. Mock data only.');
 await browser.close();server.close();})().catch(e=>{console.error(e);server.close();process.exit(1)});

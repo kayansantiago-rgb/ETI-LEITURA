@@ -37,11 +37,17 @@ export default function TeacherPanel() {
   }, []);
 
   const user = getUser();
-  const activeStudents = stats?.total_users ?? 97;
-  const totalBooks = stats?.total_books ?? 46;
-  const totalSummaries = stats?.total_summaries ?? 35;
+  const activeStudents = stats?.total_users ?? '—';
+  const totalBooks = stats?.total_books ?? '—';
+  const totalSummaries = stats?.total_summaries ?? '—';
 
   const managementTools = [
+    ...[
+      ['Pendências', '/workspace'], ['Banco de notas', '/gradebook'],
+      ['Critérios de correção', '/admin/rubrics'], ['Adicionar livro', '/admin/add-book'],
+      ['Resumos dos alunos', '/admin/summaries'], ['Alunos e turmas', '/admin/users'],
+      ...(user?.role === 'admin' ? [['Calendário', '/admin/calendar']] : [])
+    ].map(([title, path]) => ({ type: 'activities', icon: ClipboardList, title, path, description: '', linkText: 'Acessar' })),
     {
       type: 'activities',
       icon: ClipboardList,

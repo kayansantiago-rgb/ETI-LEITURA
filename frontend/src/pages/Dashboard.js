@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   BookOpen,
   FileText,
@@ -133,10 +133,10 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    if (!staff) load();
+    load();
   }, [staff]);
 
-  if (staff) return <Navigate to="/admin/professor" replace />;
+
 
   const books = Array.isArray(data?.books) ? data.books : [];
   const activities = Array.isArray(data?.activities) ? data.activities : [];
