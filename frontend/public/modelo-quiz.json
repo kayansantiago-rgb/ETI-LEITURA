@@ -1,0 +1,14 @@
+{
+  "perguntas": [
+    {
+      "texto": "Quem narra uma história?",
+      "opcoes": [
+        "Narrador",
+        "Editor",
+        "Leitor",
+        "Ilustrador"
+      ],
+      "correta": 0
+    }
+  ]
+}

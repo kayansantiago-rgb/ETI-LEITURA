@@ -12,8 +12,8 @@ def quiz_api():
     user={'id':'s','nome':'Aluno','role':'student','turma':'7º ANO'}
     quiz={'id':'q','turma':'7º ANO','professor_id':'t','aberto':True,'perguntas':[{'texto':'Pergunta','opcoes':['A','B'],'correta':1}]}
     async def find(query, projection=None):
-        return dict(quiz) if all(quiz.get(k)==v for k,v in query.items()) else None
-    db=SimpleNamespace(quizzes=SimpleNamespace(find_one=AsyncMock(side_effect=find),insert_one=AsyncMock(),update_one=AsyncMock()),quiz_attempts=SimpleNamespace(find_one=AsyncMock(return_value=None),insert_one=AsyncMock()))
+        return dict(quiz) if all((quiz.get(k)!=v['$ne'] if isinstance(v,dict) else quiz.get(k)==v) for k,v in query.items()) else None
+    db=SimpleNamespace(quizzes=SimpleNamespace(find_one=AsyncMock(side_effect=find),insert_one=AsyncMock(),update_one=AsyncMock(return_value=SimpleNamespace(matched_count=1)),delete_one=AsyncMock(return_value=SimpleNamespace(deleted_count=1))),quiz_attempts=SimpleNamespace(find_one=AsyncMock(return_value=None),insert_one=AsyncMock()),quiz_sessions=SimpleNamespace(find_one=AsyncMock(),insert_one=AsyncMock(),update_one=AsyncMock(return_value=SimpleNamespace(matched_count=1))))
     async def current():return user
     async def staff():
         if user['role'] not in ('teacher','admin'):raise HTTPException(403)
@@ -57,3 +57,41 @@ def test_publish_permissions_and_validation(quiz_api):
     assert req('POST','/quizzes',json=payload).status_code==201
     payload['perguntas'][0]['correta']=3
     assert req('POST','/quizzes',json=payload).status_code==422
+
+
+def test_draft_lifecycle(quiz_api):
+    req,user,quiz,db=quiz_api
+    quiz['rascunho']=True
+    assert req('GET','/quizzes/q').status_code==404
+    user.update(role='teacher',id='t',turmas=['7º ANO'])
+    payload={'titulo':'Editar','turma':'7º ANO','perguntas':quiz['perguntas'],'nota_maxima':20,'segundos':30}
+    assert req('PUT','/quizzes/q',json=payload).status_code==200
+    assert req('POST','/quizzes/q/publish').status_code==200
+    assert req('DELETE','/quizzes/q').status_code==204
+    quiz['rascunho']=False
+    assert req('PUT','/quizzes/q',json=payload).status_code==409
+    assert req('DELETE','/quizzes/q').status_code==409
+    user['id']='other-teacher'
+    assert req('POST','/quizzes/q/publish').status_code==404
+
+
+def test_timer_expiry_and_resume(quiz_api):
+    from datetime import datetime, timezone, timedelta
+    req,user,quiz,db=quiz_api
+    quiz.update(segundos=30,nota_maxima=20)
+    assert req('POST','/quizzes/q/answers',json={'respostas':[1]}).status_code==409
+    first=req('POST','/quizzes/q/start').json()
+    session={'_id':'q:s',**first}
+    db.quiz_sessions.insert_one.side_effect=DuplicateKeyError('existing')
+    db.quiz_sessions.find_one.return_value=session
+    assert req('POST','/quizzes/q/start').json()['limite']==first['limite']
+    assert req('POST','/quizzes/q/step',json={'indice':0,'resposta':-1}).status_code==409
+    session['limite']=(datetime.now(timezone.utc)-timedelta(seconds=1)).isoformat()
+    assert req('POST','/quizzes/q/step',json={'indice':0,'resposta':1}).json()['concluido']
+    assert db.quiz_attempts.insert_one.call_args.args[0]['acertos']==0
+    assert db.quiz_attempts.insert_one.call_args.args[0]['respostas']==[-1]
+    session['limite']=(datetime.now(timezone.utc)+timedelta(seconds=30)).isoformat()
+    assert req('POST','/quizzes/q/step',json={'indice':0,'resposta':1}).status_code==200
+    assert db.quiz_attempts.insert_one.call_args.args[0]['nota']==20
+    db.quiz_sessions.update_one.return_value=SimpleNamespace(matched_count=0)
+    assert req('POST','/quizzes/q/step',json={'indice':0,'resposta':1}).status_code==409

@@ -152,7 +152,7 @@ export default function DashboardLayout({ children, focusMode = false }) {
       </NavLink>
     ));
 
-  const staffLinks = [[LayoutDashboard, 'Início', '/dashboard'], [BookOpen, 'Biblioteca', '/library'], teacher];
+  const staffLinks = [[LayoutDashboard, 'Início', '/dashboard'], [BookOpen, 'Biblioteca', '/library'], [Sparkles, 'Quizzes', '/quizzes'], teacher];
   const groups = isAdmin ? [['Navegação', staffLinks]] : [['Meu aprendizado', learning]];
 
   const mainLinks = isAdmin
