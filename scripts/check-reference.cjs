@@ -1,0 +1,35 @@
+// Visual and interaction checks with explicit fixtures; no database is modified.
+const fs=require('fs'),path=require('path'),http=require('http');
+const {chromium}=require('../frontend/node_modules/playwright');
+process.chdir(path.resolve(__dirname,'..'));
+const root=path.resolve(__dirname,'../frontend/build');
+const server=http.createServer((req,res)=>{let file=path.join(root,decodeURIComponent(req.url.split('?')[0]));if(!file.startsWith(root+path.sep)&&file!==root){res.writeHead(403);return res.end();}if(!fs.existsSync(file)||fs.statSync(file).isDirectory())file=path.join(root,'index.html');const ext=path.extname(file);res.setHeader('Content-Type',({'.html':'text/html','.js':'application/javascript','.css':'text/css','.svg':'image/svg+xml'})[ext]||'application/octet-stream');fs.createReadStream(file).pipe(res);});
+(async()=>{await new Promise(r=>server.listen(4173,'127.0.0.1',r));const browser=await chromium.launch({channel:'chrome',headless:true});const page=await browser.newPage({viewport:{width:1440,height:1050}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+const user={id:'test',nome:'Mariana Silva',email:'mariana@example.com',turma:'7º ANO',role:'student'};
+const books=[{id:'1',titulo:'O Pequeno Príncipe',autor:'Antoine de Saint-Exupéry',progress:45,nivel_ensino:'AMBOS'},{id:'2',titulo:'A Ilha do Tesouro',autor:'Robert Louis Stevenson',progress:15,nivel_ensino:'FUNDAMENTAL'},{id:'3',titulo:'Dom Casmurro',autor:'Machado de Assis',progress:100,nivel_ensino:'MÉDIO'},{id:'4',titulo:'O Jardim Secreto',autor:'Frances Hodgson Burnett',progress:0,nivel_ensino:'AMBOS'}].map((b,i)=>({...b,descricao:'Uma história para descobrir novas perspectivas e compartilhar ideias.',capa_url:`data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400"><rect width="300" height="400" fill="${['#233f62','#467369','#a16b4d','#6a668c'][i]}"/><rect x="20" y="20" width="260" height="360" rx="2" fill="none" stroke="#ffffff55"/><circle cx="150" cy="165" r="65" fill="none" stroke="#ffffff44" stroke-width="2"/><path d="M85 210 L150 90 L215 210Z" fill="none" stroke="#ffffff77"/><text x="150" y="295" text-anchor="middle" font-size="17" font-family="serif" fill="white">${b.titulo}</text><text x="150" y="340" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#ffffffaa">ETI LEITURA · ACERVO DE TESTE</text></svg>`)}`}));
+await page.route('**/api/**',async route=>{const url=new URL(route.request().url()),p=url.pathname;let data=[];if(p==='/api/stats')data={total_books:4,my_summaries:2};else if(p==='/api/admin/stats')data={total_books:4,total_users:28,total_summaries:12,total_productions:7};else if(p==='/api/books')data=books;else if(p==='/api/auth/me')data=user;else if(p==='/api/calendar')data=[{id:'e1',titulo:'Roda de leitura',data:`${url.searchParams.get('ano')}-${String(url.searchParams.get('mes')).padStart(2,'0')}-22`,cor:'#294b9c'}];else if(p==='/api/books/1')data=books[0];else if(p==='/api/books/1/progress')data={percentage:45};else if(p==='/api/books/1/summary')return route.fulfill({status:404,json:{detail:'Sem resumo'}});return route.fulfill({json:data});});
+await page.goto('http://127.0.0.1:4173/login');
+await page.evaluate(u=>{localStorage.setItem('user',JSON.stringify(u));localStorage.setItem('token','visual-test-only');localStorage.setItem('eti-theme','dark')},user);
+await page.goto('http://127.0.0.1:4173/dashboard');
+await page.getByText('CONTINUAR LEITURA',{exact:false}).waitFor();
+await page.waitForTimeout(1000);
+await page.screenshot({path:'docs/aluno-referencia-desktop.png',fullPage:true});
+if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('Desktop overflow');
+await page.getByRole('link',{name:'EXPLORAR BIBLIOTECA'}).click();
+await page.getByRole('heading',{name:'Biblioteca',exact:true}).waitFor();
+await page.goto('http://127.0.0.1:4173/book/1');
+await page.getByTestId('book-details-page').waitFor();
+await page.screenshot({path:'docs/livro-referencia.png',fullPage:true});
+await page.setViewportSize({width:390,height:844});
+await page.goto('http://127.0.0.1:4173/dashboard');
+await page.getByText('CONTINUAR LEITURA',{exact:false}).waitFor();
+await page.waitForTimeout(600);
+if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error('Student mobile overflow');
+await page.screenshot({path:'docs/aluno-referencia-mobile.png',fullPage:true});
+const columns=await page.locator('.study-section-grid').evaluate(e=>getComputedStyle(e).gridTemplateColumns);if(columns.split(' ').length!==1)throw Error('Mobile study sections must stack');
+await page.getByRole('button',{name:'Ativar tema claro'}).click();
+await page.screenshot({path:'docs/aluno-referencia-claro.png',fullPage:true});
+if(errors.length)throw Error(errors.join('\n'));
+console.log('PASS: student dashboard desktop/mobile, library navigation, book detail, light/dark themes, no overflow or runtime errors. Mock data only.');
+await browser.close();server.close();})().catch(e=>{console.error(e);server.close();process.exit(1)});
+

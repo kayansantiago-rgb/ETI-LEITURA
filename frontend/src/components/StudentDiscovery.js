@@ -56,8 +56,8 @@ export default function StudentDiscovery({ books = [], posts = [], stats = {} })
             </span>
             <h2>{currentPost?.titulo || 'Novidades e Histórias da Nossa Escola'}</h2>
             <p className="timeline-date">
-              {currentPost?.data
-                ? `Publicado em ${new Date(currentPost.data).toLocaleDateString('pt-BR', {
+              {(currentPost?.created_at || currentPost?.data)
+                ? `Publicado em ${new Date(currentPost.created_at || currentPost.data).toLocaleDateString('pt-BR', {
                     day: 'numeric',
                     month: 'long',
                     year: 'numeric'
@@ -90,7 +90,10 @@ export default function StudentDiscovery({ books = [], posts = [], stats = {} })
           {photos.length > 1 && (
             <div className="timeline-dots-bar" aria-label="Indicador de slides">
               {photos.map((_, idx) => (
-                <span
+                <button
+                  type="button"
+                  aria-label={`Ver foto ${idx + 1}`}
+                  aria-current={idx === slide % photos.length ? 'true' : undefined}
                   key={idx}
                   className={`timeline-dot ${idx === slide % photos.length ? 'active' : 'inactive'}`}
                   onClick={() => setSlide(idx)}
