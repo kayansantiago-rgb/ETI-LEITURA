@@ -23,7 +23,7 @@ export default function StudentDiscovery({ books = [], posts = [], stats = {} })
       <div className="student-hero-greeting">
         <div>
           <h1>
-            <span>🌅</span> {greetingText}, <span className="text-primary">{userName}</span>! 🚀
+            {greetingText}, <span className="text-primary">{userName}</span>!
           </h1>
           <p>Qual será o próximo mundo literário que vamos explorar hoje?</p>
         </div>

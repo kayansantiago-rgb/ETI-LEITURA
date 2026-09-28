@@ -1,3 +1,4 @@
+import Quizzes from '@/pages/Quizzes';
 import Classes from '@/pages/Classes';
 import SplashScreen from '@/components/SplashScreen';
 import {Rubrics,Gradebook} from '@/pages/Assessment';
@@ -39,7 +40,7 @@ function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="eti-theme"><SplashScreen><div className="App">
       <BrowserRouter>
-        <Routes><Route path="/admin/classes" element={<ProtectedRoute><Classes/></ProtectedRoute>}/><Route path="/admin/classes/:turma" element={<ProtectedRoute><Classes/></ProtectedRoute>}/><Route path="/gradebook" element={<ProtectedRoute><Gradebook/></ProtectedRoute>}/><Route path="/admin/rubrics" element={<ProtectedRoute><Rubrics/></ProtectedRoute>}/><Route path="/videos" element={<ProtectedRoute><Videos/></ProtectedRoute>}/><Route path="/admin/assistant" element={<ProtectedRoute><Assistant/></ProtectedRoute>}/>
+        <Routes><Route path="/quizzes" element={<ProtectedRoute><Quizzes/></ProtectedRoute>}/><Route path="/admin/classes" element={<ProtectedRoute><Classes/></ProtectedRoute>}/><Route path="/admin/classes/:turma" element={<ProtectedRoute><Classes/></ProtectedRoute>}/><Route path="/gradebook" element={<ProtectedRoute><Gradebook/></ProtectedRoute>}/><Route path="/admin/rubrics" element={<ProtectedRoute><Rubrics/></ProtectedRoute>}/><Route path="/videos" element={<ProtectedRoute><Videos/></ProtectedRoute>}/><Route path="/admin/assistant" element={<ProtectedRoute><Assistant/></ProtectedRoute>}/>
           <Route path="/workspace" element={<ProtectedRoute><Workspace/></ProtectedRoute>}/>
           <Route path="/notifications" element={<ProtectedRoute><Notifications/></ProtectedRoute>}/>
           <Route path="/admin/reports" element={<ProtectedRoute><Reports/></ProtectedRoute>}/>

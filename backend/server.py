@@ -1229,6 +1229,8 @@ from backend.gradebook import create_gradebook_router
 api_router.include_router(create_gradebook_router(db,get_current_user,require_staff))
 from backend.push import create_push_router, ensure_indexes as ensure_push_indexes, push_loop
 api_router.include_router(create_push_router(db,get_current_user))
+from backend.quizzes import create_quiz_router
+api_router.include_router(create_quiz_router(db, get_current_user, require_staff))
 app.include_router(api_router)
 
 # Mount static files for uploads

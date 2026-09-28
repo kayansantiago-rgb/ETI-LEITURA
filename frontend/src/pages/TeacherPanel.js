@@ -42,6 +42,7 @@ export default function TeacherPanel() {
   const totalSummaries = stats?.total_summaries ?? '—';
 
   const managementTools = [
+    {type:'activities',icon:Sparkles,title:'Quizzes interativos',description:'Crie perguntas de múltipla escolha e acompanhe os acertos da turma.',linkText:'Abrir quizzes',path:'/quizzes'},
     ...[
       ['Pendências', '/workspace', 'Veja as entregas que aguardam correção e organize seu acompanhamento.'],
       ['Banco de notas', '/gradebook', 'Consulte os boletins dos alunos e acompanhe as notas de cada turma.'],

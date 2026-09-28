@@ -1,3 +1,4 @@
+import SummaryCorrection from '@/components/SummaryCorrection';
 import StatusBadge from '@/components/StatusBadge';
 import RubricPicker from '@/components/RubricPicker';
 import AIReview from '@/components/AIReview';
@@ -138,7 +139,7 @@ const AdminSummaryCard = ({ summary, onUpdate, onDelete }) => {
 
           <div className="flex items-center gap-2">
             {/* Correct Button */}
-            <Dialog open={isCorrectDialogOpen} onOpenChange={setIsCorrectDialogOpen}>
+            <Dialog open={isCorrectDialogOpen} onOpenChange={value => { if (!loading) setIsCorrectDialogOpen(value); }}>
               <DialogTrigger asChild>
                 <Button
                   variant={isCorrected ? "outline" : "default"}
@@ -158,64 +159,8 @@ const AdminSummaryCard = ({ summary, onUpdate, onDelete }) => {
                   )}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle className="text-xl">Corrigir Resumo</DialogTitle>
-                  <p className="text-sm text-muted-foreground">
-                    {summary.book_titulo} - {summary.user_nome}
-                  </p>
-                </DialogHeader>
-
-                {/* Summary Content */}
-                <div className="mt-4 p-4 bg-muted/50 rounded-lg max-h-48 overflow-y-auto">
-                  <p className="text-sm whitespace-pre-wrap">{summary.conteudo}</p>
-                </div>
-
-                {/* Correction Form */}
-                <RubricPicker onApply={r=>{setNota(String(r.nota));setFeedback(r.feedback);}}/><AIReview kind="summary" id={summary.id} onApply={r=>{setNota(String(r.nota));setFeedback(r.feedback);}}/><form onSubmit={handleCorrection} className="mt-4 space-y-4">
-                  <div>
-                    <Label htmlFor="nota">Nota (0 a 10)</Label>
-                    <Input
-                      id="nota"
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      max="10"
-                      placeholder="Ex: 8.5"
-                      value={nota}
-                      onChange={(e) => setNota(e.target.value)}
-                      className="mt-1"
-                      required
-                      data-testid="input-nota"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="feedback">Feedback para o aluno</Label>
-                    <Textarea
-                      id="feedback"
-                      placeholder="Escreva aqui suas observações, sugestões e comentários sobre o resumo do aluno..."
-                      value={feedback}
-                      onChange={(e) => setFeedback(e.target.value)}
-                      className="mt-1 min-h-[120px]"
-                      required
-                      data-testid="input-feedback"
-                    />
-                  </div>
-
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsCorrectDialogOpen(false)}
-                    >
-                      Cancelar
-                    </Button>
-                    <Button type="submit" disabled={loading} data-testid="submit-correction">
-                      {loading ? 'Salvando...' : 'Salvar Correção'}
-                    </Button>
-                  </div>
-                </form>
+              <DialogContent className="summary-correction-dialog" aria-describedby={undefined}>
+                <SummaryCorrection summary={summary} nota={nota} feedback={feedback} setNota={setNota} setFeedback={setFeedback} loading={loading} onSubmit={handleCorrection} onCancel={()=>setIsCorrectDialogOpen(false)}/>
               </DialogContent>
             </Dialog>
 

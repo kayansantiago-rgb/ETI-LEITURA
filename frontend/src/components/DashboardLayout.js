@@ -28,6 +28,7 @@ import { getAuth, clearAuth } from '@/lib/auth';
 import Brand from '@/components/Brand';
 
 const learning = [
+  [Sparkles, 'Quizzes', '/quizzes'],
   [LayoutDashboard, 'Visão geral', '/dashboard'],
   [ClipboardList, 'Minhas atividades', '/activities'],
   [Video, 'Vídeos e materiais', '/videos'],
@@ -165,7 +166,7 @@ export default function DashboardLayout({ children, focusMode = false }) {
   const otherArea = !mobileLinks.some(([, , path]) => location.pathname === path || location.pathname.startsWith(path + '/'));
   const railPaths = isAdmin
     ? ['/admin/professor', '/admin/classes', '/admin/activities', '/admin/assistant', '/videos', '/library', '/gradebook', '/admin/reports', '/admin/users']
-    : ['/dashboard', '/activities', '/videos', '/library', '/text-productions', '/workspace'];
+    : ['/dashboard', '/activities', '/quizzes', '/videos', '/library', '/text-productions', '/workspace'];
 
   const railItems = isAdmin ? staffLinks : railPaths.map(path => (isAdmin ? [teacher, ...management, [BookOpen, 'Biblioteca', '/library']] : learning).find(item => item[2] === path)).filter(Boolean);
 

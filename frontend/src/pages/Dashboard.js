@@ -116,7 +116,6 @@ export default function Dashboard() {
       stats: '/stats',
       books: '/books',
       activities: '/activities',
-      grades: '/gradebook',
       materials: '/materials',
       mural: '/mural'
     };
@@ -248,90 +247,6 @@ export default function Dashboard() {
               </section>
             </div>
 
-            {/* Grid de Atividades & Comentários do Professor (SEM DISCIPLINA, COM VALOR DA NOTA) */}
-            <div className="student-work-grid">
-              {/* Atividades do Aluno */}
-              <section className="space-y-3">
-                <div className="section-heading-row">
-                  <h2 className="text-lg font-bold">Minhas atividades</h2>
-                  <Link to="/activities" className="text-xs text-primary font-semibold hover:underline">
-                    Ver todas →
-                  </Link>
-                </div>
-
-                {data?.failed.includes('activities') ? (
-                  <p className="panel text-sm">Não foi possível consultar as atividades.</p>
-                ) : activities.length ? (
-                  <div className="student-activity-list">
-                    {[...pending, ...activities.filter(a => !pending.some(p => p.id === a.id))]
-                      .slice(0, 4)
-                      .map(a => {
-                        const scoreValue =
-                          a.minha_resposta?.nota != null
-                            ? `Nota: ${a.minha_resposta.nota}/10`
-                            : 'Vale 10,0 pts';
-
-                        return (
-                          <Link className="student-activity-row" to={'/activities/' + a.id} key={a.id}>
-                            <span className="activity-row-icon">
-                              <ClipboardList size={20} />
-                            </span>
-                            <div className="activity-row-info">
-                              <h3>{a.titulo}</h3>
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="activity-score-badge">
-                                  <Award size={12} /> {scoreValue}
-                                </span>
-                                <span className="text-xs text-muted-foreground">• {deadline(a.prazo)}</span>
-                              </div>
-                              <StatusBadge state={activityState(a)} />
-                            </div>
-                            <ArrowRight size={16} className="text-muted-foreground shrink-0" />
-                          </Link>
-                        );
-                      })}
-                  </div>
-                ) : (
-                  <p className="panel text-sm text-muted-foreground">
-                    Suas atividades aparecerão aqui quando o professor publicar.
-                  </p>
-                )}
-              </section>
-
-              {/* Comentários do Professor */}
-              <section className="space-y-3">
-                <div className="section-heading-row">
-                  <h2 className="text-lg font-bold">Comentários do professor</h2>
-                  <MessageSquare size={18} className="text-primary" />
-                </div>
-
-                {data?.failed.includes('grades') ? (
-                  <p className="panel text-sm">Não foi possível consultar os comentários.</p>
-                ) : comments.length ? (
-                  <div className="feedback-list">
-                    {comments.map(n => (
-                      <article className="feedback-card" key={n.id}>
-                        <div className="feedback-card-header">
-                          <h3>{n.titulo}</h3>
-                          <span className="text-xs text-muted-foreground shrink-0">{deadline(n.data)}</span>
-                        </div>
-                        <p className="feedback-excerpt">"{n.feedback}"</p>
-                        <Link
-                          to={n.link || '/gradebook#grade-' + n.id}
-                          className="text-xs font-bold text-primary flex items-center gap-1 hover:underline"
-                        >
-                          Ver correção completa <ArrowRight size={12} />
-                        </Link>
-                      </article>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="panel text-sm text-muted-foreground">
-                    Os comentários dos professores aparecerão assim que suas atividades forem corrigidas.
-                  </p>
-                )}
-              </section>
-            </div>
           </>
         )}
       </div>
