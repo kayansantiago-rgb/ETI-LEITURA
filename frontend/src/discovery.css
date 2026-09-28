@@ -813,3 +813,93 @@
     font-size: 11px;
   }
 }
+
+/* --------------------------------------------------------------------------
+   WIDGET DE CALENDÁRIO / AGENDA (ESTUDANTE - GRID DE 7 COLUNAS)
+   -------------------------------------------------------------------------- */
+.calendar-widget-card {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid hsl(var(--border) / 0.8);
+  padding: 18px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.03);
+}
+
+.dark .calendar-widget-card {
+  background: #181628;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.calendar-header h2 {
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: hsl(var(--foreground));
+}
+
+.calendar-month-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: hsl(var(--muted-foreground));
+  text-transform: capitalize;
+}
+
+.calendar-grid-days {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  gap: 6px !important;
+  text-align: center;
+  align-items: center !important;
+}
+
+.calendar-weekday-header {
+  font-size: 11px;
+  font-weight: 700;
+  color: hsl(var(--muted-foreground));
+  padding-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.calendar-day-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.calendar-day-cell:hover:not(.empty) {
+  background: hsl(var(--accent));
+}
+
+.calendar-day-cell.today {
+  background: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  font-weight: 800 !important;
+  box-shadow: 0 2px 8px hsl(var(--primary) / 0.35);
+}
+
+.calendar-day-cell.has-deadline {
+  border: 2px solid #8b5cf6;
+  font-weight: 700;
+  color: #7c3aed;
+}
+
+.calendar-day-cell.empty {
+  visibility: hidden;
+}
+

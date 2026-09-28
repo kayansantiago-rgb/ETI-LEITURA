@@ -18,6 +18,7 @@ import StatusBadge, { activityState } from '@/components/StatusBadge';
 import { getUser } from '@/lib/auth';
 import api from '@/lib/api';
 import { deadline } from '@/pages/Activities';
+import '@/discovery.css';
 
 // Componente do Widget de Calendário (Imagem de Referência 3)
 function InteractiveCalendar({ pendingActivities = [] }) {
@@ -75,7 +76,8 @@ function InteractiveCalendar({ pendingActivities = [] }) {
         </div>
       </div>
 
-      <div className="calendar-grid-days">
+      <div className="calendar-grid-days" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px', textAlign: 'center', alignItems: 'center' }}>
+
         {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((dayStr, idx) => (
           <div key={idx} className="calendar-weekday-header">
             {dayStr}
