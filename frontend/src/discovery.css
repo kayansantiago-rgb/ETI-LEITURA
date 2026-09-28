@@ -354,16 +354,61 @@
 
 
 /* --------------------------------------------------------------------------
-   3. DASHBOARD DE ATIVIDADES DO PROFESSOR (IMAGEM DE REFERÊNCIA DE HOJE)
+   3. PAINEL DO PROFESSOR (IMAGEM DE REFERÊNCIA DE HOJE - MEDIA_1790603937073)
    -------------------------------------------------------------------------- */
-.teacher-kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-  margin: 20px 0;
+.teacher-panel-container {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  animation: fadeIn 0.4s ease-out;
 }
 
-.teacher-kpi-card {
+/* Header do Professor com ícone de chapéu acadêmico */
+.teacher-panel-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.teacher-panel-header-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  background: #f3e8ff;
+  color: #7c3aed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dark .teacher-panel-header-icon {
+  background: rgba(124, 58, 237, 0.2);
+  color: #d8b4fe;
+}
+
+.teacher-panel-header-text h1 {
+  font-size: clamp(26px, 3.2vw, 36px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: hsl(var(--foreground));
+  margin: 0;
+}
+
+.teacher-panel-header-text p {
+  font-size: 14px;
+  color: hsl(var(--muted-foreground));
+  margin: 4px 0 0 0;
+}
+
+/* 3 Cards de Indicadores do Topo */
+.teacher-stats-trio {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.teacher-stat-trio-card {
   background: #ffffff;
   border: 1px solid hsl(var(--border) / 0.8);
   border-radius: 22px;
@@ -373,13 +418,22 @@
   justify-content: space-between;
   gap: 16px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
 }
 
-.dark .teacher-kpi-card {
+.dark .teacher-stat-trio-card {
   background: #181628;
 }
 
-.teacher-kpi-content span {
+.teacher-stat-trio-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  border-color: hsl(var(--primary) / 0.4);
+}
+
+.stat-trio-info span {
   display: block;
   font-size: 11px;
   font-weight: 800;
@@ -389,24 +443,32 @@
   margin-bottom: 6px;
 }
 
-.teacher-kpi-content strong {
+.stat-trio-info strong {
   display: block;
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 800;
   line-height: 1.1;
   color: hsl(var(--foreground));
   letter-spacing: -0.03em;
 }
 
-.teacher-kpi-content p {
+.stat-trio-subtitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 12px;
-  color: hsl(var(--muted-foreground));
-  margin: 8px 0 0 0;
+  font-weight: 600;
+  color: #10b981;
+  margin-top: 10px;
 }
 
-.teacher-kpi-icon-badge {
-  width: 48px;
-  height: 48px;
+.dark .stat-trio-subtitle {
+  color: #34d399;
+}
+
+.stat-trio-icon-badge {
+  width: 50px;
+  height: 50px;
   border-radius: 16px;
   display: flex;
   align-items: center;
@@ -414,156 +476,221 @@
   flex-shrink: 0;
 }
 
-.teacher-kpi-icon-badge.purple {
+.stat-trio-icon-badge.blue {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.dark .stat-trio-icon-badge.blue {
+  background: rgba(37, 99, 235, 0.2);
+  color: #60a5fa;
+}
+
+.stat-trio-icon-badge.green {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.dark .stat-trio-icon-badge.green {
+  background: rgba(5, 150, 105, 0.2);
+  color: #34d399;
+}
+
+.stat-trio-icon-badge.purple {
   background: #f3e8ff;
   color: #7c3aed;
 }
 
-.dark .teacher-kpi-icon-badge.purple {
+.dark .stat-trio-icon-badge.purple {
   background: rgba(124, 58, 237, 0.2);
-  color: #d8b4fe;
+  color: #c4b5fd;
 }
 
-.teacher-kpi-icon-badge.amber {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-.dark .teacher-kpi-icon-badge.amber {
-  background: rgba(217, 119, 6, 0.2);
-  color: #fcd34d;
-}
-
-/* Card Engajamento das Turmas */
-.engagement-card {
-  background: #ffffff;
-  border: 1px solid hsl(var(--border) / 0.8);
-  border-radius: 24px;
-  padding: 26px 28px;
+/* Seção Ferramentas de Gestão (Cards Coloridos Pastel) */
+.management-tools-section {
   display: flex;
   flex-direction: column;
+  gap: 16px;
+}
+
+.management-tools-section h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: hsl(var(--foreground));
+  margin: 0;
+}
+
+.management-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
+}
+
+.management-tool-card {
+  border-radius: 24px;
+  padding: 28px 26px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 240px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.25s ease;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
-  margin-bottom: 24px;
+  border: 1px solid transparent;
 }
 
-.dark .engagement-card {
-  background: #181628;
+.management-tool-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
 }
 
-.engagement-header {
+/* Card 1: Atividades Escolares (Creme Quente / Amarelo Pastel) */
+.management-tool-card.activities {
+  background: #fffbeb;
+  border-color: #fef08a;
+  color: #451a03;
+}
+
+.dark .management-tool-card.activities {
+  background: #231e13;
+  border-color: #443719;
+  color: #fef3c7;
+}
+
+/* Card 2: Gerenciar Mural (Azul / Lavanda Soft) */
+.management-tool-card.mural {
+  background: #eef2ff;
+  border-color: #e0e7ff;
+  color: #1e1b4b;
+}
+
+.dark .management-tool-card.mural {
+  background: #191c33;
+  border-color: #2b3259;
+  color: #e0e7ff;
+}
+
+/* Card 3: Gerenciar Livros (Menta / Verde Água Soft) */
+.management-tool-card.books {
+  background: #e6f7f2;
+  border-color: #a7f3d0;
+  color: #064e3b;
+}
+
+.dark .management-tool-card.books {
+  background: #122822;
+  border-color: #1b4d3e;
+  color: #d1fae5;
+}
+
+.tool-card-icon-white {
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  margin-bottom: 20px;
+}
+
+.management-tool-card.activities .tool-card-icon-white { color: #d97706; }
+.management-tool-card.mural .tool-card-icon-white { color: #4f46e5; }
+.management-tool-card.books .tool-card-icon-white { color: #059669; }
+
+.dark .tool-card-icon-white {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.management-tool-card h3 {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px 0;
+  line-height: 1.25;
+}
+
+.management-tool-card p {
+  font-size: 13px;
+  line-height: 1.5;
+  opacity: 0.85;
+  margin: 0;
+}
+
+.tool-card-footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  margin-top: 24px;
+}
+
+.management-tool-card.activities .tool-card-footer-link { color: #7c3aed; }
+.management-tool-card.mural .tool-card-footer-link { color: #4f46e5; }
+.management-tool-card.books .tool-card-footer-link { color: #059669; }
+
+.dark .tool-card-footer-link { color: inherit !important; opacity: 0.9; }
+
+/* Outras Ferramentas do Professor */
+.other-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.other-tool-row {
   display: flex;
   align-items: center;
   gap: 14px;
+  padding: 16px 18px;
+  background: #ffffff;
+  border: 1px solid hsl(var(--border) / 0.8);
+  border-radius: 18px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
 }
 
-.engagement-icon-badge {
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
-  background: #f3e8ff;
-  color: #7c3aed;
+.dark .other-tool-row {
+  background: #181628;
+}
+
+.other-tool-row:hover {
+  border-color: hsl(var(--primary) / 0.4);
+  transform: translateX(3px);
+}
+
+.other-tool-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.dark .engagement-icon-badge {
-  background: rgba(124, 58, 237, 0.2);
-  color: #d8b4fe;
-}
-
-.engagement-title h2 {
-  font-size: 20px;
-  font-weight: 800;
-  margin: 0;
-  letter-spacing: -0.02em;
-  color: hsl(var(--foreground));
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.engagement-title p {
-  font-size: 13px;
-  color: hsl(var(--muted-foreground));
-  margin: 2px 0 0 0;
-}
-
-.engagement-filters-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.engagement-select-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.engagement-select-group label {
-  font-size: 12px;
+.other-tool-info h4 {
+  font-size: 14px;
   font-weight: 700;
-  color: hsl(var(--foreground));
+  margin: 0 0 2px 0;
 }
 
-.engagement-rate-box {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 18px;
-  padding: 18px 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.dark .engagement-rate-box {
-  background: #141222;
-  border-color: #2b2542;
-}
-
-.engagement-rate-info {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.engagement-rate-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: hsl(var(--foreground));
-}
-
-.engagement-rate-value {
-  color: #0d9488;
-}
-
-.dark .engagement-rate-value {
-  color: #14b8a6;
-}
-
-.engagement-progress-track {
-  width: 100%;
-  height: 10px;
-  background: #e2e8f0;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.dark .engagement-progress-track {
-  background: #28233d;
-}
-
-.engagement-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #0d9488 0%, #10b981 100%);
-  border-radius: 10px;
-  transition: width 0.4s ease;
+.other-tool-info p {
+  font-size: 11px;
+  color: hsl(var(--muted-foreground));
+  margin: 0;
+  line-height: 1.3;
 }
 
 
@@ -717,6 +844,8 @@
 @media (max-width: 768px) {
   .hero-discovery-container,
   .teacher-kpi-grid,
+  .teacher-stats-trio,
+  .management-tools-grid,
   .engagement-filters-grid,
   .hero-stats-grid {
     grid-template-columns: 1fr;
