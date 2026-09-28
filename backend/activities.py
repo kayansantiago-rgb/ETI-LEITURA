@@ -19,6 +19,7 @@ class Attachment(BaseModel):
 class ActivityCreate(BaseModel):
     publicar_em: Optional[datetime] = None
     disciplina: str = Field(default='', max_length=80)
+    valor_nota: Optional[float] = Field(default=10.0, ge=0, le=100)
     bimestre: Optional[int] = Field(default=None, ge=1, le=4)
     titulo: str = Field(min_length=1, max_length=160)
     descricao: str = Field(default='', max_length=10000)
@@ -108,7 +109,7 @@ def create_activity_router(db, get_current_user, require_admin):
             choices=[x.strip() for x in q['alternativas']]
             if q['tipo']=='alternativa' and (len(choices)<2 or any(not x or len(x)>500 for x in choices) or len(set(choices))!=len(choices)):raise HTTPException(400,'Informe de 2 a 6 alternativas diferentes, até 500 caracteres cada')
             questions.append({**q,'alternativas':choices if q['tipo']=='alternativa' else [],'id':str(uuid4())})
-        return {'publicar_em':publication,'disciplina':data.disciplina.strip(),'bimestre':data.bimestre,'titulo':data.titulo.strip(),'descricao':data.descricao.strip(),'turma':data.turma,'prazo':data.prazo.isoformat() if data.prazo else None,'perguntas':questions,'book_id':data.book_id,'anexos':[a.model_dump() for a in data.anexos]}
+        return {'publicar_em':publication,'disciplina':data.disciplina.strip(),'valor_nota':data.valor_nota if data.valor_nota is not None else 10.0,'bimestre':data.bimestre,'titulo':data.titulo.strip(),'descricao':data.descricao.strip(),'turma':data.turma,'prazo':data.prazo.isoformat() if data.prazo else None,'perguntas':questions,'book_id':data.book_id,'anexos':[a.model_dump() for a in data.anexos]}
 
     def can_manage(activity,user):
         if user['role']=='teacher' and activity.get('professor_id')!=user['id']:raise HTTPException(403,'Somente o autor ou administrador pode alterar esta atividade')

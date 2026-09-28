@@ -1,61 +1,342 @@
-import {reconcilePush} from '@/lib/push';
+import { reconcilePush } from '@/lib/push';
 import Accessibility from '@/components/Accessibility';
 import api from '@/lib/api';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useState, useEffect } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Video, Sparkles, BookOpen, LayoutDashboard, FileText, LogOut, Menu, X, Plus, PenTool, Users, ImageIcon, CalendarDays, Library, ArrowUpRight, GraduationCap, ClipboardList, Bell, ChartColumn } from 'lucide-react';
+import {
+  Video,
+  Sparkles,
+  BookOpen,
+  LayoutDashboard,
+  FileText,
+  LogOut,
+  Menu,
+  X,
+  Plus,
+  PenTool,
+  Users,
+  ImageIcon,
+  CalendarDays,
+  Library,
+  GraduationCap,
+  ClipboardList,
+  Bell,
+  ChartColumn
+} from 'lucide-react';
 import { getAuth, clearAuth } from '@/lib/auth';
-import { Button } from '@/components/ui/button';
 import Brand from '@/components/Brand';
-const learning = [[FileText,"Minhas notas","/gradebook"],[Video,"Vídeos e materiais","/videos"],[ClipboardList, 'Pendências', '/workspace'], [ClipboardList, 'Minhas atividades', '/activities'], [LayoutDashboard, 'Visão geral', '/dashboard'], [BookOpen, 'Biblioteca', '/library'], [FileText, 'Meus resumos', '/summaries'], [PenTool, 'Produção textual', '/text-productions']];
-const management = [[Users,"Minhas turmas","/admin/classes"],[FileText,"Banco de notas","/gradebook"],[ClipboardList,"Critérios de correção","/admin/rubrics"],[Sparkles,"Assistente IA","/admin/assistant"],[Video,"Vídeos e materiais","/videos"],[ChartColumn, 'Relatórios', '/admin/reports'], [Users, 'Professores', '/admin/teachers'], [ClipboardList, 'Atividades', '/admin/activities'], [Library, 'Acervo de livros', '/admin/books'], [Plus, 'Adicionar livro', '/admin/add-book'], [FileText, 'Resumos dos alunos', '/admin/summaries'], [PenTool, 'Produções dos alunos', '/admin/text-productions'], [Users, 'Alunos e turmas', '/admin/users'], [ImageIcon, 'Mural da escola', '/admin/mural'], [CalendarDays, 'Calendário', '/admin/calendar']];
-export default function DashboardLayout({ children, focusMode=false }) {
+
+const learning = [
+  [LayoutDashboard, 'Visão geral', '/dashboard'],
+  [ClipboardList, 'Minhas atividades', '/activities'],
+  [Video, 'Vídeos e materiais', '/videos'],
+  [BookOpen, 'Biblioteca', '/library'],
+  [PenTool, 'Produção textual', '/text-productions'],
+  [ClipboardList, 'Pendências', '/workspace'],
+  [FileText, 'Meus resumos', '/summaries']
+];
+
+const management = [
+  [Users, 'Minhas turmas', '/admin/classes'],
+  [FileText, 'Banco de notas', '/gradebook'],
+  [ClipboardList, 'Critérios de correção', '/admin/rubrics'],
+  [Sparkles, 'Assistente IA', '/admin/assistant'],
+  [Video, 'Vídeos e materiais', '/videos'],
+  [ChartColumn, 'Relatórios', '/admin/reports'],
+  [Users, 'Professores', '/admin/teachers'],
+  [ClipboardList, 'Atividades', '/admin/activities'],
+  [Library, 'Acervo de livros', '/admin/books'],
+  [Plus, 'Adicionar livro', '/admin/add-book'],
+  [FileText, 'Resumos dos alunos', '/admin/summaries'],
+  [PenTool, 'Produções dos alunos', '/admin/text-productions'],
+  [Users, 'Alunos e turmas', '/admin/users'],
+  [ImageIcon, 'Mural da escola', '/admin/mural'],
+  [CalendarDays, 'Calendário', '/admin/calendar']
+];
+
+export default function DashboardLayout({ children, focusMode = false }) {
   const [open, setOpen] = useState(false);
   const { user } = getAuth();
-  useEffect(()=>{reconcilePush(user?.id).catch(()=>{});},[user?.id]);
+
+  useEffect(() => {
+    reconcilePush(user?.id).catch(() => {});
+  }, [user?.id]);
+
   const location = useLocation();
   const navigate = useNavigate();
-  const isAdmin = ['admin','teacher'].includes(user?.role);
-  const [unread,setUnread]=useState(0);
-  useEffect(()=>{let alive=true;const refresh=()=>api.get('/notifications').then(r=>{if(alive)setUnread(r.data.filter(n=>!n.lida).length);}).catch(()=>{});refresh();const timer=setInterval(refresh,60000);window.addEventListener('eti-notices',refresh);return()=>{alive=false;clearInterval(timer);window.removeEventListener('eti-notices',refresh);};},[]);
+  const isAdmin = ['admin', 'teacher'].includes(user?.role);
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    let alive = true;
+    const refresh = () =>
+      api
+        .get('/notifications')
+        .then(r => {
+          if (alive) setUnread(r.data.filter(n => !n.lida).length);
+        })
+        .catch(() => {});
+    refresh();
+    const timer = setInterval(refresh, 60000);
+    window.addEventListener('eti-notices', refresh);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+      window.removeEventListener('eti-notices', refresh);
+    };
+  }, []);
+
   const teacher = [GraduationCap, 'Painel do professor', '/admin/professor'];
-  const title = [...(isAdmin?management:learning), teacher].find(item => item[2] === location.pathname)?.[1] || (location.pathname === '/profile' ? 'Meu perfil' : 'Espaço de leitura');
+  const title =
+    [...(isAdmin ? management : learning), teacher].find(item => item[2] === location.pathname)?.[1] ||
+    (location.pathname === '/profile' ? 'Meu perfil' : 'Espaço de leitura');
+
   useEffect(() => {
     if (!open) return;
-    const previous=document.activeElement;
-    const oldOverflow=document.body.style.overflow;document.body.style.overflow='hidden';
-    const drawer=document.getElementById('platform-sidebar');
-    const focusable=()=>Array.from(drawer.querySelectorAll('a[href],button:not([disabled]),input,select,textarea,[tabindex="0"]'));
+    const previous = document.activeElement;
+    const oldOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const drawer = document.getElementById('platform-sidebar');
+    const focusable = () =>
+      Array.from(
+        drawer.querySelectorAll(
+          'a[href],button:not([disabled]),input,select,textarea,[tabindex="0"]'
+        )
+      );
     let frame;
-    const focusWhenVisible=()=>{const target=focusable()[0];if(target&&getComputedStyle(target).visibility==='visible')target.focus({preventScroll:true});if(!drawer.contains(document.activeElement))frame=requestAnimationFrame(focusWhenVisible);};
-    frame=requestAnimationFrame(focusWhenVisible);
+    const focusWhenVisible = () => {
+      const target = focusable()[0];
+      if (target && getComputedStyle(target).visibility === 'visible') target.focus({ preventScroll: true });
+      if (!drawer.contains(document.activeElement)) frame = requestAnimationFrame(focusWhenVisible);
+    };
+    frame = requestAnimationFrame(focusWhenVisible);
     const close = event => {
       if (event.key === 'Escape') setOpen(false);
-      if (event.key === 'Tab') {const list=focusable(),first=list[0],last=list[list.length-1];if(!drawer.contains(document.activeElement)){event.preventDefault();(event.shiftKey?last:first)?.focus();}else if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}}
+      if (event.key === 'Tab') {
+        const list = focusable(),
+          first = list[0],
+          last = list[list.length - 1];
+        if (!drawer.contains(document.activeElement)) {
+          event.preventDefault();
+          (event.shiftKey ? last : first)?.focus();
+        } else if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
+      }
     };
     window.addEventListener('keydown', close);
-    return () => {document.body.style.overflow=oldOverflow;cancelAnimationFrame(frame);window.removeEventListener('keydown', close);previous?.focus();};
+    return () => {
+      document.body.style.overflow = oldOverflow;
+      cancelAnimationFrame(frame);
+      window.removeEventListener('keydown', close);
+      previous?.focus();
+    };
   }, [open]);
-  const links = items => items.map(([Icon, label, path]) => <NavLink key={path} to={path} onClick={() => setOpen(false)} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}><Icon size={18} strokeWidth={1.8} /><span>{label}</span></NavLink>);
-  const groups=isAdmin?[
-    ['Ensino',[[BookOpen,'Biblioteca','/library'],...management.filter(i=>['/admin/activities','/admin/assistant','/videos','/admin/books','/admin/add-book'].includes(i[2]))]],
-    ['Avaliações',[[ClipboardList,'Pendências','/workspace'],...management.filter(i=>['/gradebook','/admin/rubrics','/admin/reports','/admin/summaries','/admin/text-productions'].includes(i[2]))]],
-    ['Gestão escolar',management.filter(i=>['/admin/classes','/admin/users','/admin/teachers','/admin/mural','/admin/calendar'].includes(i[2])&&(user?.role==='admin'||['/admin/users','/admin/classes'].includes(i[2])))]
-  ]:[['Meu estudo',learning.filter(i=>['/dashboard','/library','/videos','/activities'].includes(i[2]))],['Acompanhamento',learning.filter(i=>['/workspace','/gradebook','/summaries','/text-productions'].includes(i[2]))]];
-  const mainLinks = isAdmin ? [teacher,[Sparkles,"Assistente IA","/admin/assistant"],[Video,"Vídeos","/videos"],[ClipboardList,'Pendências','/workspace'],[ClipboardList,'Atividades','/admin/activities'],[Library,'Biblioteca','/library'],[ChartColumn,'Relatórios','/admin/reports']] : [[Video,"Vídeos","/videos"],[LayoutDashboard,'Início','/dashboard'],[BookOpen,'Biblioteca','/library'],[ClipboardList,'Atividades','/activities'],[ClipboardList,'Pendências','/workspace']];
-  const mobileLinks = isAdmin ? [[GraduationCap,'Início','/admin/professor'],[ClipboardList,'Atividades','/admin/activities'],[Sparkles,'IA','/admin/assistant'],[BookOpen,'Livros','/library']] : [[LayoutDashboard,'Início','/dashboard'],[ClipboardList,'Atividades','/activities'],[BookOpen,'Livros','/library'],[FileText,'Notas','/gradebook']];
-  const otherArea = !mobileLinks.some(([, ,path])=>location.pathname===path||location.pathname.startsWith(path+'/'));
-  const railPaths=isAdmin?['/admin/professor','/admin/classes','/admin/activities','/admin/assistant','/videos','/library','/gradebook','/admin/reports','/admin/users']:['/dashboard','/activities','/videos','/library','/gradebook','/workspace'];
-  const railItems=railPaths.map(path=>(isAdmin?[teacher,...management,[BookOpen,'Biblioteca','/library']]:learning).find(item=>item[2]===path)).filter(Boolean);
-  return <div className={`platform-shell studio-shell atlas-shell ${focusMode?'reading-focus':''}`}>
-    <a href="#main-content" className="skip-link">Pular para o conteúdo</a>
-    <aside className="desktop-rail" aria-label="Navegação permanente"><Link className="rail-brand" to={isAdmin?'/admin/professor':'/dashboard'}><Brand/></Link><div className="rail-caption">{isAdmin?'ESPAÇO DO PROFESSOR':'MEU APRENDIZADO'}</div><nav aria-label="Acessos rápidos">{links(railItems)}</nav><button className="rail-all" onClick={()=>setOpen(true)}><Menu size={18}/>Todas as áreas</button><div className="rail-bottom"><span className="user-avatar">{user?.nome?.charAt(0)}</span><div><strong>{user?.nome?.split(' ')[0]}</strong><small>{isAdmin?'Ensinar e acompanhar':user?.turma||'Seu espaço de estudo'}</small></div></div></aside>
-    <header className="studio-header"><Link to={isAdmin?'/admin/professor':'/dashboard'} aria-label="ETI LEITURA — início"><Brand/></Link><span className="studio-role">{isAdmin?'ESPAÇO DO EDUCADOR':'ESPAÇO DO ALUNO'}</span><div className="studio-header-actions"><Link to="/notifications" aria-label={`Avisos: ${unread} não lidos`} className="studio-notices"><Bell size={19}/>{unread>0&&<span>{unread}</span>}</Link><Accessibility/><ThemeToggle/><Link to="/profile" className="studio-profile"><span className="user-avatar">{user?.avatar_url?<img src={user.avatar_url} alt=""/>:user?.nome?.charAt(0)||'E'}</span><span>{user?.nome?.split(' ')[0]}</span></Link></div></header>
-    <nav className="studio-tabs" aria-label="Áreas principais">{links(mainLinks)}<button className="studio-all" onClick={()=>setOpen(true)}><Menu size={16}/>Todas as áreas</button></nav>
-    <nav className="mobile-dock" aria-label="Navegação do celular">{mobileLinks.map(([Icon,label,path])=><NavLink key={path} to={path} className={({isActive})=>`mobile-dock-item ${isActive?'active':''}`}><span className="mobile-dock-icon"><Icon size={21} strokeWidth={1.8}/></span><span>{label}</span></NavLink>)}<button type="button" className={`mobile-dock-item ${open||otherArea?'active':''}`} onClick={()=>setOpen(true)} aria-label="Abrir menu" aria-expanded={open} aria-controls="platform-sidebar"><span className="mobile-dock-icon"><Menu size={21}/></span><span>Mais</span></button></nav>
-    {open&&<button className="sidebar-overlay" onClick={()=>setOpen(false)} aria-label="Fechar menu"/>}
-    <aside role={open?'dialog':undefined} aria-modal={open?true:undefined} aria-label="Menu de navegação" id="platform-sidebar" className={`platform-sidebar studio-drawer ${open?'is-open':''}`} data-testid="sidebar"><div className="sidebar-brand"><Brand/><button onClick={()=>setOpen(false)} aria-label="Fechar menu"><X size={22}/></button></div><nav aria-label="Navegação principal" className="sidebar-nav">{isAdmin&&links([teacher])}{groups.filter(([,items])=>items.length).map(([name,items])=><section className="menu-group" key={name} aria-label={name}><h2 className="nav-label">{name}</h2>{links(items)}</section>)}</nav><div className="sidebar-account"><Link to="/profile" className="account-link"><span className="user-avatar">{user?.nome?.charAt(0)}</span><span><strong>{user?.nome}</strong><small className="block">{user?.role==='admin'?'Administrador':isAdmin?'Professor':user?.turma}</small></span></Link><button aria-label="Sair da conta" onClick={async()=>{await clearAuth();navigate('/login');}}><LogOut size={18}/></button></div></aside>
-    <div className="platform-body"><div className="studio-context"><span>PLATAFORMA DE LEITURA</span><span>{title}</span></div><main id="main-content" className={`platform-main ${['/dashboard','/admin/professor'].includes(location.pathname)?'':'inner-workspace'}`} tabIndex={-1}>{children}</main><footer className="platform-footer"><span>ETI LEITURA</span><span>Aprendizagem em movimento.</span></footer></div>
-  </div>;
+
+  const links = items =>
+    items.map(([Icon, label, path]) => (
+      <NavLink
+        key={path}
+        to={path}
+        onClick={() => setOpen(false)}
+        className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+      >
+        <Icon size={18} strokeWidth={1.8} />
+        <span>{label}</span>
+      </NavLink>
+    ));
+
+  const groups = isAdmin
+    ? [
+        [
+          'Ensino',
+          [
+            [BookOpen, 'Biblioteca', '/library'],
+            ...management.filter(i =>
+              ['/admin/activities', '/admin/assistant', '/videos', '/admin/books', '/admin/add-book'].includes(i[2])
+            )
+          ]
+        ],
+        [
+          'Avaliações',
+          [
+            [ClipboardList, 'Pendências', '/workspace'],
+            ...management.filter(i =>
+              ['/gradebook', '/admin/rubrics', '/admin/reports', '/admin/summaries', '/admin/text-productions'].includes(
+                i[2]
+              )
+            )
+          ]
+        ],
+        [
+          'Gestão escolar',
+          management.filter(
+            i =>
+              ['/admin/classes', '/admin/users', '/admin/teachers', '/admin/mural', '/admin/calendar'].includes(i[2]) &&
+              (user?.role === 'admin' || ['/admin/users', '/admin/classes'].includes(i[2]))
+          )
+        ]
+      ]
+    : [
+        ['Meu aprendizado', learning.filter(i => ['/dashboard', '/activities', '/videos', '/library', '/text-productions'].includes(i[2]))],
+        ['Acompanhamento', learning.filter(i => ['/workspace', '/summaries'].includes(i[2]))]
+      ];
+
+  const mainLinks = isAdmin
+    ? [teacher, [Sparkles, 'Assistente IA', '/admin/assistant'], [Video, 'Vídeos', '/videos'], [ClipboardList, 'Pendências', '/workspace'], [ClipboardList, 'Atividades', '/admin/activities'], [Library, 'Biblioteca', '/library'], [ChartColumn, 'Relatórios', '/admin/reports']]
+    : [[LayoutDashboard, 'Início', '/dashboard'], [ClipboardList, 'Atividades', '/activities'], [PenTool, 'Produção', '/text-productions'], [BookOpen, 'Biblioteca', '/library'], [ClipboardList, 'Pendências', '/workspace']];
+
+  const mobileLinks = isAdmin
+    ? [[GraduationCap, 'Início', '/admin/professor'], [ClipboardList, 'Atividades', '/admin/activities'], [Sparkles, 'IA', '/admin/assistant'], [BookOpen, 'Livros', '/library']]
+    : [[LayoutDashboard, 'Início', '/dashboard'], [ClipboardList, 'Atividades', '/activities'], [PenTool, 'Produção', '/text-productions'], [BookOpen, 'Livros', '/library']];
+
+  const otherArea = !mobileLinks.some(([, , path]) => location.pathname === path || location.pathname.startsWith(path + '/'));
+  const railPaths = isAdmin
+    ? ['/admin/professor', '/admin/classes', '/admin/activities', '/admin/assistant', '/videos', '/library', '/gradebook', '/admin/reports', '/admin/users']
+    : ['/dashboard', '/activities', '/videos', '/library', '/text-productions', '/workspace'];
+
+  const railItems = railPaths.map(path => (isAdmin ? [teacher, ...management, [BookOpen, 'Biblioteca', '/library']] : learning).find(item => item[2] === path)).filter(Boolean);
+
+  return (
+    <div className={`platform-shell studio-shell atlas-shell ${focusMode ? 'reading-focus' : ''}`}>
+      <a href="#main-content" className="skip-link">
+        Pular para o conteúdo
+      </a>
+      <aside className="desktop-rail" aria-label="Navegação permanente">
+        <Link className="rail-brand" to={isAdmin ? '/admin/professor' : '/dashboard'}>
+          <Brand />
+        </Link>
+        <div className="rail-caption">{isAdmin ? 'ESPAÇO DO PROFESSOR' : 'MEU APRENDIZADO'}</div>
+        <nav aria-label="Acessos rápidos">{links(railItems)}</nav>
+        <button className="rail-all" onClick={() => setOpen(true)}>
+          <Menu size={18} />
+          Todas as áreas
+        </button>
+        <div className="rail-bottom">
+          <span className="user-avatar">{user?.nome?.charAt(0)}</span>
+          <div>
+            <strong>{user?.nome?.split(' ')[0]}</strong>
+            <small>{isAdmin ? 'Ensinar e acompanhar' : user?.turma || 'Seu espaço de estudo'}</small>
+          </div>
+        </div>
+      </aside>
+      <header className="studio-header">
+        <Link to={isAdmin ? '/admin/professor' : '/dashboard'} aria-label="ETI LEITURA — início">
+          <Brand />
+        </Link>
+        <span className="studio-role">{isAdmin ? 'ESPAÇO DO EDUCADOR' : 'ESPAÇO DO ALUNO'}</span>
+        <div className="studio-header-actions">
+          <Link to="/notifications" aria-label={`Avisos: ${unread} não lidos`} className="studio-notices">
+            <Bell size={19} />
+            {unread > 0 && <span>{unread}</span>}
+          </Link>
+          <Accessibility />
+          <ThemeToggle />
+          <Link to="/profile" className="studio-profile">
+            <span className="user-avatar">
+              {user?.avatar_url ? <img src={user.avatar_url} alt="" /> : user?.nome?.charAt(0) || 'E'}
+            </span>
+            <span>{user?.nome?.split(' ')[0]}</span>
+          </Link>
+        </div>
+      </header>
+      <nav className="studio-tabs" aria-label="Áreas principais">
+        {links(mainLinks)}
+        <button className="studio-all" onClick={() => setOpen(true)}>
+          <Menu size={16} />
+          Todas as áreas
+        </button>
+      </nav>
+      <nav className="mobile-dock" aria-label="Navegação do celular">
+        {mobileLinks.map(([Icon, label, path]) => (
+          <NavLink key={path} to={path} className={({ isActive }) => `mobile-dock-item ${isActive ? 'active' : ''}`}>
+            <span className="mobile-dock-icon">
+              <Icon size={21} strokeWidth={1.8} />
+            </span>
+            <span>{label}</span>
+          </NavLink>
+        ))}
+        <button
+          type="button"
+          className={`mobile-dock-item ${open || otherArea ? 'active' : ''}`}
+          onClick={() => setOpen(true)}
+          aria-label="Abrir menu"
+          aria-expanded={open}
+          aria-controls="platform-sidebar"
+        >
+          <span className="mobile-dock-icon">
+            <Menu size={21} />
+          </span>
+          <span>Mais</span>
+        </button>
+      </nav>
+      {open && <button className="sidebar-overlay" onClick={() => setOpen(false)} aria-label="Fechar menu" />}
+      <aside
+        role={open ? 'dialog' : undefined}
+        aria-modal={open ? true : undefined}
+        aria-label="Menu de navegação"
+        id="platform-sidebar"
+        className={`platform-sidebar studio-drawer ${open ? 'is-open' : ''}`}
+        data-testid="sidebar"
+      >
+        <div className="sidebar-brand">
+          <Brand />
+          <button onClick={() => setOpen(false)} aria-label="Fechar menu">
+            <X size={22} />
+          </button>
+        </div>
+        <nav aria-label="Navegação principal" className="sidebar-nav">
+          {isAdmin && links([teacher])}
+          {groups
+            .filter(([, items]) => items.length)
+            .map(([name, items]) => (
+              <section className="menu-group" key={name} aria-label={name}>
+                <h2 className="nav-label">{name}</h2>
+                {links(items)}
+              </section>
+            ))}
+        </nav>
+        <div className="sidebar-account">
+          <Link to="/profile" className="account-link">
+            <span className="user-avatar">{user?.nome?.charAt(0)}</span>
+            <span>
+              <strong>{user?.nome}</strong>
+              <small className="block">{user?.role === 'admin' ? 'Administrador' : isAdmin ? 'Professor' : user?.turma}</small>
+            </span>
+          </Link>
+          <button
+            aria-label="Sair da conta"
+            onClick={async () => {
+              await clearAuth();
+              navigate('/login');
+            }}
+          >
+            <LogOut size={18} />
+          </button>
+        </div>
+      </aside>
+      <div className="platform-body">
+        <div className="studio-context">
+          <span>PLATAFORMA DE LEITURA</span>
+          <span>{title}</span>
+        </div>
+        <main
+          id="main-content"
+          className={`platform-main ${['/dashboard', '/admin/professor'].includes(location.pathname) ? '' : 'inner-workspace'}`}
+          tabIndex={-1}
+        >
+          {children}
+        </main>
+        <footer className="platform-footer">
+          <span>ETI LEITURA</span>
+          <span>Aprendizagem em movimento.</span>
+        </footer>
+      </div>
+    </div>
+  );
 }
