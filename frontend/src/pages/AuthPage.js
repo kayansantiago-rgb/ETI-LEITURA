@@ -8,7 +8,6 @@ import { Mail, Lock, User, Eye, EyeOff, ArrowRight, BookOpen, GraduationCap } fr
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TURMAS } from '@/constants/turmas';
 import api from '@/lib/api';
 import { setAuth } from '@/lib/auth';
@@ -80,22 +79,25 @@ const AuthPage = () => {
 
                   <div>
                     <Label htmlFor="turma">Turma *</Label>
-                    <Select
+                    <select
+                      id="turma"
+                      name="turma"
+                      data-testid="input-turma"
+                      className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                       value={formData.turma}
-                      onValueChange={(value) => setFormData({ ...formData, turma: value })}
+                      onChange={(event) => {
+                        const turma = event.target.value;
+                        setFormData((current) => ({ ...current, turma }));
+                      }}
                       required
                     >
-                      <SelectTrigger id="turma" className="mt-1" data-testid="input-turma">
-                        <SelectValue placeholder="Selecione sua turma" />
-                      </SelectTrigger>
-                      <SelectContent>
+                      <option value="" disabled>Selecione sua turma</option>
                         {TURMAS.map((turma) => (
-                          <SelectItem key={turma.value} value={turma.value}>
+                          <option key={turma.value} value={turma.value}>
                             {turma.label}
-                          </SelectItem>
+                          </option>
                         ))}
-                      </SelectContent>
-                    </Select>
+                    </select>
                   </div>
 
                 </>
