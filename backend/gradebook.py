@@ -86,7 +86,7 @@ def create_gradebook_router(db, current, staff):
         return item.get('historico',[])
     @router.get('/gradebook')
     async def gradebook(turma:str=None,user=Depends(current)):
-        students=[{'id':user['id'],'nome':user['nome'],'turma':user.get('turma')}] if user['role']=='student' else await db.users.find(class_query(user,turma),{'_id':0,'id':1,'nome':1,'turma':1}).sort('nome',1).to_list(10000)
+        students=[{'id':user['id'],'nome':user['nome'],'turma':user.get('turma')}] if user['role']=='student' else await db.users.find(class_query(user,turma),{'_id':0,'id':1,'nome':1,'turma':1,'email':1}).sort('nome',1).to_list(10000)
         members={s['id']:s for s in students};query={'user_id':{'$in':list(members)}}
         rows=[]
         for row in await db.grade_entries.find(query,{'_id':0,'historico':0}).to_list(10000):

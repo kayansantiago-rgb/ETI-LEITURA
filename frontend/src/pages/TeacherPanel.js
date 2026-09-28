@@ -43,11 +43,14 @@ export default function TeacherPanel() {
 
   const managementTools = [
     ...[
-      ['Pendências', '/workspace'], ['Banco de notas', '/gradebook'],
-      ['Critérios de correção', '/admin/rubrics'], ['Adicionar livro', '/admin/add-book'],
-      ['Resumos dos alunos', '/admin/summaries'], ['Alunos e turmas', '/admin/users'],
-      ...(user?.role === 'admin' ? [['Calendário', '/admin/calendar']] : [])
-    ].map(([title, path]) => ({ type: 'activities', icon: ClipboardList, title, path, description: '', linkText: 'Acessar' })),
+      ['Pendências', '/workspace', 'Veja as entregas que aguardam correção e organize seu acompanhamento.'],
+      ['Banco de notas', '/gradebook', 'Consulte os boletins dos alunos e acompanhe as notas de cada turma.'],
+      ['Critérios de correção', '/admin/rubrics', 'Defina os critérios e a pontuação para avaliar os trabalhos dos alunos.'],
+      ['Adicionar livro', '/admin/add-book', 'Cadastre uma nova obra com capa, descrição e arquivo para leitura.'],
+      ['Resumos dos alunos', '/admin/summaries', 'Leia os resumos dos livros, atribua notas e envie comentários aos alunos.'],
+      ['Alunos e turmas', '/admin/users', 'Consulte os estudantes cadastrados e gerencie suas informações e turmas.'],
+      ...(user?.role === 'admin' ? [['Calendário', '/admin/calendar', 'Organize os eventos e as datas importantes da escola.']] : [])
+    ].map(([title, path, description]) => ({ type: 'activities', icon: ClipboardList, title, path, description, linkText: 'Acessar' })),
     {
       type: 'activities',
       icon: ClipboardList,

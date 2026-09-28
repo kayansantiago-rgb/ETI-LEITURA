@@ -1,4 +1,13 @@
 /* Shared reading identity, inspired by the owner's Leitura Viva reference. */
+:root:not(.dark) .atlas-shell { background:#f5f6fa; color:#242532; }
+:root:not(.dark) .atlas-shell .desktop-rail,
+:root:not(.dark) .atlas-shell .studio-drawer,
+:root:not(.dark) .atlas-shell .studio-header { background:#fff; color:#353342; border-color:#e9e7ef; }
+:root:not(.dark) .atlas-shell .desktop-rail .nav-link { color:#605c6c; }
+:root:not(.dark) .atlas-shell .desktop-rail .nav-link.active { background:#eee7ff; color:#7233d9; }
+:root:not(.dark) .atlas-shell .desktop-rail :is(.brand strong,.rail-bottom strong) { color:#292335; }
+:root:not(.dark) .atlas-shell .desktop-rail :is(.rail-caption,.rail-bottom small,.rail-all) { color:#777183; }
+:root:not(.dark) .atlas-shell .platform-body { background:#f5f6fa; }
 .eti-brand .eti-brand-mark { width:44px; height:44px; flex-shrink:0; filter:drop-shadow(0 4px 8px #161f3920); }
 .eti-brand strong { letter-spacing:.02em; }
 .eti-brand small { letter-spacing:.13em; font-size:8px; }

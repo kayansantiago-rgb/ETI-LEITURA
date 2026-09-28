@@ -1,0 +1,24 @@
+.grade-kpis,.grade-student-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; }
+.grade-kpis article,.grade-directory-filters,.grade-student-card { background:hsl(var(--card)); border:1px solid hsl(var(--border)); border-radius:22px; padding:24px; box-shadow:0 8px 25px #17204404; }
+.grade-kpis article>svg { float:right; width:44px; height:44px; padding:11px; border-radius:14px; background:#eee7ff; color:#7944ed; }
+.grade-kpis article>span,.grade-card-scores span { display:block; font-size:10px; font-weight:750; letter-spacing:.03em; }
+.grade-kpis strong { display:block; font-size:32px; margin:10px 0; line-height:1.2; }
+.grade-kpis small,.grade-card-scores small { font-size:12px; font-weight:500; opacity:.65; }
+.grade-kpis p { color:hsl(var(--muted-foreground)); font-size:11px; }
+.grade-kpis .grade-best { font-size:19px; min-height:38px; }
+.grade-directory-filters { display:grid; grid-template-columns:1fr 2.5fr; gap:18px; margin:28px 0 32px; }
+.grade-directory-filters label { font-size:12px; font-weight:650; min-width:0; }
+.grade-directory-filters select,.grade-search { display:flex; align-items:center; gap:10px; margin-top:9px; width:100%; background:hsl(var(--muted)/.4); border:1px solid hsl(var(--border)); border-radius:14px; padding:12px; min-height:46px; }
+.grade-search input { background:transparent!important; border:0!important; box-shadow:none!important; width:100%; min-width:0; outline-offset:3px; }
+.grade-student-card header { display:flex; align-items:center; gap:12px; }
+.grade-student-card header>div { min-width:0; }
+.grade-avatar { display:grid; place-items:center; width:44px; height:44px; flex-shrink:0; background:#eee5ff; color:#742ee8; border-radius:50%; font-weight:750; }
+.grade-student-card h2 { font-size:14px!important; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.grade-student-card header p { font-size:12px; color:hsl(var(--muted-foreground)); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.grade-class { display:inline-block; margin:22px 0 28px; background:#dcf8ef; color:#087b66; border-radius:30px; padding:3px 10px; font-size:10px; font-weight:700; }
+.grade-card-scores { display:flex; justify-content:space-between; gap:12px; margin-bottom:28px; }
+.grade-card-scores strong { display:inline-block; background:hsl(var(--muted)); padding:6px 12px; border-radius:20px; font-size:13px; margin-top:6px; }
+.grade-card-scores b { display:block; text-align:right; margin-top:10px; font-size:14px; }
+.grade-student-card>button { display:flex; justify-content:center; align-items:center; gap:8px; width:100%; padding:12px; border-radius:12px; background:linear-gradient(100deg,#8237ef,#5642ee); color:white; font-size:12px; font-weight:800; box-shadow:0 5px 14px #753af329; }
+@media(max-width:1100px) { .grade-student-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:700px) { .grade-kpis,.grade-student-grid,.grade-directory-filters { grid-template-columns:1fr; } }

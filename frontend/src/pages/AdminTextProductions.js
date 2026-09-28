@@ -1,3 +1,4 @@
+import '@/productions.css';
 import StatusBadge from '@/components/StatusBadge';
 import RubricPicker from '@/components/RubricPicker';
 import AIReview from '@/components/AIReview';
@@ -20,6 +21,10 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+const displayDate = value => {
+ const date = new Date(value);
+ return value && !Number.isNaN(date.getTime()) ? format(date, 'dd/MM/yyyy', {locale:ptBR}) : 'Sem data';
+};
 const ProductionCard = ({ production, onUpdate, onDelete }) => {
   const [isCorrectDialogOpen, setIsCorrectDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -86,40 +91,27 @@ const ProductionCard = ({ production, onUpdate, onDelete }) => {
     <motion.div
       whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
-      className={`bg-white border rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-300 p-6 ${isCorrected ? 'border-green-200' : 'border-stone-100'}`}
+      className="production-card"
       data-testid={`admin-production-card-${production.id}`}
     >
       <div className="space-y-3">
-        {/* Title */}
-        <h3 className="font-semibold text-lg text-foreground line-clamp-2">
-          {production.titulo}
-        </h3>
-        
-        {/* Student Info */}
-        <div className="flex items-center gap-2 text-sm">
-          <Users className="h-4 w-4 text-muted-foreground" />
-          <span className="text-muted-foreground">{production.user_nome}</span>
-          {production.user_turma && (
-            <>
-              <span className="text-muted-foreground">•</span>
-              <span className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-lg">
-                {production.user_turma}
-              </span>
-            </>
-          )}
-        </div>
-        
+        <header className="production-card-heading">
+          <h3 title={production.titulo}>{production.titulo}</h3>
+          <time>{displayDate(production.updated_at)}</time>
+          {getUser()?.role==='admin' && <button className="production-delete" aria-label={`Excluir produção: ${production.titulo}`} onClick={handleDelete} disabled={deleting} data-testid={`delete-production-${production.id}`}><Trash2 size={15}/></button>}
+        </header>
+        <div className="production-student"><span className="production-student-icon"><Users size={18}/></span><div><strong title={production.user_nome}>{production.user_nome}</strong>{production.user_turma && <small>{production.user_turma}</small>}</div></div>
         {/* Content Preview */}
-        <p className="text-sm text-muted-foreground line-clamp-4">
+        <p className="production-excerpt">
           {production.conteudo}
         </p>
 
-        <div className="mb-3"><StatusBadge state={isCorrected?'graded':'review'} label={isCorrected?'Corrigida':undefined}/></div>{/* Correction Badge */}
+        {!isCorrected && <div className="production-pending"><StatusBadge state="review"/></div>}{/* Correction Badge */}
         {isCorrected && (
-          <div className="flex items-center gap-2 p-2 bg-green-50 rounded-lg">
+          <div className="production-grade">
             <CheckCircle className="h-4 w-4 text-green-600" />
             <span className="text-sm text-green-700 font-medium">
-              Nota: {production.nota.toFixed(1)}
+              Nota: {Number(production.nota).toFixed(1)}
             </span>
             <span className="text-xs text-green-600">
               (por {production.corrigido_por})
@@ -127,16 +119,7 @@ const ProductionCard = ({ production, onUpdate, onDelete }) => {
           </div>
         )}
         
-        {/* Date and Actions */}
-        <div className="flex items-center justify-between pt-2 border-t">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <FileText className="h-3 w-3" />
-            <span>
-              {format(new Date(production.updated_at), "dd 'de' MMMM, yyyy", { locale: ptBR })}
-            </span>
-          </div>
-          
-          <div className="flex items-center gap-2">
+        <div className="production-actions"><div>
             {/* Correct Button */}
             <Dialog open={isCorrectDialogOpen} onOpenChange={setIsCorrectDialogOpen}>
               <DialogTrigger asChild>
@@ -158,7 +141,7 @@ const ProductionCard = ({ production, onUpdate, onDelete }) => {
                   )}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-2xl max-h-[90dvh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="text-xl">Corrigir Produção Textual</DialogTitle>
                   <p className="text-sm text-muted-foreground">
@@ -243,7 +226,7 @@ const ProductionCard = ({ production, onUpdate, onDelete }) => {
                     <span>•</span>
                     <Calendar className="h-4 w-4" />
                     <span>
-                      {format(new Date(production.updated_at), "dd 'de' MMMM, yyyy", { locale: ptBR })}
+                      {displayDate(production.updated_at)}
                     </span>
                   </div>
                 </DialogHeader>
@@ -265,12 +248,12 @@ const ProductionCard = ({ production, onUpdate, onDelete }) => {
                       <div className="flex items-center gap-2">
                         <Star className="h-4 w-4 text-yellow-500" />
                         <span className="text-lg font-bold text-green-800">
-                          {production.nota.toFixed(1)}
+                          {Number(production.nota).toFixed(1)}
                         </span>
                       </div>
                       <div className="text-sm text-green-700">
                         Corrigido por {production.corrigido_por} em{' '}
-                        {format(new Date(production.corrigido_em), "dd/MM/yyyy", { locale: ptBR })}
+                        {displayDate(production.corrigido_em)}
                       </div>
                     </div>
                     
@@ -287,17 +270,6 @@ const ProductionCard = ({ production, onUpdate, onDelete }) => {
               </DialogContent>
             </Dialog>
 
-            {/* Delete Button */}
-            {getUser()?.role==='admin'&&<Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-              onClick={handleDelete}
-              disabled={deleting}
-              data-testid={`delete-production-${production.id}`}
-            >
-              <Trash2 className="h-3 w-3" />
-            </Button>}
           </div>
         </div>
       </div>
@@ -345,9 +317,9 @@ const AdminTextProductions = () => {
 
   return (
     <DashboardLayout>
-      <div data-testid="admin-text-productions-page">
+      <div data-testid="admin-text-productions-page" className="productions-page">
         {/* Header */}
-        <PageIntro section="APRENDIZAGEM / ESCRITA" title="Produções dos alunos" description="Acompanhe o desenvolvimento da escrita, texto por texto."/>
+        <PageIntro section="APRENDIZAGEM / ESCRITA" title="Todas as Produções Textuais" description="Visualize, corrija e acompanhe as produções textuais dos alunos."/>
 
         {/* Filter by Turma */}
         <div className="collection-filter">
@@ -377,7 +349,7 @@ const AdminTextProductions = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
-            className="collection-grid"
+            className="production-grid"
           >
             {productions.map((production, index) => (
               <motion.div
