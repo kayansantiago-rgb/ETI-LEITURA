@@ -53,7 +53,7 @@
 
 .timeline-carousel-card {
   position: relative;
-  min-height: 380px;
+  min-height: 360px;
   border-radius: 24px;
   overflow: hidden;
   background: #ffffff;
@@ -108,7 +108,7 @@
 }
 
 .timeline-caption-box {
-  padding: 28px 32px 36px 32px;
+  padding: 24px 28px 32px 28px;
   z-index: 1;
 }
 
@@ -124,7 +124,7 @@
   background: #f3e8ff;
   padding: 4px 12px;
   border-radius: 20px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .dark .timeline-badge {
@@ -133,7 +133,7 @@
 }
 
 .timeline-caption-box h2 {
-  font-size: clamp(22px, 2.5vw, 30px);
+  font-size: clamp(20px, 2.2vw, 28px);
   font-weight: 800;
   line-height: 1.2;
   margin: 0 0 6px 0;
@@ -177,14 +177,14 @@
   background: #ffffff;
 }
 
-.carousel-nav-btn.prev { left: 16px; }
-.carousel-nav-btn.next { right: 16px; }
+.carousel-nav-btn.prev { left: 14px; }
+.carousel-nav-btn.next { right: 14px; }
 
 .timeline-dots-bar {
   position: absolute;
-  bottom: 14px;
-  left: 32px;
-  right: 32px;
+  bottom: 12px;
+  left: 28px;
+  right: 28px;
   display: flex;
   align-items: center;
   gap: 5px;
@@ -203,7 +203,7 @@
 }
 
 .timeline-dot.active {
-  width: 28px;
+  width: 26px;
   background: #7c3aed;
 }
 
@@ -335,7 +335,7 @@
   justify-content: center;
   gap: 10px;
   width: 100%;
-  padding: 13px 20px;
+  padding: 12px 18px;
   border-radius: 14px;
   background: linear-gradient(90deg, #6d28d9 0%, #7c3aed 100%);
   color: #ffffff;
@@ -354,16 +354,15 @@
 
 
 /* --------------------------------------------------------------------------
-   3. PAINEL DO PROFESSOR (IMAGEM DE REFERÊNCIA DE HOJE - MEDIA_1790603937073)
+   3. PAINEL DO PROFESSOR (TODOS OS CARDS PASTEL UNIFICADOS)
    -------------------------------------------------------------------------- */
 .teacher-panel-container {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 24px;
   animation: fadeIn 0.4s ease-out;
 }
 
-/* Header do Professor com ícone de chapéu acadêmico */
 .teacher-panel-header {
   display: flex;
   align-items: flex-start;
@@ -388,7 +387,7 @@
 }
 
 .teacher-panel-header-text h1 {
-  font-size: clamp(26px, 3.2vw, 36px);
+  font-size: clamp(24px, 3vw, 34px);
   font-weight: 800;
   letter-spacing: -0.03em;
   color: hsl(var(--foreground));
@@ -396,27 +395,26 @@
 }
 
 .teacher-panel-header-text p {
-  font-size: 14px;
+  font-size: 13px;
   color: hsl(var(--muted-foreground));
   margin: 4px 0 0 0;
 }
 
-/* 3 Cards de Indicadores do Topo */
 .teacher-stats-trio {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  gap: 18px;
 }
 
 .teacher-stat-trio-card {
   background: #ffffff;
   border: 1px solid hsl(var(--border) / 0.8);
   border-radius: 22px;
-  padding: 22px 24px;
+  padding: 20px 22px;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 14px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
   text-decoration: none;
   color: inherit;
@@ -440,12 +438,12 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: hsl(var(--muted-foreground));
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .stat-trio-info strong {
   display: block;
-  font-size: 36px;
+  font-size: 34px;
   font-weight: 800;
   line-height: 1.1;
   color: hsl(var(--foreground));
@@ -456,10 +454,10 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: #10b981;
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 .dark .stat-trio-subtitle {
@@ -467,8 +465,8 @@
 }
 
 .stat-trio-icon-badge {
-  width: 50px;
-  height: 50px;
+  width: 48px;
+  height: 48px;
   border-radius: 16px;
   display: flex;
   align-items: center;
@@ -476,48 +474,23 @@
   flex-shrink: 0;
 }
 
-.stat-trio-icon-badge.blue {
-  background: #eff6ff;
-  color: #2563eb;
-}
+.stat-trio-icon-badge.blue { background: #eff6ff; color: #2563eb; }
+.dark .stat-trio-icon-badge.blue { background: rgba(37, 99, 235, 0.2); color: #60a5fa; }
 
-.dark .stat-trio-icon-badge.blue {
-  background: rgba(37, 99, 235, 0.2);
-  color: #60a5fa;
-}
+.stat-trio-icon-badge.green { background: #ecfdf5; color: #059669; }
+.dark .stat-trio-icon-badge.green { background: rgba(5, 150, 105, 0.2); color: #34d399; }
 
-.stat-trio-icon-badge.green {
-  background: #ecfdf5;
-  color: #059669;
-}
+.stat-trio-icon-badge.purple { background: #f3e8ff; color: #7c3aed; }
+.dark .stat-trio-icon-badge.purple { background: rgba(124, 58, 237, 0.2); color: #c4b5fd; }
 
-.dark .stat-trio-icon-badge.green {
-  background: rgba(5, 150, 105, 0.2);
-  color: #34d399;
-}
-
-.stat-trio-icon-badge.purple {
-  background: #f3e8ff;
-  color: #7c3aed;
-}
-
-.dark .stat-trio-icon-badge.purple {
-  background: rgba(124, 58, 237, 0.2);
-  color: #c4b5fd;
-}
-
-/* Seção Ferramentas de Gestão (Cards Coloridos Pastel) */
 .management-tools-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .management-tools-section h2 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
   letter-spacing: -0.02em;
   color: hsl(var(--foreground));
@@ -527,16 +500,16 @@
 .management-tools-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  gap: 18px;
 }
 
 .management-tool-card {
-  border-radius: 24px;
-  padding: 28px 26px;
+  border-radius: 22px;
+  padding: 24px 22px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 240px;
+  min-height: 220px;
   text-decoration: none;
   color: inherit;
   transition: all 0.25s ease;
@@ -549,76 +522,71 @@
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
 }
 
-/* Card 1: Atividades Escolares (Creme Quente / Amarelo Pastel) */
-.management-tool-card.activities {
-  background: #fffbeb;
-  border-color: #fef08a;
-  color: #451a03;
-}
+/* Variações de Cores Pastel para os Cards */
+.management-tool-card.activities { background: #fffbeb; border-color: #fef08a; color: #451a03; }
+.dark .management-tool-card.activities { background: #231e13; border-color: #443719; color: #fef3c7; }
 
-.dark .management-tool-card.activities {
-  background: #231e13;
-  border-color: #443719;
-  color: #fef3c7;
-}
+.management-tool-card.mural { background: #eef2ff; border-color: #e0e7ff; color: #1e1b4b; }
+.dark .management-tool-card.mural { background: #191c33; border-color: #2b3259; color: #e0e7ff; }
 
-/* Card 2: Gerenciar Mural (Azul / Lavanda Soft) */
-.management-tool-card.mural {
-  background: #eef2ff;
-  border-color: #e0e7ff;
-  color: #1e1b4b;
-}
+.management-tool-card.books { background: #e6f7f2; border-color: #a7f3d0; color: #064e3b; }
+.dark .management-tool-card.books { background: #122822; border-color: #1b4d3e; color: #d1fae5; }
 
-.dark .management-tool-card.mural {
-  background: #191c33;
-  border-color: #2b3259;
-  color: #e0e7ff;
-}
+.management-tool-card.classes { background: #fff1f2; border-color: #fecdd3; color: #881337; }
+.dark .management-tool-card.classes { background: #2a161b; border-color: #4c1d27; color: #ffe4e6; }
 
-/* Card 3: Gerenciar Livros (Menta / Verde Água Soft) */
-.management-tool-card.books {
-  background: #e6f7f2;
-  border-color: #a7f3d0;
-  color: #064e3b;
-}
+.management-tool-card.assistant { background: #f5f3ff; border-color: #ddd6fe; color: #3b0764; }
+.dark .management-tool-card.assistant { background: #1f1833; border-color: #3b2c5e; color: #ede9fe; }
 
-.dark .management-tool-card.books {
-  background: #122822;
-  border-color: #1b4d3e;
-  color: #d1fae5;
-}
+.management-tool-card.reports { background: #f0f9ff; border-color: #bae6fd; color: #0c4a6e; }
+.dark .management-tool-card.reports { background: #132433; border-color: #1f425c; color: #e0f2fe; }
+
+.management-tool-card.videos { background: #fff7ed; border-color: #ffedd5; color: #7c2d12; }
+.dark .management-tool-card.videos { background: #2b1c14; border-color: #4a2c1d; color: #ffedd5; }
+
+.management-tool-card.productions { background: #fdf2f8; border-color: #fbcfe8; color: #831843; }
+.dark .management-tool-card.productions { background: #2b1522; border-color: #4d203b; color: #fce7f3; }
+
+.management-tool-card.teachers { background: #eef2ff; border-color: #c7d2fe; color: #1e1b4b; }
+.dark .management-tool-card.teachers { background: #181c38; border-color: #2e3766; color: #e0e7ff; }
 
 .tool-card-icon-white {
-  width: 46px;
-  height: 46px;
-  border-radius: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
   background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .management-tool-card.activities .tool-card-icon-white { color: #d97706; }
 .management-tool-card.mural .tool-card-icon-white { color: #4f46e5; }
 .management-tool-card.books .tool-card-icon-white { color: #059669; }
+.management-tool-card.classes .tool-card-icon-white { color: #e11d48; }
+.management-tool-card.assistant .tool-card-icon-white { color: #7c3aed; }
+.management-tool-card.reports .tool-card-icon-white { color: #0284c7; }
+.management-tool-card.videos .tool-card-icon-white { color: #ea580c; }
+.management-tool-card.productions .tool-card-icon-white { color: #db2777; }
+.management-tool-card.teachers .tool-card-icon-white { color: #4f46e5; }
 
 .dark .tool-card-icon-white {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.14);
 }
 
 .management-tool-card h3 {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
   letter-spacing: -0.02em;
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0;
   line-height: 1.25;
 }
 
 .management-tool-card p {
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.5;
   opacity: 0.85;
   margin: 0;
@@ -627,71 +595,23 @@
 .tool-card-footer-link {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
+  gap: 6px;
+  font-size: 12px;
   font-weight: 800;
-  margin-top: 24px;
+  margin-top: 20px;
 }
 
 .management-tool-card.activities .tool-card-footer-link { color: #7c3aed; }
 .management-tool-card.mural .tool-card-footer-link { color: #4f46e5; }
 .management-tool-card.books .tool-card-footer-link { color: #059669; }
+.management-tool-card.classes .tool-card-footer-link { color: #e11d48; }
+.management-tool-card.assistant .tool-card-footer-link { color: #7c3aed; }
+.management-tool-card.reports .tool-card-footer-link { color: #0284c7; }
+.management-tool-card.videos .tool-card-footer-link { color: #ea580c; }
+.management-tool-card.productions .tool-card-footer-link { color: #db2777; }
+.management-tool-card.teachers .tool-card-footer-link { color: #4f46e5; }
 
 .dark .tool-card-footer-link { color: inherit !important; opacity: 0.9; }
-
-/* Outras Ferramentas do Professor */
-.other-tools-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
-}
-
-.other-tool-row {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 16px 18px;
-  background: #ffffff;
-  border: 1px solid hsl(var(--border) / 0.8);
-  border-radius: 18px;
-  text-decoration: none;
-  color: inherit;
-  transition: all 0.2s ease;
-}
-
-.dark .other-tool-row {
-  background: #181628;
-}
-
-.other-tool-row:hover {
-  border-color: hsl(var(--primary) / 0.4);
-  transform: translateX(3px);
-}
-
-.other-tool-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: hsl(var(--primary) / 0.1);
-  color: hsl(var(--primary));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.other-tool-info h4 {
-  font-size: 14px;
-  font-weight: 700;
-  margin: 0 0 2px 0;
-}
-
-.other-tool-info p {
-  font-size: 11px;
-  color: hsl(var(--muted-foreground));
-  margin: 0;
-  line-height: 1.3;
-}
 
 
 /* --------------------------------------------------------------------------
@@ -773,11 +693,11 @@
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 20px;
-  background: rgba(20, 18, 38, 0.88);
+  gap: 10px;
+  padding: 10px 18px;
+  background: rgba(20, 18, 38, 0.92);
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 40px;
   color: #ffffff;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
@@ -796,6 +716,7 @@
   align-items: center;
   justify-content: center;
   transition: background 0.2s;
+  flex-shrink: 0;
 }
 
 .floating-reader-dock button:hover:not(:disabled) {
@@ -816,15 +737,29 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Corrigir o número da página no leitor (Texto escuro em pílula branca com contraste 100%) */
+.dock-page-pill input {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-radius: 8px !important;
+  font-weight: 800 !important;
+  padding: 2px 6px !important;
+  outline: none !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
 }
 
 .dock-paper-selector {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   background: rgba(255, 255, 255, 0.1);
   padding: 3px;
   border-radius: 20px;
+  flex-shrink: 0;
 }
 
 .dock-paper-btn {
@@ -840,22 +775,41 @@
   color: #1e1b4b !important;
 }
 
-/* Responsividade Mobile */
+/* Responsividade Mobile sem Espremer a Tela */
+@media (max-width: 1024px) {
+  .hero-discovery-container,
+  .study-section-grid,
+  .teacher-stats-trio,
+  .management-tools-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
 @media (max-width: 768px) {
   .hero-discovery-container,
+  .study-section-grid,
   .teacher-kpi-grid,
   .teacher-stats-trio,
   .management-tools-grid,
   .engagement-filters-grid,
   .hero-stats-grid {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 14px;
   }
 
   .floating-reader-dock {
     bottom: 12px;
-    width: 92%;
+    width: calc(100% - 24px);
+    max-width: 480px;
     padding: 8px 12px;
     justify-content: space-between;
+    border-radius: 28px;
+  }
+
+  .dock-page-pill {
+    padding: 3px 8px;
+    gap: 4px;
+    font-size: 11px;
   }
 }

@@ -41,21 +41,89 @@ export default function TeacherPanel() {
   const totalBooks = stats?.total_books ?? 46;
   const totalSummaries = stats?.total_summaries ?? 35;
 
-  const secondaryTools = [
-    { icon: Users, title: 'Minhas turmas', description: 'Alunos, atividades e materiais por turma.', path: '/admin/classes' },
-    { icon: Sparkles, title: 'Assistente IA', description: 'Prepare atividades e revise sugestões com IA.', path: '/admin/assistant' },
-    { icon: ChartColumn, title: 'Relatórios', description: 'Métricas de leitura e participação dos alunos.', path: '/admin/reports' },
-    { icon: Video, title: 'Vídeos e materiais', description: 'Aulas e materiais de apoio da escola.', path: '/videos' },
-    { icon: PenTool, title: 'Produções textuais', description: 'Acompanhe a escrita e faça as correções.', path: '/admin/text-productions' },
+  const managementTools = [
+    {
+      type: 'activities',
+      icon: ClipboardList,
+      title: 'Atividades Escolares',
+      description: 'Elabore tarefas escolares, gerencie agendamentos e avalie as entregas dos alunos.',
+      linkText: 'Ver Atividades',
+      path: '/admin/activities'
+    },
+    {
+      type: 'mural',
+      icon: ImageIcon,
+      title: 'Gerenciar Mural',
+      description: 'Publique fotos e vídeos na tela inicial dos estudantes.',
+      linkText: 'Acessar Mural',
+      path: '/admin/mural'
+    },
+    {
+      type: 'books',
+      icon: Library,
+      title: 'Gerenciar Livros',
+      description: 'Visualize, edite e remova os livros cadastrados na biblioteca.',
+      linkText: 'Ver Catálogo',
+      path: '/admin/books'
+    },
+    {
+      type: 'classes',
+      icon: Users,
+      title: 'Minhas Turmas',
+      description: 'Consulte os alunos, materiais e atividades reunidos por turma.',
+      linkText: 'Ver Turmas',
+      path: '/admin/classes'
+    },
+    {
+      type: 'assistant',
+      icon: Sparkles,
+      title: 'Assistente IA',
+      description: 'Prepare atividades pedagógicas e revise sugestões de correção com IA.',
+      linkText: 'Abrir Assistente',
+      path: '/admin/assistant'
+    },
+    {
+      type: 'reports',
+      icon: ChartColumn,
+      title: 'Relatórios Escolares',
+      description: 'Acompanhe médias, engajamento de leitura e participação das turmas.',
+      linkText: 'Ver Relatórios',
+      path: '/admin/reports'
+    },
+    {
+      type: 'videos',
+      icon: Video,
+      title: 'Vídeos e Materiais',
+      description: 'Compartilhe videoaulas e materiais de apoio com os estudantes.',
+      linkText: 'Gerenciar Materiais',
+      path: '/videos'
+    },
+    {
+      type: 'productions',
+      icon: PenTool,
+      title: 'Produções Textuais',
+      description: 'Acompanhe a escrita criativa dos alunos e atribua notas.',
+      linkText: 'Ver Produções',
+      path: '/admin/text-productions'
+    },
     ...(user?.role === 'admin'
-      ? [{ icon: Users, title: 'Professores', description: 'Gerenciar contas e permissões docentes.', path: '/admin/teachers' }]
+      ? [
+          {
+            type: 'teachers',
+            icon: Users,
+            title: 'Professores',
+            description: 'Gerencie as contas individuais dos docentes e suas turmas.',
+            linkText: 'Gerenciar Professores',
+            path: '/admin/teachers'
+          }
+        ]
       : [])
   ];
 
   return (
     <DashboardLayout>
       <div data-testid="teacher-panel" className="teacher-panel-container">
-        {/* Header do Painel (Imagem de Referência de Hoje) */}
+        {/* Header do Painel */}
         <header className="teacher-panel-header">
           <div className="teacher-panel-header-icon">
             <GraduationCap size={28} />
@@ -117,73 +185,28 @@ export default function TeacherPanel() {
           </section>
         )}
 
-        {/* Seção Ferramentas de Gestão (3 Cards Coloridos Pastel) */}
+        {/* Seção Ferramentas de Gestão (TODOS OS CARDS COLORIDOS PASTEL) */}
         <section className="management-tools-section">
           <h2>🛠️ Ferramentas de Gestão</h2>
 
           <div className="management-tools-grid">
-            {/* Card 1: Atividades Escolares (Creme / Amarelo Pastel) */}
-            <Link to="/admin/activities" className="management-tool-card activities">
-              <div>
-                <div className="tool-card-icon-white">
-                  <ClipboardList size={22} />
-                </div>
-                <h3>Atividades Escolares</h3>
-                <p>Elabore tarefas escolares, gerencie agendamentos e avalie as entregas dos alunos.</p>
-              </div>
-              <span className="tool-card-footer-link">
-                Ver Atividades <ArrowRight size={16} />
-              </span>
-            </Link>
-
-            {/* Card 2: Gerenciar Mural (Azul / Lavanda Soft) */}
-            <Link to="/admin/mural" className="management-tool-card mural">
-              <div>
-                <div className="tool-card-icon-white">
-                  <ImageIcon size={22} />
-                </div>
-                <h3>Gerenciar Mural</h3>
-                <p>Publique fotos e vídeos na tela inicial dos estudantes.</p>
-              </div>
-              <span className="tool-card-footer-link">
-                Acessar Mural <ArrowRight size={16} />
-              </span>
-            </Link>
-
-            {/* Card 3: Gerenciar Livros (Menta / Verde Água Soft) */}
-            <Link to="/admin/books" className="management-tool-card books">
-              <div>
-                <div className="tool-card-icon-white">
-                  <Library size={22} />
-                </div>
-                <h3>Gerenciar Livros</h3>
-                <p>Visualize, edite e remova os livros cadastrados na biblioteca.</p>
-              </div>
-              <span className="tool-card-footer-link">
-                Ver Catálogo <ArrowRight size={16} />
-              </span>
-            </Link>
-          </div>
-        </section>
-
-        {/* Demais Ferramentas Auxiliares */}
-        <section className="space-y-3 pt-2">
-          <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
-            Outras Áreas de Gestão
-          </h2>
-
-          <div className="other-tools-grid">
-            {secondaryTools.map(({ icon: Icon, title, description, path }) => (
-              <Link key={path} to={path} className="other-tool-row">
-                <div className="other-tool-icon">
-                  <Icon size={18} />
-                </div>
-                <div className="other-tool-info">
-                  <h4>{title}</h4>
-                  <p>{description}</p>
-                </div>
-              </Link>
-            ))}
+            {managementTools.map(tool => {
+              const Icon = tool.icon;
+              return (
+                <Link key={tool.path} to={tool.path} className={`management-tool-card ${tool.type}`}>
+                  <div>
+                    <div className="tool-card-icon-white">
+                      <Icon size={22} />
+                    </div>
+                    <h3>{tool.title}</h3>
+                    <p>{tool.description}</p>
+                  </div>
+                  <span className="tool-card-footer-link">
+                    {tool.linkText} <ArrowRight size={16} />
+                  </span>
+                </Link>
+              );
+            })}
           </div>
         </section>
       </div>
