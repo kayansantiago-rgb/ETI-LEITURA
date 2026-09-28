@@ -14,13 +14,11 @@ import {
   Moon,
   Feather,
   ArrowLeft,
-  CheckCircle2,
   FileText,
-  RotateCcw,
-  Sparkles
+  Sparkles,
+  CheckCircle2
 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Button } from '@/components/ui/button';
 import { getUser } from '@/lib/auth';
 import api from '@/lib/api';
 import '@/discovery.css';
@@ -49,10 +47,9 @@ export default function Reader() {
 
   const area = useRef(null);
 
-  // Teclas de atalho para navegação
+  // Navegação por teclado (Seta Esquerda / Seta Direita)
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      // Ignora se estiver digitando no input de página
+    const handleKeyDown = e => {
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
 
       if (e.key === 'Escape') {
@@ -67,14 +64,14 @@ export default function Reader() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [count]);
 
-  // Persistir tema de papel
+  // Persistir preferência de papel
   useEffect(() => {
     try {
       localStorage.setItem('eti-reader-paper', paper);
     } catch {}
   }, [paper]);
 
-  // Carregar dados do livro e última posição de leitura
+  // Carregar dados do livro e posição salva
   useEffect(() => {
     let alive = true;
     Promise.all([
@@ -98,7 +95,7 @@ export default function Reader() {
     };
   }, [id, key]);
 
-  // Observer de redimensionamento da tela
+  // Ajuste responsivo da largura da página
   useEffect(() => {
     if (!book || !area.current) return;
     const observer = new ResizeObserver(entries => setWidth(entries[0].contentRect.width));
@@ -106,25 +103,25 @@ export default function Reader() {
     return () => observer.disconnect();
   }, [book]);
 
-  // Sincronização da posição de leitura
+  // Sincronizar posição de leitura com backend/localStorage
   useEffect(() => {
     if (!book || !count) return;
     let active = true;
     try {
       localStorage.setItem(key, JSON.stringify({ page, at: Date.now() }));
-      setSaved('Página guardada neste navegador.');
+      setSaved('Salvo');
     } catch {
-      setSaved('Salvando página…');
+      setSaved('Salvando…');
     }
     const timer = setTimeout(
       () =>
         api
           .put(`/books/${id}/position`, { page })
           .then(() => {
-            if (active) setSaved('Página salva na nuvem.');
+            if (active) setSaved('Sincronizado');
           })
           .catch(() => {
-            if (active) setSaved('Modo offline: salvo localmente.');
+            if (active) setSaved('Salvo localmente');
           }),
       400
     );
@@ -136,29 +133,37 @@ export default function Reader() {
 
   const url = book?.arquivo_url;
   const file = url?.startsWith('/api/uploads/') ? url + '?inline=true' : url;
-  const progressPercent = count ? Math.round((page / count) * 100) : 0;
 
   return (
     <DashboardLayout focusMode={focus}>
-      <div className={`reader-workspace paper-${paper}`}>
-        {/* Banner de Cabeçalho do Leitor */}
-        <div className="reader-banner-modern">
-          <div className="reader-banner-left">
-            <Link to={`/book/${id}`} className="reader-back-btn">
-              <ArrowLeft size={14} /> Voltar aos detalhes do livro
-            </Link>
-            <h1>{book?.titulo || 'Leitor ETI LEITURA'}</h1>
-            <p>{book?.autor || 'Uma experiência imersiva de leitura.'}</p>
-          </div>
-          <div className="reader-banner-actions">
-            <Link to={`/editor/${id}`} className="reader-summary-btn">
-              <FileText size={16} /> Escrever resumo
-            </Link>
-          </div>
-        </div>
+      <div className={`immersive-reader-page paper-${paper}`}>
+        {/* Header Discreto e Minimalista (Sem Caixas Gigantes) */}
+        {!focus && (
+          <header className="immersive-reader-header">
+            <div className="flex items-center gap-3">
+              <Link to={`/book/${id}`} className="p-2 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground">
+                <ArrowLeft size={18} />
+              </Link>
+              <div className="immersive-reader-title">
+                <h1>{book?.titulo || 'Leitor de Livros'}</h1>
+                <p>{book?.autor || 'ETI LEITURA'}</p>
+              </div>
+            </div>
 
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground flex items-center gap-1 hidden sm:inline-flex">
+                <CheckCircle2 size={13} className="text-emerald-500" /> {saved}
+              </span>
+              <Link to={`/editor/${id}`} className="hero-library-btn !py-2 !px-4 !text-xs">
+                <FileText size={14} /> Escrever resumo
+              </Link>
+            </div>
+          </header>
+        )}
+
+        {/* Mensagens de Erro */}
         {error && (
-          <div role="alert" className="panel mb-5 border-red-300 bg-red-50 text-red-800 dark:bg-red-950/30 dark:text-red-200">
+          <div role="alert" className="m-4 p-4 rounded-xl border border-red-300 bg-red-50 text-red-800 dark:bg-red-950/30 text-sm">
             {error}{' '}
             {url && (
               <a className="text-primary underline ml-2 font-bold" href={url} target="_blank" rel="noreferrer">
@@ -168,200 +173,143 @@ export default function Reader() {
           </div>
         )}
 
-        {book && !url ? (
-          <div className="empty-state panel p-12 text-center">
-            <p className="text-muted-foreground text-lg">Este livro ainda não possui um arquivo PDF cadastrado.</p>
-          </div>
-        ) : (
-          book && (
-            <>
-              {/* Barra de Progresso Visual */}
-              <section className="reader-progress-bar-container" aria-label="Progresso de leitura">
-                <div className="reader-progress-info">
-                  <span className="reader-progress-label">SUA JORNADA NESTE LIVRO</span>
-                  <span className="reader-progress-page">
-                    {count ? `Página ${page} de ${count} (${progressPercent}%)` : 'Carregando documento…'}
-                  </span>
-                </div>
-                <div className="reader-progress-track">
-                  <div className="reader-progress-fill" style={{ width: `${progressPercent}%` }} />
-                </div>
-              </section>
-
-              {/* Toolbar do Leitor */}
-              <div className="reader-toolbar">
-                {/* Grupo: Modo de Foco */}
-                <div className="reader-tool-group">
-                  <button
-                    className={`reader-tool-btn ${focus ? 'active' : ''}`}
-                    onClick={() => setFocus(v => !v)}
-                    title={focus ? 'Sair do modo foco (Esc)' : 'Ativar modo foco'}
-                  >
-                    {focus ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-                    <span>{focus ? 'Sair do foco' : 'Modo imersivo'}</span>
-                  </button>
-                </div>
-
-                {/* Grupo: Temas de Papel */}
-                <div className="reader-tool-group">
-                  <span className="text-xs font-semibold text-muted-foreground hidden sm:inline">Papel:</span>
-                  <div className="paper-picker">
-                    <button
-                      className={`paper-option-btn ${paper === 'original' ? 'selected' : ''}`}
-                      onClick={() => setPaper('original')}
-                      title="Papel Claro Original"
-                    >
-                      <Sun size={14} /> Claro
-                    </button>
-                    <button
-                      className={`paper-option-btn ${paper === 'sepia' ? 'selected' : ''}`}
-                      onClick={() => setPaper('sepia')}
-                      title="Papel Sépia Conforto Visual"
-                    >
-                      <Feather size={14} /> Sépia
-                    </button>
-                    <button
-                      className={`paper-option-btn ${paper === 'dark' ? 'selected' : ''}`}
-                      onClick={() => setPaper('dark')}
-                      title="Modo Noturno"
-                    >
-                      <Moon size={14} /> Noturno
-                    </button>
+        {/* Área Principal de Leitura Imersiva (Visual do PDF em Destaque Absoluto) */}
+        <div ref={area} className="immersive-pdf-viewport">
+          {book && !url ? (
+            <div className="p-12 text-center text-muted-foreground">
+              Este livro ainda não possui um arquivo PDF cadastrado.
+            </div>
+          ) : (
+            book && (
+              <Document
+                file={file}
+                loading={
+                  <div className="p-12 text-center text-muted-foreground flex flex-col items-center gap-2">
+                    <Sparkles className="animate-spin text-primary" size={28} />
+                    <p>Carregando páginas do livro…</p>
                   </div>
-                </div>
-
-                {/* Grupo: Navegação de Página */}
-                <div className="reader-tool-group">
-                  <button
-                    className="reader-tool-btn"
-                    disabled={page <= 1 || !count}
-                    onClick={() => setPage(v => v - 1)}
-                    title="Página Anterior (Seta Esquerda)"
-                  >
-                    <ChevronLeft size={18} />
-                  </button>
-
-                  <div className="flex items-center gap-1.5 text-xs font-bold px-2">
-                    <input
-                      aria-label="Página atual"
-                      className="bg-background border border-border rounded-lg p-1.5 w-14 text-center font-bold"
-                      type="number"
-                      min={1}
-                      max={count || 1}
-                      value={page}
-                      onChange={e => {
-                        const n = Number(e.target.value);
-                        if (n >= 1 && n <= count) setPage(n);
-                      }}
-                    />
-                    <span className="text-muted-foreground">/ {count || '…'}</span>
-                  </div>
-
-                  <button
-                    className="reader-tool-btn"
-                    disabled={page >= count || !count}
-                    onClick={() => setPage(v => v + 1)}
-                    title="Próxima Página (Seta Direita)"
-                  >
-                    <ChevronRight size={18} />
-                  </button>
-                </div>
-
-                {/* Grupo: Zoom */}
-                <div className="reader-tool-group">
-                  <button
-                    className="reader-tool-btn"
-                    disabled={zoom <= 0.75}
-                    onClick={() => setZoom(z => Math.max(0.75, Number((z - 0.25).toFixed(2))))}
-                    title="Diminuir Zoom"
-                  >
-                    <ZoomOut size={16} />
-                  </button>
-                  <span className="text-xs font-bold w-12 text-center">{Math.round(zoom * 100)}%</span>
-                  <button
-                    className="reader-tool-btn"
-                    disabled={zoom >= 2}
-                    onClick={() => setZoom(z => Math.min(2, Number((z + 0.25).toFixed(2))))}
-                    title="Aumentar Zoom"
-                  >
-                    <ZoomIn size={16} />
-                  </button>
-                  {zoom !== 1 && (
-                    <button
-                      className="reader-tool-btn"
-                      onClick={() => setZoom(1)}
-                      title="Resetar Zoom"
-                    >
-                      <RotateCcw size={14} />
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Área do Documento PDF */}
-              <div ref={area} className="pdf-page-container">
-                <Document
-                  file={file}
+                }
+                onLoadSuccess={({ numPages }) => {
+                  setCount(numPages);
+                  setPage(v => Math.min(numPages, Math.max(1, v)));
+                  setError('');
+                }}
+                onLoadError={() =>
+                  setError('O PDF não pôde ser exibido. Se for um link externo, verifique as permissões.')
+                }
+                error=""
+              >
+                <Page
+                  pageNumber={page}
+                  width={Math.max(280, width - 32) * zoom}
                   loading={
-                    <div className="p-12 text-center text-muted-foreground">
-                      <Sparkles className="animate-spin inline-block mb-2" size={24} />
-                      <p>Carregando páginas do livro…</p>
+                    <div className="p-8 text-center text-muted-foreground text-sm">
+                      Preparando página {page}…
                     </div>
                   }
-                  onLoadSuccess={({ numPages }) => {
-                    setCount(numPages);
-                    setPage(v => Math.min(numPages, Math.max(1, v)));
-                    setError('');
-                  }}
-                  onLoadError={() =>
-                    setError(
-                      'O PDF não pôde ser exibido. Se for um link externo, verifique as permissões de acesso.'
-                    )
-                  }
-                  error=""
-                >
-                  <Page
-                    pageNumber={page}
-                    width={Math.max(240, width - 24) * zoom}
-                    loading={
-                      <div className="p-8 text-center text-muted-foreground text-sm">
-                        Renderizando página {page}…
-                      </div>
-                    }
-                  />
-                </Document>
-              </div>
+                />
+              </Document>
+            )
+          )}
+        </div>
 
-              {/* Rodapé Flutuante de Navegação e Status */}
-              <div className="reader-bottom-nav">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1 || !count}
-                  onClick={() => setPage(v => v - 1)}
-                >
-                  <ChevronLeft size={16} className="mr-1" /> Página anterior
-                </Button>
+        {/* Dock Flutuante do Leitor no Rodapé (Estilo Apple Books / e-Reader) */}
+        {book && url && (
+          <div className="floating-reader-dock" role="toolbar" aria-label="Controles do leitor">
+            {/* Página Anterior */}
+            <button
+              disabled={page <= 1 || !count}
+              onClick={() => setPage(v => v - 1)}
+              title="Página anterior (Seta Esquerda)"
+            >
+              <ChevronLeft size={20} />
+            </button>
 
-                <div className="flex items-center gap-3">
-                  <span className="reader-sync-status">
-                    <CheckCircle2 size={16} className="text-emerald-500" /> {saved}
-                  </span>
-                  <span className="keyboard-hint-pill hidden md:inline-flex">
-                    Dica: Use as setas ← → do teclado para virar páginas
-                  </span>
-                </div>
+            {/* Contador de Páginas */}
+            <div className="dock-page-pill">
+              <span>Página</span>
+              <input
+                aria-label="Página atual"
+                className="bg-transparent w-8 text-center font-bold text-white outline-none border-b border-white/30"
+                type="number"
+                min={1}
+                max={count || 1}
+                value={page}
+                onChange={e => {
+                  const n = Number(e.target.value);
+                  if (n >= 1 && n <= count) setPage(n);
+                }}
+              />
+              <span>de {count || '…'}</span>
+            </div>
 
-                <Button
-                  size="sm"
-                  disabled={page >= count || !count}
-                  onClick={() => setPage(v => v + 1)}
-                >
-                  Próxima página <ChevronRight size={16} className="ml-1" />
-                </Button>
-              </div>
-            </>
-          )
+            {/* Próxima Página */}
+            <button
+              disabled={page >= count || !count}
+              onClick={() => setPage(v => v + 1)}
+              title="Próxima página (Seta Direita)"
+            >
+              <ChevronRight size={20} />
+            </button>
+
+            <span className="w-[1px] h-4 bg-white/20 mx-1 hidden sm:block" />
+
+            {/* Seleção de Papel */}
+            <div className="dock-paper-selector hidden sm:flex">
+              <button
+                className={`dock-paper-btn ${paper === 'original' ? 'active' : ''}`}
+                onClick={() => setPaper('original')}
+                title="Papel Claro"
+              >
+                <Sun size={12} className="inline mr-1" /> Claro
+              </button>
+              <button
+                className={`dock-paper-btn ${paper === 'sepia' ? 'active' : ''}`}
+                onClick={() => setPaper('sepia')}
+                title="Papel Sépia"
+              >
+                <Feather size={12} className="inline mr-1" /> Sépia
+              </button>
+              <button
+                className={`dock-paper-btn ${paper === 'dark' ? 'active' : ''}`}
+                onClick={() => setPaper('dark')}
+                title="Modo Noturno"
+              >
+                <Moon size={12} className="inline mr-1" /> Dark
+              </button>
+            </div>
+
+            <span className="w-[1px] h-4 bg-white/20 mx-1 hidden sm:block" />
+
+            {/* Zoom */}
+            <div className="items-center gap-1 hidden sm:flex">
+              <button
+                disabled={zoom <= 0.75}
+                onClick={() => setZoom(z => Math.max(0.75, Number((z - 0.25).toFixed(2))))}
+                title="Diminuir Zoom"
+              >
+                <ZoomOut size={16} />
+              </button>
+              <span className="text-xs font-bold w-10 text-center">{Math.round(zoom * 100)}%</span>
+              <button
+                disabled={zoom >= 2}
+                onClick={() => setZoom(z => Math.min(2, Number((z + 0.25).toFixed(2))))}
+                title="Aumentar Zoom"
+              >
+                <ZoomIn size={16} />
+              </button>
+            </div>
+
+            <span className="w-[1px] h-4 bg-white/20 mx-1" />
+
+            {/* Modo Imersivo */}
+            <button
+              onClick={() => setFocus(v => !v)}
+              title={focus ? 'Sair do modo imersivo (Esc)' : 'Ativar modo imersivo'}
+            >
+              {focus ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+            </button>
+          </div>
         )}
       </div>
     </DashboardLayout>
