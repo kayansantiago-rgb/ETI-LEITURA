@@ -1,4 +1,9 @@
 /* Shared reading identity, inspired by the owner's Leitura Viva reference. */
+.atlas-shell .book-card .book-card-copy { padding:16px 16px 10px; text-align:center; }
+.atlas-shell .book-card .book-card-copy h3 { margin:8px 0 6px; min-height:2.8em; line-height:1.4; overflow-wrap:anywhere; }
+.atlas-shell .book-card .book-card-copy p { margin:0; }
+.atlas-shell .book-card .book-level { padding:0; margin:0; text-align:center; }
+.atlas-shell .book-card .book-card-progress { padding:4px 16px 18px; }
 :root:not(.dark) .atlas-shell { background:#f5f6fa; color:#242532; }
 :root:not(.dark) .atlas-shell .desktop-rail,
 :root:not(.dark) .atlas-shell .studio-drawer,

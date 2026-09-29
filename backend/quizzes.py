@@ -118,6 +118,21 @@ def create_quiz_router(db, current, staff):
             quiz['resultados'] = await db.quiz_attempts.find({'quiz_id': id}, {'_id': 0}).to_list(10000)
         return quiz
 
+    @router.get('/quizzes/{id}/ranking')
+    async def ranking(id: str, user=Depends(current)):
+        quiz = await find(id, user)
+        if user['role'] == 'student' and not await db.quiz_attempts.find_one({'_id': f"{id}:{user['id']}"}):
+            raise HTTPException(403, 'Conclua o quiz para ver o ranking.')
+        attempts = await db.quiz_attempts.find({'quiz_id': id}, {'_id': 0, 'user_id': 1, 'nome': 1, 'acertos': 1, 'total': 1}).to_list(None)
+        attempts.sort(key=lambda a: (-a['acertos'], a.get('nome', '').casefold()))
+        rows, previous, position = [], None, 0
+        for index, attempt in enumerate(attempts, 1):
+            if attempt['acertos'] != previous:
+                position = index
+            previous = attempt['acertos']
+            rows.append({'posicao': position, 'nome': attempt['nome'], 'acertos': attempt['acertos'], 'total': attempt['total'], 'voce': attempt['user_id'] == user['id']})
+        return {'participantes': rows, 'encerrado': not quiz['aberto']}
+
     @router.post('/quizzes/{id}/answers')
     async def submit(id: str, data: QuizAnswers, user=Depends(current)):
         if user['role'] != 'student':

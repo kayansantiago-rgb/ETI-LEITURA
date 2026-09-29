@@ -95,3 +95,22 @@ def test_timer_expiry_and_resume(quiz_api):
     assert db.quiz_attempts.insert_one.call_args.args[0]['nota']==20
     db.quiz_sessions.update_one.return_value=SimpleNamespace(matched_count=0)
     assert req('POST','/quizzes/q/step',json={'indice':0,'resposta':1}).status_code==409
+
+def test_ranking_access_ties_and_privacy(quiz_api):
+    from unittest.mock import Mock
+    req,user,quiz,db=quiz_api
+    assert req('GET','/quizzes/q/ranking').status_code==403
+    db.quiz_attempts.find_one.return_value={'user_id':'s'}
+    rows=[{'user_id':'other','nome':'Ana','acertos':1,'total':1,'respostas':[1]}, {'user_id':'s','nome':'Aluno','acertos':1,'total':1}, {'user_id':'third','nome':'Pedro','acertos':0,'total':1}]
+    db.quiz_attempts.find=Mock(return_value=SimpleNamespace(to_list=AsyncMock(return_value=rows)))
+    result=req('GET','/quizzes/q/ranking').json()
+    assert [r['posicao'] for r in result['participantes']]==[1,1,3]
+    assert result['participantes'][0]['voce'] is True
+    assert all(set(r)=={'nome','posicao','acertos','total','voce'} for r in result['participantes'])
+    db.quiz_attempts.find.assert_called_once_with({'quiz_id':'q'},{'_id':0,'user_id':1,'nome':1,'acertos':1,'total':1})
+    quiz['aberto']=False
+    assert req('GET','/quizzes/q/ranking').json()['encerrado'] is True
+    user['turma']='8º ANO'
+    assert req('GET','/quizzes/q/ranking').status_code==404
+    user.update(role='teacher',id='other-teacher')
+    assert req('GET','/quizzes/q/ranking').status_code==404
