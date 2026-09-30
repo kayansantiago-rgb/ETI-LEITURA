@@ -81,23 +81,27 @@ export default function Activities() {
   const totalEsperadoAlunos = 18; // Estimativa padrão por turma
   const taxaEntregaPercent = Math.min(100, Math.round((entregasAtuais / totalEsperadoAlunos) * 100));
 
+  // Métricas do Aluno
+  const studentPending = items.filter(a => !a.minha_resposta && !a.encerrada).length;
+  const studentCompleted = items.filter(a => a.minha_resposta).length;
+  const studentGrades = items.filter(a => a.minha_resposta?.nota != null).map(a => a.minha_resposta.nota);
+  const studentAvg = studentGrades.length ? (studentGrades.reduce((a, b) => a + b, 0) / studentGrades.length).toFixed(1) : '—';
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Cabeçalho do Professor (Imagem de Referência de Hoje) */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-              <ClipboardList size={26} />
+        {/* Cabeçalho da Página de Atividades */}
+        <div className="activities-page-header">
+          <div className="activities-header-title">
+            <div className="activities-header-icon">
+              <ClipboardList size={28} />
             </div>
             <div>
-              <h1 className="text-2xl font-extrabold tracking-tight">
-                {admin ? 'Atividades Escolares' : 'Minhas atividades'}
-              </h1>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <h1>{admin ? 'Atividades Escolares' : 'Minhas Atividades'}</h1>
+              <p>
                 {admin
                   ? 'Elabore tarefas escolares, gerencie agendamentos e avalie as entregas dos seus estudantes.'
-                  : 'Veja as propostas dos professores, responda e acompanhe seu feedback.'}
+                  : 'Acompanhe as propostas dos seus professores, responda no prazo e veja suas notas.'}
               </p>
             </div>
           </div>
@@ -105,17 +109,18 @@ export default function Activities() {
           {admin && !creating && (
             <Button
               onClick={() => { setDraft(null); setCreating(true); }}
-              className="hero-library-btn !w-auto !py-2.5 !px-5"
+              className="activities-create-btn"
             >
-              <span>📝 ELABORAR ATIVIDADE</span>
+              <Plus size={18} />
+              <span>ELABORAR ATIVIDADE</span>
             </Button>
           )}
         </div>
 
-        {/* KPIs do Professor (3 Cards da Imagem de Referência) */}
-        {admin && (
+        {/* KPIs do Professor */}
+        {admin ? (
           <div className="teacher-kpi-grid">
-            <div className="teacher-kpi-card">
+            <div className="teacher-kpi-card purple-bg">
               <div className="teacher-kpi-content">
                 <span>TOTAL ELABORADO</span>
                 <strong>{totalElaborado}</strong>
@@ -126,31 +131,67 @@ export default function Activities() {
               </div>
             </div>
 
-            <div className="teacher-kpi-card">
+            <div className="teacher-kpi-card amber-bg">
               <div className="teacher-kpi-content">
                 <span>AGUARDANDO CORREÇÃO</span>
                 <strong>{aguardandoCorrecao}</strong>
-                <p>Entregas prontas para nota e feedback</p>
+                <p>Entregas prontas para nota</p>
               </div>
               <div className="teacher-kpi-icon-badge amber">
                 <Clock size={24} />
               </div>
             </div>
 
-            <div className="teacher-kpi-card">
+            <div className="teacher-kpi-card green-bg">
               <div className="teacher-kpi-content">
                 <span>TAXA DE CORREÇÃO</span>
                 <strong>{taxaCorrecao}%</strong>
-                <p>Aproveitamento das correções docentes</p>
+                <p>Aproveitamento das correções</p>
+              </div>
+              <div className="teacher-kpi-icon-badge green">
+                <TrendingUp size={24} />
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* KPIs do Aluno */
+          <div className="teacher-kpi-grid">
+            <div className="teacher-kpi-card amber-bg">
+              <div className="teacher-kpi-content">
+                <span>PENDENTES</span>
+                <strong>{studentPending}</strong>
+                <p>Atividades aguardando resposta</p>
+              </div>
+              <div className="teacher-kpi-icon-badge amber">
+                <Clock size={24} />
+              </div>
+            </div>
+
+            <div className="teacher-kpi-card green-bg">
+              <div className="teacher-kpi-content">
+                <span>ENTREGUES</span>
+                <strong>{studentCompleted}</strong>
+                <p>Respostas enviadas aos professores</p>
+              </div>
+              <div className="teacher-kpi-icon-badge green">
+                <FileCheck size={24} />
+              </div>
+            </div>
+
+            <div className="teacher-kpi-card purple-bg">
+              <div className="teacher-kpi-content">
+                <span>MÉDIA GERAL</span>
+                <strong>{studentAvg}</strong>
+                <p>Nota média nas avaliações</p>
               </div>
               <div className="teacher-kpi-icon-badge purple">
-                <TrendingUp size={24} />
+                <Award size={24} />
               </div>
             </div>
           </div>
         )}
 
-        {/* Card Engajamento das Turmas (Imagem de Referência de Hoje) */}
+        {/* Card Engajamento das Turmas (Apenas Professor) */}
         {admin && (
           <section className="engagement-card">
             <div className="engagement-header">
@@ -158,10 +199,8 @@ export default function Activities() {
                 <BarChart3 size={22} />
               </div>
               <div className="engagement-title">
-                <h2>
-                  📊 Engajamento das Turmas
-                </h2>
-                <p>Acompanhe o progresso de entregas em tempo real.</p>
+                <h2>📊 Engajamento das Turmas</h2>
+                <p>Acompanhe o progresso de entregas em tempo real por turma e atividade.</p>
               </div>
             </div>
 
@@ -228,30 +267,30 @@ export default function Activities() {
           </section>
         )}
 
-        {/* Abas e Lista de Atividades */}
+        {/* Abas de Navegação (Apenas Professor) */}
         {admin && (
-          <div className="flex flex-wrap gap-2 mb-4" aria-label="Área de atividades">
-            <Button
-              variant={tab === 'published' ? 'default' : 'outline'}
+          <div className="activities-nav-tabs" aria-label="Área de atividades">
+            <button
+              className={`activities-tab-btn ${tab === 'published' ? 'active' : ''}`}
               aria-pressed={tab === 'published'}
               onClick={() => { setTab('published'); setCreating(false); }}
             >
               Publicadas ({items.filter(a => !a.agendada).length})
-            </Button>
-            <Button
-              variant={tab === 'scheduled' ? 'default' : 'outline'}
+            </button>
+            <button
+              className={`activities-tab-btn ${tab === 'scheduled' ? 'active' : ''}`}
               aria-pressed={tab === 'scheduled'}
               onClick={() => { setTab('scheduled'); setCreating(false); }}
             >
               Agendadas ({items.filter(a => a.agendada).length})
-            </Button>
-            <Button
-              variant={tab === 'models' ? 'default' : 'outline'}
+            </button>
+            <button
+              className={`activities-tab-btn ${tab === 'models' ? 'active' : ''}`}
               aria-pressed={tab === 'models'}
               onClick={() => { setTab('models'); setCreating(false); }}
             >
               Meus modelos
-            </Button>
+            </button>
           </div>
         )}
 
@@ -294,33 +333,62 @@ export default function Activities() {
             ) : (
               <div className="activity-collection">
                 {visibleItems.map(a => (
-                  <article key={a.id} className="panel flex flex-col">
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                      <span className="activity-badge">{a.turma === 'TODAS' ? 'Todas as turmas' : a.turma}</span>
-                      <StatusBadge state={activityState(a, admin)} label={admin && !a.agendada && a.encerrada ? 'Encerrada' : undefined} />
+                  <article key={a.id} className="activity-card-modern">
+                    <div>
+                      <div className="activity-card-top">
+                        <span className="activity-turma-pill">
+                          {a.turma === 'TODAS' ? 'Todas as turmas' : a.turma}
+                        </span>
+                        <StatusBadge state={activityState(a, admin)} label={admin && !a.agendada && a.encerrada ? 'Encerrada' : undefined} />
+                      </div>
+
+                      <div className="activity-score-badge">
+                        <Award size={14} />
+                        <span>
+                          {a.minha_resposta?.nota != null
+                            ? `Nota: ${a.minha_resposta.nota.toFixed(1)} / ${(a.valor_nota || 10).toFixed(1)}`
+                            : `Valor: ${(a.valor_nota || 10).toFixed(1)} pts`}
+                        </span>
+                      </div>
+
+                      <h2 className="activity-card-title">{a.titulo}</h2>
+                      <p className="activity-card-desc">
+                        {a.descricao || `${a.perguntas.length} pergunta(s) para responder.`}
+                      </p>
                     </div>
 
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="activity-score-badge">
-                        <Award size={13} /> {a.minha_resposta?.nota != null ? `Nota: ${a.minha_resposta.nota.toFixed(1)}/${a.valor_nota || 10}` : `Valor: ${(a.valor_nota || 10).toFixed(1)} pts`}
-                      </span>
-                    </div>
+                    <div>
+                      <div className="activity-card-meta">
+                        <p className="flex items-center gap-1.5 font-medium">
+                          <Clock size={14} className="text-primary" />
+                          <span>Prazo: {deadline(a.minha_resposta?.reenvio?.prazo || a.prazo)}</span>
+                        </p>
+                        {a.agendada && (
+                          <p className="text-primary font-medium">
+                            Publicação: {publicationLabel(a.publicar_em)} (Brasília)
+                          </p>
+                        )}
+                        <p>
+                          {admin
+                            ? `${a.entregas} entrega(s) · ${a.corrigidas} corrigida(s)${a.devolvidas ? ` · ${a.devolvidas} devolvida(s)` : ''}`
+                            : `Professor: ${a.professor_nome}`}
+                        </p>
+                      </div>
 
-                    <h2 className="text-lg font-semibold mb-2">{a.titulo}</h2>
-                    <p className="text-sm text-muted-foreground line-clamp-3 mb-4">{a.descricao || `${a.perguntas.length} pergunta(s) para responder.`}</p>
-
-                    <div className="text-xs text-muted-foreground space-y-1.5 mt-auto pt-3 border-t">
-                      <p>Prazo: {deadline(a.minha_resposta?.reenvio?.prazo || a.prazo)}</p>
-                      {a.agendada && <p className="text-primary font-medium">Publicação: {publicationLabel(a.publicar_em)} (Brasília)</p>}
-                      <p>{admin ? `${a.entregas} entrega(s) · ${a.corrigidas} corrigida(s)${a.devolvidas ? ` · ${a.devolvidas} devolvida(s)` : ''}` : `Professor: ${a.professor_nome}`}</p>
-                    </div>
-
-                    <Button asChild variant="outline" className="mt-4">
-                      <Link to={`${admin ? '/admin/activities' : '/activities'}/${a.id}`}>
-                        {admin ? 'Ver respostas e corrigir' : a.minha_resposta ? 'Ver minha resposta' : 'Abrir atividade'}
+                      <Link
+                        to={`${admin ? '/admin/activities' : '/activities'}/${a.id}`}
+                        className="activity-card-action-btn"
+                      >
+                        <span>
+                          {admin
+                            ? 'Ver respostas e corrigir'
+                            : a.minha_resposta
+                            ? 'Ver minha resposta'
+                            : 'Responder atividade'}
+                        </span>
                         <ArrowRight size={15} />
                       </Link>
-                    </Button>
+                    </div>
                   </article>
                 ))}
               </div>
@@ -331,3 +399,4 @@ export default function Activities() {
     </DashboardLayout>
   );
 }
+

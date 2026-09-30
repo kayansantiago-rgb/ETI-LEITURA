@@ -1104,4 +1104,523 @@
   visibility: hidden;
 }
 
+/* --------------------------------------------------------------------------
+   PÁGINA DE ATIVIDADES ESCOLARES (PROFESSOR & ALUNO - DESIGN MODERNO)
+   -------------------------------------------------------------------------- */
+.activities-page-header {
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+  border: 1px solid #ddd6fe;
+  border-radius: 24px;
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.05);
+}
+
+.dark .activities-page-header {
+  background: linear-gradient(135deg, #1e1b4b 0%, #17153a 100%);
+  border-color: #3b0764;
+}
+
+.activities-header-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.activities-header-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  background: #ffffff;
+  color: #7c3aed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.15);
+  flex-shrink: 0;
+}
+
+.dark .activities-header-icon {
+  background: #2e2a5c;
+  color: #c084fc;
+}
+
+.activities-header-title h1 {
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.dark .activities-header-title h1 {
+  color: #f8fafc;
+}
+
+.activities-header-title p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 4px 0 0 0;
+}
+
+.dark .activities-header-title p {
+  color: #94a3b8;
+}
+
+.activities-create-btn {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+  padding: 12px 24px !important;
+  border-radius: 16px !important;
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.3) !important;
+  border: none !important;
+  transition: all 0.2s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+}
+
+.activities-create-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4) !important;
+}
+
+/* KPI CARDS (PROFESSOR & ALUNO) */
+.teacher-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.teacher-kpi-card {
+  border-radius: 20px;
+  padding: 20px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: transform 0.2s ease;
+}
+
+.teacher-kpi-card:hover {
+  transform: translateY(-3px);
+}
+
+.teacher-kpi-card.purple-bg {
+  background: #faf5ff;
+  border: 1px solid #e9d5ff;
+}
+.dark .teacher-kpi-card.purple-bg {
+  background: #221435;
+  border-color: #581c87;
+}
+
+.teacher-kpi-card.amber-bg {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+}
+.dark .teacher-kpi-card.amber-bg {
+  background: #2a220e;
+  border-color: #78350f;
+}
+
+.teacher-kpi-card.green-bg {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+.dark .teacher-kpi-card.green-bg {
+  background: #102619;
+  border-color: #14532d;
+}
+
+.teacher-kpi-content span {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.dark .teacher-kpi-content span {
+  color: #a1a1aa;
+}
+
+.teacher-kpi-content strong {
+  display: block;
+  font-size: 30px;
+  font-weight: 900;
+  color: #0f172a;
+  line-height: 1.1;
+  margin: 4px 0;
+}
+
+.dark .teacher-kpi-content strong {
+  color: #f8fafc;
+}
+
+.teacher-kpi-content p {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0;
+}
+
+.dark .teacher-kpi-content p {
+  color: #a1a1aa;
+}
+
+.teacher-kpi-icon-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+}
+
+.dark .teacher-kpi-icon-badge {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.teacher-kpi-icon-badge.purple { color: #8b5cf6; }
+.teacher-kpi-icon-badge.amber { color: #f59e0b; }
+.teacher-kpi-icon-badge.green { color: #10b981; }
+
+/* CARD ENGAJAMENTO DAS TURMAS */
+.engagement-card {
+  background: #ffffff;
+  border: 1px solid hsl(var(--border) / 0.8);
+  border-radius: 22px;
+  padding: 22px 26px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.dark .engagement-card {
+  background: #181628;
+}
+
+.engagement-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.engagement-icon-badge {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: #f3e8ff;
+  color: #7c3aed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.engagement-title h2 {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.dark .engagement-title h2 {
+  color: #f8fafc;
+}
+
+.engagement-title p {
+  font-size: 12px;
+  color: #64748b;
+  margin: 2px 0 0 0;
+}
+
+.engagement-filters-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.engagement-select-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 6px;
+}
+
+.dark .engagement-select-group label {
+  color: #cbd5e1;
+}
+
+.native-select {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  outline: none;
+}
+
+.dark .native-select {
+  background: #121020;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+.engagement-rate-box {
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+}
+
+.dark .engagement-rate-box {
+  background: #121020;
+  border-color: #2a2740;
+}
+
+.engagement-rate-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.engagement-rate-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #475569;
+}
+
+.dark .engagement-rate-label {
+  color: #94a3b8;
+}
+
+.engagement-rate-value {
+  color: #7c3aed;
+}
+
+.engagement-progress-track {
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.dark .engagement-progress-track {
+  background: #334155;
+}
+
+.engagement-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #8b5cf6, #06b6d4);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+/* ABAS DE NAVEGAÇÃO / PILHAS MODERNAS */
+.activities-nav-tabs {
+  display: inline-flex;
+  gap: 6px;
+  background: #f1f5f9;
+  padding: 5px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+}
+
+.dark .activities-nav-tabs {
+  background: #141224;
+  border-color: #2a2740;
+}
+
+.activities-tab-btn {
+  padding: 8px 18px !important;
+  border-radius: 12px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+  background: transparent !important;
+  border: none !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+}
+
+.activities-tab-btn.active {
+  background: #ffffff !important;
+  color: #7c3aed !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06) !important;
+}
+
+.dark .activities-tab-btn.active {
+  background: #25213d !important;
+  color: #c084fc !important;
+}
+
+/* GRID DE ATIVIDADES ESCOLARES (CARDS) */
+.activity-collection {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.activity-card-modern {
+  background: #ffffff;
+  border-radius: 22px;
+  border: 1px solid #e2e8f0;
+  padding: 22px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.25s ease;
+  position: relative;
+}
+
+.dark .activity-card-modern {
+  background: #181628;
+  border-color: #2a2740;
+}
+
+.activity-card-modern:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.07);
+  border-color: #cbd5e1;
+}
+
+.dark .activity-card-modern:hover {
+  border-color: #4c466d;
+}
+
+.activity-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.activity-turma-pill {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: #f3e8ff;
+  color: #7e22ce;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.dark .activity-turma-pill {
+  background: #3b0764;
+  color: #e9d5ff;
+}
+
+.activity-score-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: #fef3c7;
+  color: #b45309;
+  margin-bottom: 12px;
+  width: fit-content;
+}
+
+.dark .activity-score-badge {
+  background: #451a03;
+  color: #fde68a;
+}
+
+.activity-card-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.35;
+  margin: 0 0 8px 0;
+}
+
+.dark .activity-card-title {
+  color: #f8fafc;
+}
+
+.activity-card-desc {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+  margin-bottom: 16px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.dark .activity-card-desc {
+  color: #94a3b8;
+}
+
+.activity-card-meta {
+  font-size: 12px;
+  color: #64748b;
+  padding-top: 14px;
+  border-top: 1px dashed #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.dark .activity-card-meta {
+  border-top-color: #2a2740;
+  color: #94a3b8;
+}
+
+.activity-card-action-btn {
+  width: 100%;
+  margin-top: 16px;
+  padding: 10px 16px !important;
+  border-radius: 14px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  background: #f5f3ff !important;
+  color: #7c3aed !important;
+  border: 1px solid #ddd6fe !important;
+  transition: all 0.2s ease !important;
+  text-decoration: none !important;
+}
+
+.dark .activity-card-action-btn {
+  background: #221d3f !important;
+  color: #c084fc !important;
+  border-color: #3f3669 !important;
+}
+
+.activity-card-action-btn:hover {
+  background: #7c3aed !important;
+  color: #ffffff !important;
+  border-color: #7c3aed !important;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3) !important;
+}
+
+
 
