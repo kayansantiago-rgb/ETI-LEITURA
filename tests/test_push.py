@@ -79,3 +79,21 @@ def test_configuration_requires_contact_and_keys(monkeypatch):
 def test_invalid_subscription_keys_rejected():
     with pytest.raises(ValidationError):
         Keys(p256dh=base64.urlsafe_b64encode(b'x'*65).decode(),auth=base64.urlsafe_b64encode(b'x'*16).decode())
+
+@pytest.mark.parametrize('role',['teacher','admin'])
+def test_staff_dispatch_only_new_unread_scoped_notices(monkeypatch,role):
+    import asyncio
+    from types import SimpleNamespace
+    from unittest.mock import AsyncMock,Mock
+    import backend.push as push
+    import backend.school as school
+    device={**DEVICE,'user_id':'t','token_version':0,'binding':'binding','_id':'device'}
+    async def devices():yield device
+    db=SimpleNamespace(push_subscriptions=SimpleNamespace(find=Mock(side_effect=lambda q:devices())),users=SimpleNamespace(find_one=AsyncMock(return_value={'id':'t','role':role})))
+    notices=AsyncMock(return_value=[{'id':'new','lida':False,'data':'2026-09-21T11:00:00+00:00','link':'/admin/summaries'},{'id':'old','lida':False,'data':'2020-01-01','link':'/admin/summaries'},{'id':'read','lida':True,'data':'2026-09-21','link':'/admin/summaries'}])
+    monkeypatch.setattr(school,'notifications',notices)
+    monkeypatch.setattr(push,'configuration',lambda:{'configured':True})
+    delivery=AsyncMock(return_value=True);monkeypatch.setattr(push,'deliver',delivery)
+    assert asyncio.run(push.dispatch(db,AT))==1
+    assert delivery.call_args.args[2]['id']=='new'
+    notices.assert_awaited_once_with(db,{'id':'t','role':role})

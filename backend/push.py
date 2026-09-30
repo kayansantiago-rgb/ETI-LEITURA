@@ -162,9 +162,17 @@ async def dispatch(db, at=None, sender=send_push):
     at = at or now()
     sent = 0
     async for subscription in db.push_subscriptions.find({}):
-        user = await db.users.find_one({'id':subscription['user_id'], 'role':'student', 'active':{'$ne':False}})
+        user = await db.users.find_one({'id':subscription['user_id'], 'active':{'$ne':False}})
         if not user or user.get('token_version',0) != subscription.get('token_version',0):
             await db.push_subscriptions.delete_one({'_id':subscription['_id'], 'binding':subscription['binding']})
+            continue
+        if user['role'] in ('admin', 'teacher'):
+            from backend.school import notifications
+            if subscription.get('new_activities', True):
+                for notice in await notifications(db, user):
+                    if not notice['lida'] and notice['data'] >= subscription['created_at']:
+                        event = {'id': notice['id'], 'title': 'Nova entrega para corrigir', 'body': 'Uma nova entrega está disponível na ETI LEITURA.', 'url': notice['link'], 'ttl': 3600}
+                        sent += int(await deliver(db, subscription, event, at, sender))
             continue
         async for activity in db.activities.find({'turma':{'$in':['TODAS',user.get('turma')]},**published_query(at)}):
             sub = await db.activity_submissions.find_one({'activity_id':activity['id'], 'user_id':user['id']})
@@ -186,8 +194,8 @@ def create_push_router(db, current):
     router = APIRouter()
 
     def student(user):
-        if user['role'] != 'student':
-            raise HTTPException(403, 'As notificações de atividades são destinadas aos alunos')
+        if user['role'] not in ('student', 'teacher', 'admin'):
+            raise HTTPException(403, 'Perfil sem acesso às notificações')
 
     @router.get('/push/config')
     async def config(user=Depends(current)):
@@ -204,7 +212,7 @@ def create_push_router(db, current):
     async def subscribe(data:Subscription, user=Depends(current)):
         student(user)
         if not configuration()['configured']:
-            raise HTTPException(503, 'As notificações no celular ainda não foram configuradas pela escola')
+            raise HTTPException(503, 'As notificações neste aparelho ainda não foram configuradas pela escola')
         identity = digest(data.endpoint)
         previous = await db.push_subscriptions.find_one({'_id':identity})
         if not previous and await db.push_subscriptions.count_documents({'user_id':user['id']}) >= 10:
@@ -226,7 +234,7 @@ def create_push_router(db, current):
         row = await db.push_subscriptions.find_one({'_id':digest(data.endpoint), 'user_id':user['id']})
         if not row:raise HTTPException(404,'Ative as notificações neste aparelho primeiro')
         at = now()
-        event = {'id':'test:'+str(int(at.timestamp())//60), 'title':'ETI LEITURA', 'body':'Pronto! Este aparelho pode receber avisos de atividades.', 'url':'/notifications', 'ttl':60}
+        event = {'id':'test:'+str(int(at.timestamp())//60), 'title':'ETI LEITURA', 'body':'Pronto! Este aparelho pode receber avisos da plataforma.', 'url':'/notifications', 'ttl':60}
         if not await deliver(db,row,event,at):raise HTTPException(409,'Aguarde um minuto e tente novamente. Confira também a permissão do aparelho.')
         return {'message':'Teste enviado ao serviço de notificações. Confira seu aparelho.'}
 
