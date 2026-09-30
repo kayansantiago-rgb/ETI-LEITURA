@@ -14,7 +14,10 @@ import {
   Sparkles,
   Video,
   PenTool,
-  ChartColumn
+  ChartColumn,
+  Clock,
+  Award,
+  Calendar
 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import api from '@/lib/api';
@@ -42,16 +45,6 @@ export default function TeacherPanel() {
   const totalSummaries = stats?.total_summaries ?? '—';
 
   const managementTools = [
-    {type:'activities',icon:Sparkles,title:'Quizzes interativos',description:'Crie perguntas de múltipla escolha e acompanhe os acertos da turma.',linkText:'Abrir quizzes',path:'/quizzes'},
-    ...[
-      ['Pendências', '/workspace', 'Veja as entregas que aguardam correção e organize seu acompanhamento.'],
-      ['Banco de notas', '/gradebook', 'Consulte os boletins dos alunos e acompanhe as notas de cada turma.'],
-      ['Critérios de correção', '/admin/rubrics', 'Defina os critérios e a pontuação para avaliar os trabalhos dos alunos.'],
-      ['Adicionar livro', '/admin/add-book', 'Cadastre uma nova obra com capa, descrição e arquivo para leitura.'],
-      ['Resumos dos alunos', '/admin/summaries', 'Leia os resumos dos livros, atribua notas e envie comentários aos alunos.'],
-      ['Alunos e turmas', '/admin/users', 'Consulte os estudantes cadastrados e gerencie suas informações e turmas.'],
-      ...(user?.role === 'admin' ? [['Calendário', '/admin/calendar', 'Organize os eventos e as datas importantes da escola.']] : [])
-    ].map(([title, path, description]) => ({ type: 'activities', icon: ClipboardList, title, path, description, linkText: 'Acessar' })),
     {
       type: 'activities',
       icon: ClipboardList,
@@ -61,20 +54,36 @@ export default function TeacherPanel() {
       path: '/admin/activities'
     },
     {
-      type: 'mural',
-      icon: ImageIcon,
-      title: 'Gerenciar Mural',
-      description: 'Publique fotos e vídeos na tela inicial dos estudantes.',
-      linkText: 'Acessar Mural',
-      path: '/admin/mural'
-    },
-    {
       type: 'books',
       icon: Library,
       title: 'Gerenciar Livros',
-      description: 'Visualize, edite e remova os livros cadastrados na biblioteca.',
-      linkText: 'Ver Catálogo',
+      description: 'Visualize o catálogo, cadastre novas obras com capa e gerencie os livros da biblioteca.',
+      linkText: 'Ver Acervo',
       path: '/admin/books'
+    },
+    {
+      type: 'pending',
+      icon: Clock,
+      title: 'Pendências de Correção',
+      description: 'Veja as entregas dos alunos que aguardam nota e organize seu acompanhamento pedagógico.',
+      linkText: 'Corrigir Entregas',
+      path: '/workspace'
+    },
+    {
+      type: 'summaries',
+      icon: FileText,
+      title: 'Resumos dos Alunos',
+      description: 'Leia os resumos dos livros, atribua notas e envie comentários aos alunos.',
+      linkText: 'Ver Resumos',
+      path: '/admin/summaries'
+    },
+    {
+      type: 'productions',
+      icon: PenTool,
+      title: 'Produções Textuais',
+      description: 'Acompanhe a escrita criativa dos alunos e atribua notas e pareceres.',
+      linkText: 'Ver Produções',
+      path: '/admin/text-productions'
     },
     {
       type: 'classes',
@@ -83,6 +92,30 @@ export default function TeacherPanel() {
       description: 'Consulte os alunos, materiais e atividades reunidos por turma.',
       linkText: 'Ver Turmas',
       path: '/admin/classes'
+    },
+    {
+      type: 'students',
+      icon: GraduationCap,
+      title: 'Alunos e Turmas',
+      description: 'Consulte os estudantes cadastrados e gerencie suas informações e turmas.',
+      linkText: 'Ver Alunos',
+      path: '/admin/users'
+    },
+    {
+      type: 'gradebook',
+      icon: Award,
+      title: 'Banco de Notas',
+      description: 'Consulte os boletins dos alunos e acompanhe as notas acumuladas.',
+      linkText: 'Ver Boletins',
+      path: '/gradebook'
+    },
+    {
+      type: 'mural',
+      icon: ImageIcon,
+      title: 'Gerenciar Mural',
+      description: 'Publique avisos, comunicados e fotos na tela inicial dos estudantes.',
+      linkText: 'Acessar Mural',
+      path: '/admin/mural'
     },
     {
       type: 'assistant',
@@ -109,12 +142,12 @@ export default function TeacherPanel() {
       path: '/videos'
     },
     {
-      type: 'productions',
-      icon: PenTool,
-      title: 'Produções Textuais',
-      description: 'Acompanhe a escrita criativa dos alunos e atribua notas.',
-      linkText: 'Ver Produções',
-      path: '/admin/text-productions'
+      type: 'quizzes',
+      icon: Sparkles,
+      title: 'Quizzes Interativos',
+      description: 'Crie perguntas de múltipla escolha e acompanhe o desempenho em tempo real.',
+      linkText: 'Abrir Quizzes',
+      path: '/quizzes'
     },
     ...(user?.role === 'admin'
       ? [
@@ -122,9 +155,17 @@ export default function TeacherPanel() {
             type: 'teachers',
             icon: Users,
             title: 'Professores',
-            description: 'Gerencie as contas individuais dos docentes e suas turmas.',
+            description: 'Gerencie as contas individuais dos docentes e suas atribuições.',
             linkText: 'Gerenciar Professores',
             path: '/admin/teachers'
+          },
+          {
+            type: 'calendar',
+            icon: Calendar,
+            title: 'Calendário Escolar',
+            description: 'Organize os eventos, datas de provas e prazos importantes da escola.',
+            linkText: 'Ver Calendário',
+            path: '/admin/calendar'
           }
         ]
       : [])
@@ -223,3 +264,4 @@ export default function TeacherPanel() {
     </DashboardLayout>
   );
 }
+

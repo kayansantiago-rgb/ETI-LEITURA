@@ -73,25 +73,36 @@ function ResponseCard({ activity, response, onGraded, onNext, onPrevious, index,
     }
   };
 
+  const initials = (response.user_nome || 'Estudante')
+    .split(' ')
+    .map(n => n[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+
   return (
     <article className="correction-desk">
       <header className="correction-heading">
-        <div>
-          <h3 className="font-bold text-lg">{response.user_nome}</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {response.user_turma} · Tentativa {response.tentativa || 1} · Entregue em{' '}
-            {new Date(response.updated_at).toLocaleString('pt-BR')}
-          </p>
+        <div className="correction-student-badge">
+          <div className="correction-avatar">{initials}</div>
+          <div className="correction-student-info">
+            <h3>{response.user_nome}</h3>
+            <div className="correction-student-meta">
+              <span className="activity-turma-pill">{response.user_turma || 'Turma'}</span>
+              <span>· Tentativa {response.tentativa || 1}</span>
+              <span>· Entregue em {new Date(response.updated_at).toLocaleString('pt-BR')}</span>
+            </div>
+          </div>
         </div>
 
         <div className="correction-navigation">
-          <Button type="button" variant="outline" size="sm" disabled={busy || index === 0} onClick={onPrevious}>
+          <Button type="button" variant="ghost" size="sm" disabled={busy || index === 0} onClick={onPrevious}>
             ← Anterior
           </Button>
-          <span className="text-xs font-bold px-2">
+          <span className="text-xs font-extrabold px-3 py-1 bg-accent/20 rounded-lg text-primary">
             {index + 1} de {total}
           </span>
-          <Button type="button" variant="outline" size="sm" disabled={busy || index === total - 1} onClick={onNext}>
+          <Button type="button" variant="ghost" size="sm" disabled={busy || index === total - 1} onClick={onNext}>
             Próximo →
           </Button>
         </div>
@@ -121,19 +132,17 @@ function ResponseCard({ activity, response, onGraded, onNext, onPrevious, index,
       <div className="correction-columns">
         {/* Coluna 1: Respostas do Aluno */}
         <section className={`correction-reading ${tab === 'answer' ? 'mobile-selected' : ''}`} aria-label="Respostas do aluno">
-          <p className="eyebrow">RESPOSTAS DO ESTUDANTE</p>
+          <span className="eyebrow">✍️ RESPOSTAS DO ESTUDANTE</span>
 
           <div className="space-y-4 mt-3">
             {activity.perguntas.map((q, i) => (
-              <div key={q.id} className="p-4 rounded-xl border bg-card/50 space-y-2">
-                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                  Pergunta {i + 1}
-                </h4>
-                <p className="text-sm font-semibold text-foreground whitespace-pre-wrap">{q.enunciado}</p>
-                <div className="pt-2 border-t mt-2">
-                  <p className="answer-text text-sm whitespace-pre-wrap">
-                    {response.respostas.find(a => a.pergunta_id === q.id)?.resposta || '— Sem resposta —'}
-                  </p>
+              <div key={q.id} className="correction-question-card">
+                <div className="correction-question-header">
+                  PERGUNTA {i + 1}
+                </div>
+                <p className="correction-question-prompt">{q.enunciado}</p>
+                <div className="correction-answer-box">
+                  {response.respostas.find(a => a.pergunta_id === q.id)?.resposta || '— Sem resposta —'}
                 </div>
               </div>
             ))}
@@ -144,7 +153,7 @@ function ResponseCard({ activity, response, onGraded, onNext, onPrevious, index,
 
         {/* Coluna 2: Formulário de Nota & Devolutiva */}
         <section className={`correction-tools ${tab === 'grade' ? 'mobile-selected' : ''}`} aria-label="Correção da entrega">
-          <p className="eyebrow">DEVOLUTIVA DO PROFESSOR</p>
+          <span className="eyebrow">📝 DEVOLUTIVA DO PROFESSOR</span>
 
           {response.reenvio && (
             <div className="rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-950/30 p-4 space-y-2 text-sm mb-4">
@@ -163,14 +172,14 @@ function ResponseCard({ activity, response, onGraded, onNext, onPrevious, index,
               </div>
 
               <form onSubmit={correct} className="border-t pt-4 space-y-4">
-                <div>
-                  <Label htmlFor={`grade-${response.id}`} className="text-xs font-bold">
-                    Nota da atividade (0 a {maxScore}) *
-                  </Label>
-                  <div className="flex items-center gap-2 mt-1">
+                <div className="correction-grade-box">
+                  <span className="correction-grade-label">
+                    Nota Atribuída (0 a {maxScore}) *
+                  </span>
+                  <div className="correction-grade-input-group">
                     <Input
                       id={`grade-${response.id}`}
-                      className="max-w-28 font-bold text-lg"
+                      className="correction-grade-input"
                       type="number"
                       required
                       min="0"
@@ -179,12 +188,12 @@ function ResponseCard({ activity, response, onGraded, onNext, onPrevious, index,
                       value={grade}
                       onChange={e => setGrade(e.target.value)}
                     />
-                    <span className="text-sm font-semibold text-muted-foreground">/ {maxScore} pts</span>
+                    <span className="text-base font-extrabold text-muted-foreground">/ {maxScore} pts</span>
                   </div>
                 </div>
 
                 <div>
-                  <Label htmlFor={`feedback-${response.id}`} className="text-xs font-bold">
+                  <Label htmlFor={`feedback-${response.id}`} className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">
                     Feedback para o estudante
                   </Label>
                   <Textarea
@@ -193,16 +202,16 @@ function ResponseCard({ activity, response, onGraded, onNext, onPrevious, index,
                     placeholder="Escreva orientações ou pontos fortes da resposta…"
                     value={feedback}
                     onChange={e => setFeedback(e.target.value)}
-                    className="mt-1 text-sm"
+                    className="mt-1 text-sm rounded-xl min-h-[120px]"
                   />
                 </div>
 
                 <div className="flex flex-wrap gap-2 pt-2">
-                  <Button type="submit" disabled={busy}>
-                    {busy ? 'Salvando…' : response.nota != null ? 'Atualizar correção' : 'Enviar correção'}
+                  <Button type="submit" disabled={busy} className="bg-primary text-primary-foreground font-bold hover:opacity-90">
+                    {busy ? 'Salvando…' : response.nota != null ? 'Atualizar correção' : 'Enviar correção ✨'}
                   </Button>
                   {index < total - 1 && (
-                    <Button type="submit" value="next" variant="outline" disabled={busy}>
+                    <Button type="submit" value="next" variant="outline" disabled={busy} className="font-bold">
                       Salvar e próximo →
                     </Button>
                   )}

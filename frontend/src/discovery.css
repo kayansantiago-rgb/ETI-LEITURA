@@ -550,6 +550,25 @@
 .management-tool-card.teachers { background: #eef2ff; border-color: #c7d2fe; color: #1e1b4b; }
 .dark .management-tool-card.teachers { background: #181c38; border-color: #2e3766; color: #e0e7ff; }
 
+.management-tool-card.pending { background: #fff1f2; border-color: #fecdd3; color: #881337; }
+.dark .management-tool-card.pending { background: #2a161b; border-color: #4c1d27; color: #ffe4e6; }
+
+.management-tool-card.summaries { background: #f5f3ff; border-color: #ddd6fe; color: #3b0764; }
+.dark .management-tool-card.summaries { background: #1f1833; border-color: #3b2c5e; color: #ede9fe; }
+
+.management-tool-card.students { background: #e0f2fe; border-color: #bae6fd; color: #0369a1; }
+.dark .management-tool-card.students { background: #0c2a3a; border-color: #1a4d66; color: #e0f2fe; }
+
+.management-tool-card.gradebook { background: #fffbeb; border-color: #fde68a; color: #78350f; }
+.dark .management-tool-card.gradebook { background: #2b220f; border-color: #4d3d19; color: #fef3c7; }
+
+.management-tool-card.quizzes { background: #fefce8; border-color: #fef08a; color: #713f12; }
+.dark .management-tool-card.quizzes { background: #262211; border-color: #4d401a; color: #fef9c3; }
+
+.management-tool-card.calendar { background: #faf5ff; border-color: #e9d5ff; color: #581c87; }
+.dark .management-tool-card.calendar { background: #231633; border-color: #43265e; color: #f3e8ff; }
+
+
 .tool-card-icon-white {
   width: 44px;
   height: 44px;
@@ -1621,6 +1640,272 @@
   border-color: #7c3aed !important;
   box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3) !important;
 }
+
+/* --------------------------------------------------------------------------
+   WORKSPACE DE CORREÇÃO DO PROFESSOR (DESIGN SLEEK, MODERNO E MINIMALISTA)
+   -------------------------------------------------------------------------- */
+.correction-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.correction-toolbar {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.dark .correction-toolbar {
+  background: #181628;
+  border-color: #2a2740;
+}
+
+.correction-toolbar .eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #8b5cf6;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.correction-toolbar h2 {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.dark .correction-toolbar h2 {
+  color: #f8fafc;
+}
+
+.correction-desk {
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.04);
+}
+
+.dark .correction-desk {
+  background: #181628;
+  border-color: #2a2740;
+}
+
+.correction-heading {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid #e2e8f0;
+  padding: 20px 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.dark .correction-heading {
+  background: linear-gradient(135deg, #141224 0%, #1a172e 100%);
+  border-bottom-color: #2a2740;
+}
+
+.correction-student-badge {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.correction-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.25);
+  flex-shrink: 0;
+}
+
+.correction-student-info h3 {
+  font-size: 17px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.dark .correction-student-info h3 {
+  color: #f8fafc;
+}
+
+.correction-student-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.correction-navigation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  padding: 4px;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+}
+
+.dark .correction-navigation {
+  background: #1e1b36;
+  border-color: #332d56;
+}
+
+.correction-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+}
+
+.correction-reading {
+  padding: 26px;
+  border-right: 1px solid #e2e8f0;
+  background: #fafafa;
+}
+
+.dark .correction-reading {
+  border-right-color: #2a2740;
+  background: #141224;
+}
+
+.correction-reading .eyebrow,
+.correction-tools .eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #7c3aed;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.correction-question-card {
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid #e2e8f0;
+  padding: 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+.dark .correction-question-card {
+  background: #181628;
+  border-color: #2a2740;
+}
+
+.correction-question-header {
+  font-size: 11px;
+  font-weight: 800;
+  color: #8b5cf6;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.correction-question-prompt {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.dark .correction-question-prompt {
+  color: #f8fafc;
+}
+
+.correction-answer-box {
+  background: #f8fafc;
+  border-left: 4px solid #8b5cf6;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 14px;
+  color: #334155;
+  line-height: 1.6;
+}
+
+.dark .correction-answer-box {
+  background: #110e20;
+  color: #cbd5e1;
+}
+
+.correction-tools {
+  padding: 26px;
+  background: #ffffff;
+}
+
+.dark .correction-tools {
+  background: #181628;
+}
+
+.correction-grade-box {
+  background: #fdf4ff;
+  border: 1px solid #f5d0fe;
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 20px;
+}
+
+.dark .correction-grade-box {
+  background: #23122c;
+  border-color: #581c87;
+}
+
+.correction-grade-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: #a21caf;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.dark .correction-grade-label {
+  color: #f0abfc;
+}
+
+.correction-grade-input-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.correction-grade-input {
+  width: 90px !important;
+  font-size: 22px !important;
+  font-weight: 900 !important;
+  text-align: center !important;
+  color: #7c3aed !important;
+  border-radius: 14px !important;
+  background: #ffffff !important;
+  border: 2px solid #d8b4fe !important;
+}
+
+.dark .correction-grade-input {
+  background: #141224 !important;
+  color: #c084fc !important;
+  border-color: #6b21a8 !important;
+}
+
 
 
 
