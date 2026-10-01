@@ -43,7 +43,6 @@ const learning = [
 const management = [
   [Users, 'Minhas turmas', '/admin/classes'],
   [ClipboardList, 'Critérios de correção', '/admin/rubrics'],
-  [Sparkles, 'Assistente IA', '/admin/assistant'],
   [Video, 'Vídeos e materiais', '/videos'],
   [ChartColumn, 'Relatórios', '/admin/reports'],
   [Users, 'Professores', '/admin/teachers'],
@@ -166,7 +165,7 @@ export default function DashboardLayout({ children, focusMode = false }) {
 
   const otherArea = !mobileLinks.some(([, , path]) => location.pathname === path || location.pathname.startsWith(path + '/'));
   const railPaths = isAdmin
-    ? ['/admin/professor', '/admin/classes', '/admin/activities', '/admin/assistant', '/videos', '/library', '/admin/reports', '/admin/users']
+    ? ['/admin/professor', '/admin/classes', '/admin/activities', '/videos', '/library', '/admin/reports', '/admin/users']
     : ['/dashboard', '/activities', '/quizzes', '/videos', '/library', '/text-productions', '/workspace'];
 
   const railItems = isAdmin ? staffLinks : railPaths.map(path => (isAdmin ? [teacher, ...management, [BookOpen, 'Biblioteca', '/library']] : learning).find(item => item[2] === path)).filter(Boolean);

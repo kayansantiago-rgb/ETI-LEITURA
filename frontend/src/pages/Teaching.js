@@ -1,10 +1,8 @@
 import SubjectBadge from '@/components/SubjectBadge';
 import {useEffect,useState} from 'react';
-import {Link,useNavigate} from 'react-router-dom';
-import {PlayCircle,Sparkles,Plus,FileText} from 'lucide-react';
+import {PlayCircle,Plus,FileText} from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import PageIntro from '@/components/PageIntro';
-import ActivityForm from '@/components/ActivityForm';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Textarea} from '@/components/ui/textarea';
@@ -17,17 +15,6 @@ import {toast} from 'sonner';
 const errorText=e=>typeof e.response?.data?.detail==='string'?e.response.data.detail:'Não foi possível concluir. Confira os campos e tente novamente.';
 function ClassSelect({value,onChange,id}){const user=getUser();return <div><Label htmlFor={id}>Turma</Label><select id={id} className="native-select" value={value} onChange={e=>onChange(e.target.value)}>{user.role==='admin'&&<option value="TODAS">Todas as turmas</option>}{TURMAS.filter(t=>user.role==='admin'||user.turmas?.includes(t.value)).map(t=><option key={t.value} value={t.value}>{t.label}</option>)}</select></div>;}
 const initialClass=()=>getUser()?.role==='admin'?'TODAS':getUser()?.turmas?.[0]||'';
-
-export function Assistant(){
- const navigate=useNavigate();
- const [status,setStatus]=useState(null),[failed,setFailed]=useState(false),[busy,setBusy]=useState(false),[draft,setDraft]=useState(null);
- const [form,setForm]=useState({tema:'',disciplina:'',turma:initialClass(),quantidade:5,orientacoes:''});
- const load=()=>{setFailed(false);api.get('/admin/ai/status').then(r=>setStatus(r.data)).catch(()=>setFailed(true));};
- useEffect(()=>{load();},[]);
- const change=(key,value)=>setForm(f=>({...f,[key]:value}));
- const generate=async e=>{e.preventDefault();setBusy(true);try{setDraft((await api.post('/admin/ai/generate',form,{timeout:65000})).data);toast.success('Rascunho pronto. Revise antes de publicar.');}catch(e){toast.error(errorText(e));}finally{setBusy(false);load();}};
- return <DashboardLayout><PageIntro section="APOIO AO EDUCADOR" title="Seu assistente de ensino" description="Transforme uma ideia em atividade. A decisão pedagógica continua com você."/><div className="teaching-split"><aside className="teaching-guide"><Sparkles size={32}/><h2>Do planejamento à revisão.</h2><p>Crie perguntas abertas a partir de um tema ou texto de apoio. Depois ajuste o rascunho para a sua turma.</p><div className="border-t pt-5 mt-5"><h3>Precisa corrigir?</h3><p>Abra uma entrega e escolha “Sugerir correção com IA”. Revise a nota e o comentário antes de enviar.</p><Link to="/admin/activities">Abrir atividades →</Link><Link to="/admin/summaries">Revisar resumos →</Link><Link to="/admin/text-productions">Revisar produções →</Link></div></aside><section className="space-y-5">{failed?<div role="alert" className="panel">Não foi possível verificar a IA. <button onClick={load}>Tentar novamente</button></div>:!status?<p role="status">Verificando assistente…</p>:<div className="panel text-sm" role="status">{status.configured?`${status.remaining} de ${status.limit} solicitações disponíveis hoje. O uso da IA pode gerar cobrança no provedor.`:'Ativação pendente: o administrador precisa configurar a chave da IA no servidor. As atividades manuais continuam disponíveis.'}</div>}{draft?<ActivityForm draft={draft} onSaved={()=>navigate('/admin/activities')} onCancel={()=>setDraft(null)}/>:<form onSubmit={generate} className="panel space-y-5"><h2>Preparar uma atividade</h2><div><Label htmlFor="ai-theme">O que a turma vai estudar?</Label><Input id="ai-theme" required minLength={3} maxLength={300} placeholder="Ex.: interpretação de crônicas" value={form.tema} onChange={e=>change('tema',e.target.value)}/></div><div className="grid sm:grid-cols-2 gap-4"><div><Label htmlFor="ai-subject">Disciplina</Label><Input id="ai-subject" required maxLength={80} value={form.disciplina} onChange={e=>change('disciplina',e.target.value)} placeholder="Ex.: Língua Portuguesa"/></div><ClassSelect id="ai-class" value={form.turma} onChange={v=>change('turma',v)}/></div><div><Label htmlFor="ai-count">Quantidade de perguntas</Label><Input id="ai-count" type="number" min={1} max={10} required value={form.quantidade} onChange={e=>change('quantidade',Number(e.target.value))}/></div><div><Label htmlFor="ai-reference">Objetivos, orientações ou texto de apoio</Label><Textarea id="ai-reference" rows={7} maxLength={12000} value={form.orientacoes} onChange={e=>change('orientacoes',e.target.value)} placeholder="Explique a habilidade a trabalhar e cole um texto de referência, se necessário."/><p className="text-xs text-muted-foreground mt-2">Este conteúdo será enviado ao serviço de IA. Evite incluir dados pessoais dos alunos.</p></div><Button disabled={busy||!status?.configured||!status?.remaining||!form.turma} type="submit"><Sparkles size={16}/>{busy?'Preparando rascunho…':'Gerar rascunho de atividade'}</Button><p className="text-xs text-muted-foreground">A IA pode errar. Confira os conteúdos e a adequação das perguntas antes de publicar.</p></form>}</section></div></DashboardLayout>;
-}
 
 export function Videos(){
  const user=getUser(),staff=['teacher','admin'].includes(user?.role);

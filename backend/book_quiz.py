@@ -130,6 +130,20 @@ def create_book_quiz_router(db, current, staff):
         slug = ''.join(c if c.isalnum() else '-' for c in cert['book_titulo'].lower())[:40].strip('-')
         return Response(content, media_type='application/pdf', headers={'Content-Disposition': f'attachment; filename="certificado-{slug}.pdf"'})
 
+    @router.get('/admin/books/overview')
+    async def overview(user=Depends(staff)):
+        # Indicadores por livro para a tela de gestão do acervo.
+        result = {}
+        async def add(collection, match, field):
+            async for row in db[collection].aggregate([{'$match': match}, {'$group': {'_id': '$book_id', 'n': {'$sum': 1}}}]):
+                result.setdefault(row['_id'], {})[field] = row['n']
+        await add('reading_progress', {'percentage': {'$gt': 0}}, 'leitores')
+        await add('reading_progress', {'percentage': {'$gte': 100}}, 'concluidos')
+        await add('certificates', {}, 'certificados')
+        async for quiz in db.book_quizzes.find({}, {'_id': 0, 'book_id': 1, 'perguntas': 1}):
+            result.setdefault(quiz['book_id'], {})['perguntas'] = len(quiz.get('perguntas', []))
+        return result
+
     @router.get('/certificates')
     async def my_certificates(user=Depends(current)):
         return await db.certificates.find({'user_id': user['id']}, {'_id': 0, 'user_id': 0}).sort('emitido_em', -1).to_list(500)

@@ -1,6 +1,6 @@
-import { Bell, CheckCheck, ArrowUpRight, Inbox, TrendingUp, Users, BookOpen, AlertTriangle, Search, FileDown, FileSpreadsheet, ArrowUp, ArrowDown } from 'lucide-react';
+import { Bell, CheckCheck, ArrowUpRight, Inbox, TrendingUp, Users, BookOpen, AlertTriangle, Search, FileDown, FileSpreadsheet, ArrowUp, ArrowDown, ClipboardList, AlarmClock, RotateCcw, CheckCircle2, PlayCircle, Megaphone, Sparkles, PenLine, Check, Clock3, ChevronDown } from 'lucide-react';
+import CorrectionDrawer from '@/components/CorrectionDrawer';
 import '@/notifications.css';
-import StatusBadge from '@/components/StatusBadge';
 import PushSettings from '@/components/PushSettings';
 import PageIntro from '@/components/PageIntro';
 import { useEffect, useState } from 'react';
@@ -21,18 +21,390 @@ function useLoad(path) {
 }
 function Page({title,description,children}) {return <DashboardLayout><PageIntro section={getUser()?.role==='student'?'SEU ESPAÇO / APRENDIZAGEM':'GESTÃO / ACOMPANHAMENTO'} title={title} description={description}/><div className="school-page-content">{children}</div></DashboardLayout>;}
 function Loading({failed}) {return <p role={failed?'alert':'status'} className="empty-state">{failed?'Não foi possível carregar. Atualize a página para tentar novamente.':'Carregando…'}</p>;}
-export function Workspace() {
- const [data,,failed]=useLoad('/workspace'),student=getUser()?.role==='student';
- return <Page title={student?'Minhas pendências':'Entregas e pendências'} description={student?'Organize as próximas entregas e acompanhe suas correções.':'Veja quem entregou, quem falta entregar e o que precisa de correção.'}>{!data?<Loading failed={failed}/>:<div className="space-y-5"><div className="flex flex-wrap gap-3">{data.correcoes.map(c=><Button variant="outline" asChild key={c.link}><Link to={c.link}>{c.titulo}: {c.quantidade} para corrigir</Link></Button>)}</div>{!data.atividades.length&&<p className="empty-state">Nenhuma atividade disponível.</p>}{[...data.atividades].sort((a,b)=>(a.prazo||'9999').localeCompare(b.prazo||'9999')).map(a=><article key={a.id} className="panel space-y-3"><div className="flex justify-between flex-wrap gap-3"><h2>{a.titulo}</h2><StatusBadge state={student?({'Devolvida':'returned','Corrigida':'graded','Entregue':'review','Prazo encerrado':'closed'}[a.estado]||'pending'):a.corrigir?'correction':'graded'} label={student?undefined:`${a.corrigir} para corrigir`}/></div><p className="text-sm text-muted-foreground">Prazo: {deadline(a.prazo)}</p>{!student&&<div className="grid sm:grid-cols-2 gap-4"><details><summary className="cursor-pointer text-primary">Entregaram ({a.entregaram.length})</summary><ul className="text-sm mt-3 space-y-1">{a.entregaram.map((name,i)=><li key={i}>{name}</li>)}</ul></details><details><summary className="cursor-pointer text-primary">Faltam entregar ({a.faltam.length})</summary><ul className="text-sm mt-3 space-y-1">{a.faltam.map((name,i)=><li key={i}>{name}</li>)}</ul></details></div>}<Button asChild variant="outline"><Link to={a.link}>Abrir atividade</Link></Button></article>)}</div>}</Page>;
-}
+const NOTICE_TYPES = {
+  activity: [ClipboardList, 'Atividades', 'violet'],
+  deadline: [AlarmClock, 'Prazos', 'amber'],
+  retry: [RotateCcw, 'Atividades', 'amber'],
+  grade: [CheckCircle2, 'Correções', 'green'],
+  summaries: [CheckCircle2, 'Correções', 'green'],
+  text_productions: [CheckCircle2, 'Correções', 'green'],
+  material: [PlayCircle, 'Materiais', 'blue'],
+  mural: [Megaphone, 'Mural', 'pink'],
+  quiz: [Sparkles, 'Quizzes', 'violet'],
+  pending: [PenLine, 'Para corrigir', 'amber'],
+  submission: [PenLine, 'Para corrigir', 'amber']
+};
+const noticeType = n => NOTICE_TYPES[n.id.split(':')[0]] || [Bell, 'Avisos', 'violet'];
+const dayGroup = value => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Anteriores';
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const diff = (start - new Date(date.getFullYear(), date.getMonth(), date.getDate())) / 864e5;
+  return diff <= 0 ? 'Hoje' : diff === 1 ? 'Ontem' : diff < 7 ? 'Últimos 7 dias' : 'Anteriores';
+};
+const timeLabel = value => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return dayGroup(value) === 'Hoje' ? date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+};
+
 export function Notifications() {
- const [data,setData,failed]=useLoad('/notifications');
- const [onlyUnread,setOnlyUnread]=useState(false);
- const readAll=async()=>{try{await api.post('/notifications/read-all');setData(list=>list.map(n=>({...n,lida:true})));window.dispatchEvent(new Event('eti-notices'));}catch{toast.error('Não foi possível marcar os avisos.');}};
- const read=async item=>{try{await api.post('/notifications/read',{id:item.id});setData(list=>list.map(x=>x.id===item.id?{...x,lida:true}:x));window.dispatchEvent(new Event('eti-notices'));}catch{toast.error('Não foi possível marcar o aviso como lido.');}};
- const unread=data?.filter(n=>!n.lida).length||0;
- return <Page title="Sua central de avisos" description="Tudo o que merece sua atenção, em um só lugar."><div className="notice-center"><PushSettings/>{!data?<Loading failed={failed}/>:<><div className="notice-toolbar"><div className="notice-tabs"><button aria-pressed={!onlyUnread} onClick={()=>setOnlyUnread(false)}>Todos <span>{data.length}</span></button><button aria-pressed={onlyUnread} onClick={()=>setOnlyUnread(true)}>Não lidos <span>{unread}</span></button></div><Button variant="ghost" disabled={!unread} onClick={readAll}><CheckCheck size={16}/>Marcar todos como lidos</Button></div><div className="notice-list">{data.filter(n=>!onlyUnread||!n.lida).map(n=><article key={n.id} className={`notice-card ${n.lida?'is-read':'is-new'}`}><div className="notice-icon"><Bell size={20}/></div><div className="notice-copy"><div className="notice-meta"><span>{n.lida?'Lido':'Novo aviso'}</span><time>{Number.isNaN(Date.parse(n.data))?'':new Date(n.data).toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}</time></div><h2>{n.titulo}</h2><div className="notice-actions"><Link to={n.link} onClick={()=>read(n)}>Abrir aviso <ArrowUpRight size={15}/></Link>{!n.lida&&<button onClick={()=>read(n)}><CheckCheck size={15}/>Marcar como lido</button>}</div></div>{!n.lida&&<span className="notice-dot" aria-label="Não lido"/>}</article>)}</div>{!data.some(n=>!onlyUnread||!n.lida)&&<div className="notice-empty"><Inbox size={36}/><h2>Tudo em dia por aqui</h2><p>Os próximos avisos aparecerão neste espaço.</p></div>}</>}</div></Page>;
+  const [data, setData, failed] = useLoad('/notifications');
+  const [onlyUnread, setOnlyUnread] = useState(false);
+  const [category, setCategory] = useState('');
+  const navigate = useNavigate();
+  const markRead = async ids => {
+    setData(list => list.map(n => (ids.includes(n.id) ? { ...n, lida: true } : n)));
+    try {
+      if (ids.length > 1) await api.post('/notifications/read-all');
+      else await api.post('/notifications/read', { id: ids[0] });
+      window.dispatchEvent(new Event('eti-notices'));
+    } catch {
+      toast.error('Não foi possível marcar como lido.');
+    }
+  };
+  const list = data || [];
+  const unread = list.filter(n => !n.lida);
+  const categories = [...new Set(list.map(n => noticeType(n)[1]))];
+  const visible = list.filter(n => (!onlyUnread || !n.lida) && (!category || noticeType(n)[1] === category));
+  const groups = ['Hoje', 'Ontem', 'Últimos 7 dias', 'Anteriores'].map(g => [g, visible.filter(n => dayGroup(n.data) === g)]).filter(([, items]) => items.length);
+
+  return (
+    <DashboardLayout>
+      <PageIntro section="CENTRAL DE AVISOS" title="Avisos" description="Tudo o que merece sua atenção, em um só lugar. Ative as notificações para receber no celular e no computador.">
+        <Button variant="outline" disabled={!unread.length} onClick={() => markRead(unread.map(n => n.id))}>
+          <CheckCheck size={16} /> Marcar tudo como lido
+        </Button>
+      </PageIntro>
+      <div className="nt">
+        <div className="nt-main">
+          <div className="ws-card ws-toolbar">
+            <div className="ws-segment" role="group" aria-label="Filtrar avisos">
+              <button type="button" aria-pressed={!onlyUnread} onClick={() => setOnlyUnread(false)}>
+                Todos <span>{list.length}</span>
+              </button>
+              <button type="button" aria-pressed={onlyUnread} onClick={() => setOnlyUnread(true)}>
+                Não lidos <span>{unread.length}</span>
+              </button>
+            </div>
+            {categories.length > 1 && (
+              <div className="nt-chips" role="group" aria-label="Tipo de aviso">
+                <button type="button" aria-pressed={!category} onClick={() => setCategory('')}>
+                  Tudo
+                </button>
+                {categories.map(c => (
+                  <button key={c} type="button" aria-pressed={category === c} onClick={() => setCategory(category === c ? '' : c)}>
+                    {c}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {!data ? (
+            <div className="ws-card ws-empty" role={failed ? 'alert' : 'status'}>
+              {failed ? 'Não foi possível carregar. Atualize a página para tentar novamente.' : 'Carregando avisos…'}
+            </div>
+          ) : !visible.length ? (
+            <div className="ws-card ws-empty">
+              <Inbox size={34} />
+              <h3>Tudo em dia por aqui</h3>
+              <p>{onlyUnread ? 'Você leu todos os avisos.' : 'Os próximos avisos aparecerão neste espaço.'}</p>
+            </div>
+          ) : (
+            groups.map(([group, items]) => (
+              <section key={group} className="nt-group">
+                <h2>{group}</h2>
+                <ul className="ws-card nt-list">
+                  {items.map(n => {
+                    const [Icon, label, color] = noticeType(n);
+                    const [title, detail] = n.titulo.includes(': ') ? [n.titulo.split(': ')[0], n.titulo.split(': ').slice(1).join(': ')] : [label, n.titulo];
+                    return (
+                      <li key={n.id} className={n.lida ? 'is-read' : 'is-new'}>
+                        <button
+                          type="button"
+                          className="nt-item"
+                          onClick={() => {
+                            if (!n.lida) markRead([n.id]);
+                            navigate(n.link);
+                          }}
+                        >
+                          <span className={`nt-icon tone-${color}`}>
+                            <Icon size={18} />
+                          </span>
+                          <span className="nt-copy">
+                            <strong>{title}</strong>
+                            <span>{detail}</span>
+                          </span>
+                          <span className="nt-meta">
+                            <time>{timeLabel(n.data)}</time>
+                            {!n.lida && <i aria-label="Não lido" />}
+                          </span>
+                        </button>
+                        {!n.lida && (
+                          <button type="button" className="nt-read" onClick={() => markRead([n.id])} aria-label={`Marcar "${n.titulo}" como lido`} title="Marcar como lido">
+                            <Check size={15} />
+                          </button>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            ))
+          )}
+        </div>
+        <aside className="nt-side">
+          <PushSettings />
+        </aside>
+      </div>
+    </DashboardLayout>
+  );
 }
+
+const dueInfo = prazo => {
+  if (!prazo) return ['Sem prazo', 'is-none'];
+  const today = new Date(new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }) + 'T00:00:00');
+  const days = Math.round((new Date(prazo + 'T00:00:00') - today) / 864e5);
+  if (days < 0) return ['Prazo encerrado', 'is-late'];
+  if (days === 0) return ['Vence hoje', 'is-urgent'];
+  if (days === 1) return ['Vence amanhã', 'is-urgent'];
+  return [`Vence em ${days} dias`, days <= 3 ? 'is-soon' : 'is-none'];
+};
+
+function StudentWorkspace({ data }) {
+  const items = [...data.atividades].sort((a, b) => (a.prazo || '9999').localeCompare(b.prazo || '9999'));
+  const sections = [
+    ['Para fazer', items.filter(a => ['A entregar', 'Devolvida'].includes(a.estado)), ClipboardList],
+    ['Aguardando correção', items.filter(a => a.estado === 'Entregue'), Clock3],
+    ['Corrigidas', items.filter(a => a.estado === 'Corrigida'), CheckCircle2],
+    ['Prazo encerrado', items.filter(a => a.estado === 'Prazo encerrado'), AlarmClock]
+  ];
+  return (
+    <>
+      <section className="ws-kpis">
+        <article className="ws-card ws-kpi is-featured">
+          <span className="ws-kpi-icon">
+            <ClipboardList size={18} />
+          </span>
+          <span>Para fazer</span>
+          <strong>{sections[0][1].length}</strong>
+          <p>Atividades a entregar ou refazer</p>
+        </article>
+        <article className="ws-card ws-kpi">
+          <span className="ws-kpi-icon">
+            <Clock3 size={18} />
+          </span>
+          <span>Aguardando correção</span>
+          <strong>{sections[1][1].length}</strong>
+        </article>
+        <article className="ws-card ws-kpi">
+          <span className="ws-kpi-icon">
+            <CheckCircle2 size={18} />
+          </span>
+          <span>Corrigidas</span>
+          <strong>{sections[2][1].length}</strong>
+        </article>
+      </section>
+      {!items.length && (
+        <div className="ws-card ws-empty">
+          <Inbox size={30} />
+          <h3>Nenhuma atividade por enquanto</h3>
+        </div>
+      )}
+      {sections
+        .filter(([, list]) => list.length)
+        .map(([title, list, Icon]) => (
+          <section key={title} className="pd-section">
+            <h2>
+              <Icon size={17} /> {title} <span>{list.length}</span>
+            </h2>
+            <div className="pd-list">
+              {list.map(a => {
+                const [label, cls] = dueInfo(a.prazo);
+                return (
+                  <Link key={a.id} to={a.link} className="ws-card pd-item">
+                    <span className={`pd-state ${a.estado === 'Devolvida' ? 'is-retry' : ''}`}>{a.estado}</span>
+                    <strong>{a.titulo}</strong>
+                    <span className={`pd-due ${['A entregar', 'Devolvida'].includes(a.estado) ? cls : 'is-none'}`}>
+                      <AlarmClock size={13} /> {['A entregar', 'Devolvida'].includes(a.estado) ? label : `Prazo ${deadline(a.prazo)}`}
+                    </span>
+                    <ArrowUpRight size={16} className="pd-go" />
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        ))}
+    </>
+  );
+}
+
+function StaffWorkspace({ data, reload }) {
+  const [correcting, setCorrecting] = useState(null);
+  const [open, setOpen] = useState('');
+  const activities = [...data.atividades].sort((a, b) => b.corrigir - a.corrigir || (a.prazo || '9999').localeCompare(b.prazo || '9999'));
+  const toGrade = activities.filter(a => a.corrigir > 0);
+  const textTotal = data.correcoes.reduce((s, c) => s + c.quantidade, 0);
+  const total = toGrade.reduce((s, a) => s + a.corrigir, 0) + textTotal;
+  const missing = activities.reduce((s, a) => s + a.faltam.length, 0);
+  return (
+    <>
+      <section className="ws-kpis">
+        <article className="ws-card ws-kpi is-featured">
+          <span className="ws-kpi-icon">
+            <PenLine size={18} />
+          </span>
+          <span>Para corrigir</span>
+          <strong>{total}</strong>
+          <p>Atividades, resumos e produções</p>
+        </article>
+        <article className="ws-card ws-kpi">
+          <span className="ws-kpi-icon">
+            <ClipboardList size={18} />
+          </span>
+          <span>Atividades acompanhadas</span>
+          <strong>{activities.length}</strong>
+        </article>
+        <article className="ws-card ws-kpi">
+          <span className="ws-kpi-icon gb-warn">
+            <AlarmClock size={18} />
+          </span>
+          <span>Entregas faltando</span>
+          <strong>{missing}</strong>
+          <p>Somando todas as atividades</p>
+        </article>
+      </section>
+
+      <section className="pd-section">
+        <h2>
+          <PenLine size={17} /> Fila de correção <span>{total}</span>
+        </h2>
+        {!total ? (
+          <div className="ws-card ws-empty">
+            <CheckCircle2 size={30} />
+            <h3>Tudo corrigido!</h3>
+            <p>Novas entregas aparecem aqui assim que chegarem.</p>
+          </div>
+        ) : (
+          <div className="pd-queue">
+            {toGrade.map(a => (
+              <button key={a.id} type="button" className="ws-card pd-queue-item" onClick={() => setCorrecting(a.id)}>
+                <span className="pd-count">{a.corrigir}</span>
+                <span className="min-w-0">
+                  <small>Atividade</small>
+                  <strong>{a.titulo}</strong>
+                </span>
+                <span className="pd-cta">
+                  Corrigir <ArrowUpRight size={14} />
+                </span>
+              </button>
+            ))}
+            {data.correcoes
+              .filter(c => c.quantidade)
+              .map(c => (
+                <Link key={c.link} to={c.link} className="ws-card pd-queue-item">
+                  <span className="pd-count">{c.quantidade}</span>
+                  <span className="min-w-0">
+                    <small>Textos dos alunos</small>
+                    <strong>{c.titulo}</strong>
+                  </span>
+                  <span className="pd-cta">
+                    Corrigir <ArrowUpRight size={14} />
+                  </span>
+                </Link>
+              ))}
+          </div>
+        )}
+      </section>
+
+      <section className="pd-section">
+        <h2>
+          <Users size={17} /> Acompanhamento de entregas
+        </h2>
+        {!activities.length ? (
+          <div className="ws-card ws-empty">
+            <h3>Nenhuma atividade publicada</h3>
+          </div>
+        ) : (
+          <div className="ws-card pd-track">
+            {activities.map(a => {
+              const totalStudents = a.entregaram.length + a.faltam.length;
+              const rate = totalStudents ? Math.round((a.entregaram.length / totalStudents) * 100) : 0;
+              const [label, cls] = dueInfo(a.prazo);
+              const expanded = open === a.id;
+              return (
+                <div key={a.id} className="pd-track-row">
+                  <button type="button" className="pd-track-head" aria-expanded={expanded} onClick={() => setOpen(expanded ? '' : a.id)}>
+                    <span className="min-w-0">
+                      <strong>{a.titulo}</strong>
+                      <span className={`pd-due ${cls}`}>
+                        <AlarmClock size={12} /> {label}
+                      </span>
+                    </span>
+                    <span className="pd-track-bar">
+                      <span className="ws-meter">
+                        <span style={{ width: `${rate}%` }} />
+                      </span>
+                      <b>
+                        {a.entregaram.length}/{totalStudents}
+                      </b>
+                    </span>
+                    <ChevronDown size={16} className="pd-chevron" />
+                  </button>
+                  {expanded && (
+                    <div className="pd-names">
+                      <div>
+                        <h3>Faltam entregar ({a.faltam.length})</h3>
+                        <p>{a.faltam.length ? a.faltam.map(n => <span key={n}>{n}</span>) : <em>Todos entregaram 🎉</em>}</p>
+                      </div>
+                      <div>
+                        <h3>Entregaram ({a.entregaram.length})</h3>
+                        <p>{a.entregaram.length ? a.entregaram.map(n => <span key={n} className="is-done">{n}</span>) : <em>Ninguém entregou ainda.</em>}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+      {correcting && (
+        <CorrectionDrawer
+          activityId={correcting}
+          onClose={() => setCorrecting(null)}
+          onChanged={reload}
+        />
+      )}
+    </>
+  );
+}
+
+export function Workspace() {
+  const [revision, setRevision] = useState(0);
+  const [data, , failed] = useLoad('/workspace?r=' + revision);
+  const student = getUser()?.role === 'student';
+  return (
+    <DashboardLayout>
+      <PageIntro
+        section={student ? 'SEU ESPAÇO / PENDÊNCIAS' : 'GESTÃO / PENDÊNCIAS'}
+        title={student ? 'Minhas pendências' : 'Pendências de correção'}
+        description={student ? 'Organize as próximas entregas e acompanhe suas correções.' : 'Corrija o que chegou e veja quem ainda falta entregar em cada atividade.'}
+      />
+      {!data ? (
+        <div className="ws-card ws-empty" role={failed ? 'alert' : 'status'}>
+          {failed ? 'Não foi possível carregar. Atualize a página para tentar novamente.' : 'Carregando pendências…'}
+        </div>
+      ) : student ? (
+        <StudentWorkspace data={data} />
+      ) : (
+        <StaffWorkspace data={data} reload={() => setRevision(v => v + 1)} />
+      )}
+    </DashboardLayout>
+  );
+}
+
 const MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 const brNum = (value, digits = 1) => (value == null ? '—' : Number(value).toLocaleString('pt-BR', { minimumFractionDigits: digits, maximumFractionDigits: digits }));
 const gradeTone = value => (value == null ? 'is-none' : value >= 7 ? 'is-high' : value >= 5 ? 'is-mid' : 'is-low');

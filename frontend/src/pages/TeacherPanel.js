@@ -109,14 +109,6 @@ export default function TeacherPanel() {
       path: '/admin/mural'
     },
     {
-      type: 'assistant',
-      icon: Sparkles,
-      title: 'Assistente IA',
-      description: 'Prepare atividades pedagógicas e revise sugestões de correção com IA.',
-      linkText: 'Abrir Assistente',
-      path: '/admin/assistant'
-    },
-    {
       type: 'reports',
       icon: ChartColumn,
       title: 'Relatórios Escolares',

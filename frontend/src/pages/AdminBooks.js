@@ -1,284 +1,419 @@
-import {Link} from 'react-router-dom';
-import PageIntro from '@/components/PageIntro';
-import EmptyCollection from '@/components/EmptyCollection';
-import {getUser} from '@/lib/auth';
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { BookOpen, Edit3, Trash2, Save, X, ListChecks } from 'lucide-react';
-import BookQuizEditor from '@/components/BookQuizEditor';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Link } from 'react-router-dom';
+import {
+  BookOpen,
+  Plus,
+  Search,
+  Pencil,
+  Trash2,
+  ListChecks,
+  FileText,
+  Trophy,
+  Users,
+  ExternalLink,
+  X,
+  UploadCloud,
+  ImageIcon,
+  CheckCircle2,
+  AlertCircle
+} from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
+import PageIntro from '@/components/PageIntro';
+import BookQuizEditor from '@/components/BookQuizEditor';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { getUser } from '@/lib/auth';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 
-const AdminBooks = () => {
-  const [books, setBooks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [editingBook, setEditingBook] = useState(null);
-  const [quizBook, setQuizBook] = useState(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState({
-    titulo: '',
-    autor: '',
-    descricao: '',
-    capa_url: '',
-    arquivo_url: '',
-    nivel_ensino: ''
+const LEVEL = { AMBOS: 'Todos os leitores', FUNDAMENTAL: 'Fundamental', 'MÉDIO': 'Médio' };
+const normalize = value => String(value || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const errorText = e => (typeof e.response?.data?.detail === 'string' ? e.response.data.detail : 'Não foi possível concluir. Tente novamente.');
+
+function Cover({ book, size = 'sm' }) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <span className={`ab-cover is-${size}`}>
+      {book.capa_url && !failed ? <img src={book.capa_url} alt="" onError={() => setFailed(true)} /> : <BookOpen size={size === 'sm' ? 18 : 30} />}
+    </span>
+  );
+}
+
+function EditSheet({ book, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    titulo: book.titulo,
+    autor: book.autor || '',
+    descricao: book.descricao || '',
+    nivel_ensino: book.nivel_ensino || 'AMBOS',
+    capa_url: book.capa_url || '',
+    arquivo_url: book.arquivo_url || ''
   });
+  const [busy, setBusy] = useState('');
+  const coverRef = useRef(null);
+  const pdfRef = useRef(null);
+  const field = (key, value) => setForm(v => ({ ...v, [key]: value }));
 
   useEffect(() => {
-    loadBooks();
-  }, []);
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = e => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = overflow;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [onClose]);
 
-  const loadBooks = async () => {
-    try {
-      // Get all books (as admin we see all)
-      const response = await api.get('/books');
-      setBooks(response.data);
-    } catch (error) {
-      toast.error('Erro ao carregar livros');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEdit = (book) => {
-    setEditingBook(book);
-    setFormData({
-      titulo: book.titulo,
-      autor: book.autor,
-      descricao: book.descricao || '',
-      capa_url: book.capa_url || '',
-      arquivo_url: book.arquivo_url || '',
-      nivel_ensino: book.nivel_ensino
-    });
-    setEditDialogOpen(true);
-  };
-
-  const handleSave = async () => {
-    if (!editingBook) return;
-
-    setSaving(true);
-    try {
-      const response = await api.put(`/admin/books/${editingBook.id}`, formData);
-      
-      // Update local state
-      setBooks(books.map(b => b.id === editingBook.id ? { ...b, ...response.data } : b));
-      
-      toast.success('Livro atualizado com sucesso!');
-      setEditDialogOpen(false);
-      setEditingBook(null);
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Erro ao atualizar livro');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDelete = async (bookId) => {
-    if (!window.confirm('Tem certeza que deseja excluir este livro? Todos os resumos e progressos relacionados também serão excluídos.')) {
+  const upload = async (file, kind) => {
+    if (!file) return;
+    const valid = kind === 'pdf' ? file.type === 'application/pdf' : ['image/jpeg', 'image/png', 'image/webp'].includes(file.type);
+    if (!valid || file.size > (kind === 'pdf' ? 50 : 5) * 1024 * 1024) {
+      toast.error(kind === 'pdf' ? 'Escolha um PDF de até 50 MB.' : 'Escolha uma imagem JPG, PNG ou WebP de até 5 MB.');
       return;
     }
-
+    setBusy(kind);
     try {
-      await api.delete(`/admin/books/${bookId}`);
-      setBooks(books.filter(b => b.id !== bookId));
-      toast.success('Livro excluído com sucesso!');
-    } catch (error) {
-      toast.error('Erro ao excluir livro');
+      const data = new FormData();
+      data.append('file', file);
+      const r = await api.post(`/admin/books/upload-${kind}`, data);
+      field(kind === 'pdf' ? 'arquivo_url' : 'capa_url', r.data.url);
+      toast.success(kind === 'pdf' ? 'Novo PDF enviado. Salve para aplicar.' : 'Nova capa enviada. Salve para aplicar.');
+    } catch (e) {
+      toast.error(errorText(e));
+    } finally {
+      setBusy('');
     }
   };
 
-  const getNivelBadge = (nivel) => {
-    const colors = {
-      'FUNDAMENTAL': 'bg-blue-100 text-blue-700',
-      'MÉDIO': 'bg-purple-100 text-purple-700',
-      'AMBOS': 'bg-green-100 text-green-700'
-    };
-    const labels = {
-      'FUNDAMENTAL': 'Fundamental',
-      'MÉDIO': 'Médio',
-      'AMBOS': 'Ambos'
-    };
-    return (
-      <span className={`px-2 py-1 text-xs font-medium rounded-full ${colors[nivel] || 'bg-gray-100 text-gray-700'}`}>
-        {labels[nivel] || nivel}
-      </span>
-    );
+  const save = async e => {
+    e.preventDefault();
+    setBusy('save');
+    try {
+      const r = await api.put(`/admin/books/${book.id}`, { ...form, titulo: form.titulo.trim(), autor: form.autor.trim() || 'Autor não informado' });
+      toast.success('Livro atualizado.');
+      onSaved({ ...book, ...form, ...r.data });
+    } catch (err) {
+      toast.error(errorText(err));
+    } finally {
+      setBusy('');
+    }
   };
 
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+  return createPortal(
+    <div className="ws-overlay" onMouseDown={e => e.target === e.currentTarget && onClose()}>
+      <form className="ws-sheet ab-sheet" onSubmit={save} role="dialog" aria-modal="true" aria-label={`Editar ${book.titulo}`}>
+        <header className="ws-sheet-head">
+          <span className="qz-settings-icon">
+            <Pencil size={18} />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="ws-eyebrow">Editar livro</p>
+            <h2>{form.titulo || 'Sem título'}</h2>
+            <p>As alterações aparecem na biblioteca assim que você salvar.</p>
+          </div>
+          <button type="button" className="ws-icon-btn" onClick={onClose} aria-label="Fechar">
+            <X size={19} />
+          </button>
+        </header>
+        <div className="ws-sheet-body">
+          <fieldset disabled={!!busy} className="ab-edit">
+            <div className="ab-edit-cover">
+              <Cover book={{ ...book, capa_url: form.capa_url }} size="lg" />
+              <input ref={coverRef} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={e => upload(e.target.files[0], 'cover')} />
+              <Button type="button" variant="outline" onClick={() => coverRef.current.click()}>
+                <ImageIcon size={15} /> {busy === 'cover' ? 'Enviando…' : 'Trocar capa'}
+              </Button>
+            </div>
+            <div className="ab-edit-fields">
+              <label className="qz-field">
+                <span>Título</span>
+                <input required maxLength={200} value={form.titulo} onChange={e => field('titulo', e.target.value)} />
+              </label>
+              <label className="qz-field">
+                <span>Autor</span>
+                <input maxLength={200} value={form.autor} onChange={e => field('autor', e.target.value)} />
+              </label>
+              <label className="qz-field">
+                <span>Disponível para</span>
+                <select value={form.nivel_ensino} onChange={e => field('nivel_ensino', e.target.value)} data-testid="edit-nivel-ensino">
+                  <option value="AMBOS">Todos os alunos</option>
+                  <option value="FUNDAMENTAL">Apenas ensino fundamental</option>
+                  <option value="MÉDIO">Apenas ensino médio</option>
+                </select>
+              </label>
+              <label className="qz-field">
+                <span>Sinopse</span>
+                <textarea className="cx-feedback" maxLength={5000} value={form.descricao} onChange={e => field('descricao', e.target.value)} placeholder="Do que trata o livro?" />
+              </label>
+              <div className="ab-pdf">
+                <span className={form.arquivo_url ? 'is-ok' : 'is-missing'}>{form.arquivo_url ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}</span>
+                <div>
+                  <strong>{form.arquivo_url ? 'PDF cadastrado' : 'Sem PDF'}</strong>
+                  <small>{form.arquivo_url ? 'Os alunos podem ler no leitor da plataforma.' : 'Sem o PDF, o livro não pode ser lido nem gerar certificado.'}</small>
+                </div>
+                <input ref={pdfRef} type="file" accept="application/pdf" className="sr-only" onChange={e => upload(e.target.files[0], 'pdf')} />
+                <Button type="button" variant="outline" onClick={() => pdfRef.current.click()}>
+                  <UploadCloud size={15} /> {busy === 'pdf' ? 'Enviando…' : form.arquivo_url ? 'Substituir' : 'Enviar PDF'}
+                </Button>
+              </div>
+            </div>
+          </fieldset>
         </div>
-      </DashboardLayout>
-    );
-  }
+        <footer className="bqe-footer">
+          <span className="flex-1" />
+          <Button type="button" variant="ghost" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button type="submit" className="qz-btn-primary" disabled={!!busy} data-testid="save-book-button">
+            {busy === 'save' ? 'Salvando…' : 'Salvar alterações'}
+          </Button>
+        </footer>
+      </form>
+    </div>,
+    document.body
+  );
+}
+
+export default function AdminBooks() {
+  const admin = getUser()?.role === 'admin';
+  const [books, setBooks] = useState(null);
+  const [stats, setStats] = useState({});
+  const [failed, setFailed] = useState(false);
+  const [query, setQuery] = useState('');
+  const [level, setLevel] = useState('');
+  const [filter, setFilter] = useState('all');
+  const [editing, setEditing] = useState(null);
+  const [quizBook, setQuizBook] = useState(null);
+
+  const load = () => {
+    setFailed(false);
+    Promise.all([api.get('/books'), api.get('/admin/books/overview').catch(() => ({ data: {} }))])
+      .then(([b, o]) => {
+        setBooks(b.data);
+        setStats(o.data || {});
+      })
+      .catch(() => setFailed(true));
+  };
+
+  useEffect(load, []);
+
+  const remove = async book => {
+    if (!window.confirm(`Excluir "${book.titulo}"? Resumos, progresso e questionário deste livro também serão removidos. Certificados já emitidos continuam válidos.`)) return;
+    try {
+      await api.delete(`/admin/books/${book.id}`);
+      setBooks(list => list.filter(b => b.id !== book.id));
+      toast.success('Livro excluído.');
+    } catch (e) {
+      toast.error(errorText(e));
+    }
+  };
+
+  const all = books || [];
+  const info = id => stats[id] || {};
+  const visible = all
+    .filter(b => normalize(`${b.titulo} ${b.autor}`).includes(normalize(query)))
+    .filter(b => !level || (b.nivel_ensino || 'AMBOS') === level)
+    .filter(b => (filter === 'noquiz' ? !info(b.id).perguntas : filter === 'nopdf' ? !b.arquivo_url : true))
+    .sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+  const totals = {
+    pdf: all.filter(b => b.arquivo_url).length,
+    quiz: all.filter(b => info(b.id).perguntas).length,
+    certificados: Object.values(stats).reduce((s, x) => s + (x.certificados || 0), 0),
+    leitores: Object.values(stats).reduce((s, x) => s + (x.leitores || 0), 0)
+  };
 
   return (
     <DashboardLayout>
       <div data-testid="admin-books-page">
-        <PageIntro section="BIBLIOTECA / ACERVO" title="Acervo de livros" description="Organize as leituras que vão chegar aos seus alunos."><Button asChild><Link to="/admin/add-book">Adicionar livro</Link></Button></PageIntro>
+        <PageIntro section="BIBLIOTECA / ACERVO" title="Gerenciar livros" description="Cadastre livros, mantenha capas e PDFs em dia e crie o questionário que libera o certificado de leitura.">
+          {admin && (
+            <Button asChild className="qz-btn-primary">
+              <Link to="/admin/add-book">
+                <Plus size={16} /> Adicionar livro
+              </Link>
+            </Button>
+          )}
+        </PageIntro>
 
-        {/* Books List */}
-        {books.length === 0 ? (
-          <EmptyCollection title="Seu acervo começa aqui" description={<>Nenhum livro cadastrado ainda.</>} action="Adicionar primeiro livro" to="/admin/add-book"/>
-        ) : (
-          <div className="collection-grid">
-            {books.map((book, index) => (
-              <motion.div
-                key={book.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="bg-white border border-stone-100 rounded-xl shadow-sm overflow-hidden"
-              >
-                {/* Cover */}
-                <div className="collection-book-cover relative">
-                  <img
-                    src={book.capa_url}
-                    alt={book.titulo}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-2 right-2">
-                    {getNivelBadge(book.nivel_ensino)}
-                  </div>
-                </div>
-
-                {/* Info */}
-                <div className="p-4">
-                  <h3 className="font-semibold text-foreground line-clamp-1 mb-1">
-                    {book.titulo}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    {book.autor}
-                  </p>
-
-                  {/* Actions */}
-                  <Button variant="outline" size="sm" className="w-full mb-2" onClick={() => setQuizBook(book)}>
-                    <ListChecks className="h-3 w-3 mr-1" />
-                    Questionário e certificado
-                  </Button>
-                  {getUser()?.role==='admin'&&<div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => handleEdit(book)}
-                      data-testid={`edit-book-${book.id}`}
-                    >
-                      <Edit3 className="h-3 w-3 mr-1" />
-                      Editar
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => handleDelete(book.id)}
-                      data-testid={`delete-book-${book.id}`}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>}
-                </div>
-              </motion.div>
-            ))}
+        {failed ? (
+          <div className="ws-card ws-empty" role="alert">
+            <h3>Não foi possível carregar o acervo</h3>
+            <button className="underline font-semibold" onClick={load}>
+              Tentar novamente
+            </button>
           </div>
-        )}
+        ) : !books ? (
+          <div className="ws-card ws-empty" role="status">
+            <span className="cx-spinner mx-auto mb-3" /> Carregando acervo…
+          </div>
+        ) : (
+          <>
+            <section className="ws-kpis">
+              <article className="ws-card ws-kpi is-featured">
+                <span className="ws-kpi-icon">
+                  <BookOpen size={18} />
+                </span>
+                <span>Livros no acervo</span>
+                <strong>{all.length}</strong>
+                <p>{totals.pdf} com PDF para leitura</p>
+              </article>
+              <article className="ws-card ws-kpi">
+                <span className="ws-kpi-icon">
+                  <ListChecks size={18} />
+                </span>
+                <span>Com questionário</span>
+                <strong>
+                  {totals.quiz}
+                  <small> /{all.length}</small>
+                </strong>
+                <p>Liberam certificado ao final</p>
+              </article>
+              <article className="ws-card ws-kpi">
+                <span className="ws-kpi-icon">
+                  <Users size={18} />
+                </span>
+                <span>Leituras iniciadas</span>
+                <strong>{totals.leitores}</strong>
+                <p>Somando todos os livros</p>
+              </article>
+              <article className="ws-card ws-kpi">
+                <span className="ws-kpi-icon gb-warn">
+                  <Trophy size={18} />
+                </span>
+                <span>Certificados emitidos</span>
+                <strong>{totals.certificados}</strong>
+                <p>Alunos aprovados nos questionários</p>
+              </article>
+            </section>
 
-        {/* Edit Dialog */}
-        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Editar Livro</DialogTitle>
-            </DialogHeader>
-
-            <div className="space-y-4 mt-4">
-              <div>
-                <Label htmlFor="edit-titulo">Título</Label>
-                <Input
-                  id="edit-titulo"
-                  value={formData.titulo}
-                  onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="edit-autor">Autor</Label>
-                <Input
-                  id="edit-autor"
-                  value={formData.autor}
-                  onChange={(e) => setFormData({ ...formData, autor: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="edit-descricao">Descrição</Label>
-                <Textarea
-                  id="edit-descricao"
-                  value={formData.descricao}
-                  onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                  className="mt-1"
-                  rows={3}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="edit-nivel">Nível de Ensino</Label>
-                <Select
-                  value={formData.nivel_ensino}
-                  onValueChange={(value) => setFormData({ ...formData, nivel_ensino: value })}
-                >
-                  <SelectTrigger className="mt-1" data-testid="edit-nivel-ensino">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="AMBOS">Ambos (Fundamental e Médio)</SelectItem>
-                    <SelectItem value="FUNDAMENTAL">Apenas Ensino Fundamental</SelectItem>
-                    <SelectItem value="MÉDIO">Apenas Ensino Médio</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  O livro só aparecerá para alunos do nível selecionado
-                </p>
-              </div>
-
-              <div className="flex gap-2 pt-4">
-                <Button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="rounded-lg"
-                  data-testid="save-book-button"
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  {saving ? 'Salvando...' : 'Salvar'}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setEditDialogOpen(false)}
-                  className="rounded-lg"
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Cancelar
-                </Button>
+            <div className="ws-card ws-toolbar">
+              <label className="ws-search">
+                <Search size={16} />
+                <input aria-label="Buscar livro" placeholder="Buscar por título ou autor…" value={query} onChange={e => setQuery(e.target.value)} />
+              </label>
+              <select aria-label="Filtrar etapa" value={level} onChange={e => setLevel(e.target.value)}>
+                <option value="">Todas as etapas</option>
+                <option value="FUNDAMENTAL">Fundamental</option>
+                <option value="MÉDIO">Médio</option>
+                <option value="AMBOS">Todos os leitores</option>
+              </select>
+              <div className="ws-segment" role="group" aria-label="Situação">
+                {[
+                  ['all', 'Todos'],
+                  ['noquiz', 'Sem questionário'],
+                  ['nopdf', 'Sem PDF']
+                ].map(([key, label]) => (
+                  <button key={key} type="button" aria-pressed={filter === key} onClick={() => setFilter(key)}>
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
-        {quizBook && <BookQuizEditor book={quizBook} onClose={() => setQuizBook(null)} />}
+
+            {!visible.length ? (
+              <div className="ws-card ws-empty">
+                <BookOpen size={28} />
+                <h3>{all.length ? 'Nenhum livro nesta seleção' : 'Seu acervo começa aqui'}</h3>
+                <p>{all.length ? 'Ajuste a busca ou os filtros.' : 'Envie o primeiro PDF para montar a biblioteca da escola.'}</p>
+              </div>
+            ) : (
+              <div className="ws-card ws-table-wrap">
+                <table className="ws-table ab-table">
+                  <thead>
+                    <tr>
+                      <th>Livro</th>
+                      <th>Etapa</th>
+                      <th>PDF</th>
+                      <th>Questionário</th>
+                      <th className="is-center">Leitores</th>
+                      <th className="is-center">Certificados</th>
+                      <th aria-label="Ações" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visible.map(book => {
+                      const s = info(book.id);
+                      return (
+                        <tr key={book.id}>
+                          <td>
+                            <Link to={`/book/${book.id}`} className="ab-book">
+                              <Cover book={book} />
+                              <span className="min-w-0">
+                                <strong>{book.titulo}</strong>
+                                <small>{book.autor || 'Autor não informado'}</small>
+                              </span>
+                            </Link>
+                          </td>
+                          <td>
+                            <span className="ws-chip">{LEVEL[book.nivel_ensino] || book.nivel_ensino || 'Todos'}</span>
+                          </td>
+                          <td>
+                            {book.arquivo_url ? (
+                              <span className="ab-status is-ok">
+                                <FileText size={13} /> Disponível
+                              </span>
+                            ) : (
+                              <span className="ab-status is-missing">
+                                <AlertCircle size={13} /> Faltando
+                              </span>
+                            )}
+                          </td>
+                          <td>
+                            <button type="button" className={`ab-quiz ${s.perguntas ? 'is-ok' : ''}`} onClick={() => setQuizBook(book)}>
+                              <ListChecks size={14} /> {s.perguntas ? `${s.perguntas} perguntas` : 'Criar'}
+                            </button>
+                          </td>
+                          <td className="is-center">
+                            {s.leitores || 0}
+                            {s.concluidos ? <small className="ab-sub">{s.concluidos} concluíram</small> : null}
+                          </td>
+                          <td className="is-center">{s.certificados || 0}</td>
+                          <td>
+                            <div className="ab-actions">
+                              <Link to={`/reader/${book.id}`} className="ws-icon-btn" title="Abrir no leitor" aria-label={`Abrir ${book.titulo} no leitor`}>
+                                <ExternalLink size={16} />
+                              </Link>
+                              {admin && (
+                                <>
+                                  <button type="button" className="ws-icon-btn" title="Editar" aria-label={`Editar ${book.titulo}`} onClick={() => setEditing(book)} data-testid={`edit-book-${book.id}`}>
+                                    <Pencil size={16} />
+                                  </button>
+                                  <button type="button" className="ws-icon-btn ab-danger" title="Excluir" aria-label={`Excluir ${book.titulo}`} onClick={() => remove(book)} data-testid={`delete-book-${book.id}`}>
+                                    <Trash2 size={16} />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
       </div>
+      {editing && (
+        <EditSheet
+          book={editing}
+          onClose={() => setEditing(null)}
+          onSaved={updated => {
+            setBooks(list => list.map(b => (b.id === updated.id ? updated : b)));
+            setEditing(null);
+          }}
+        />
+      )}
+      {quizBook && (
+        <BookQuizEditor
+          book={quizBook}
+          onClose={changed => {
+            setQuizBook(null);
+            if (changed) load();
+          }}
+        />
+      )}
     </DashboardLayout>
   );
-};
-
-export default AdminBooks;
+}
