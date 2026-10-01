@@ -1236,6 +1236,8 @@ from backend.quizzes import create_quiz_router
 api_router.include_router(create_quiz_router(db, get_current_user, require_staff))
 from backend.book_quiz import create_book_quiz_router, ensure_indexes as ensure_book_quiz_indexes
 api_router.include_router(create_book_quiz_router(db, get_current_user, require_staff))
+from backend.reading import create_reading_router, ensure_indexes as ensure_reading_indexes
+api_router.include_router(create_reading_router(db, get_current_user))
 app.include_router(api_router)
 
 # Mount static files for uploads
@@ -1262,6 +1264,7 @@ logger = logging.getLogger(__name__)
 async def start_push_worker():
     await ensure_push_indexes(db)
     await ensure_book_quiz_indexes(db)
+    await ensure_reading_indexes(db)
     app.state.push_task = asyncio.create_task(push_loop(db))
 
 @app.on_event("shutdown")

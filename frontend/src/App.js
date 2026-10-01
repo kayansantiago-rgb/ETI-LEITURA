@@ -3,6 +3,7 @@ import Classes from '@/pages/Classes';
 import SplashScreen from '@/components/SplashScreen';
 import {Rubrics} from '@/pages/Assessment';
 import BookQuiz from '@/pages/BookQuiz';
+import Ranking from '@/pages/Ranking';
 import {Videos} from '@/pages/Teaching';
 import {Workspace,Notifications,Reports,Teachers,PasswordRecovery} from '@/pages/SchoolPages';
 import {lazy,Suspense} from 'react';
@@ -46,6 +47,7 @@ function App() {
         <Routes><Route path="/quizzes" element={<ProtectedRoute><Quizzes/></ProtectedRoute>}/><Route path="/admin/classes" element={<ProtectedRoute><Classes/></ProtectedRoute>}/><Route path="/admin/classes/:turma" element={<ProtectedRoute><Classes/></ProtectedRoute>}/><Route path="/gradebook" element={<Navigate to="/admin/reports" replace/>}/><Route path="/admin/rubrics" element={<ProtectedRoute><Rubrics/></ProtectedRoute>}/><Route path="/videos" element={<ProtectedRoute><Videos/></ProtectedRoute>}/><Route path="/admin/assistant" element={<Navigate to="/admin/professor" replace/>}/>
           <Route path="/workspace" element={<ProtectedRoute><Workspace/></ProtectedRoute>}/>
           <Route path="/book/:id/quiz" element={<ProtectedRoute><BookQuiz/></ProtectedRoute>}/>
+          <Route path="/ranking" element={<ProtectedRoute><Ranking/></ProtectedRoute>}/>
           <Route path="/notifications" element={<ProtectedRoute><Notifications/></ProtectedRoute>}/>
           <Route path="/admin/reports" element={<ProtectedRoute><Reports/></ProtectedRoute>}/>
           <Route path="/admin/teachers" element={<ProtectedRoute><Teachers/></ProtectedRoute>}/>

@@ -30,7 +30,7 @@ Materiais de vídeo aceitam transcrição ou resumo textual preenchido pelo prof
 
 - `python -m pytest tests -q`: validações e isolamento de acesso.
 - `scripts/check_school.py`: integração com contas temporárias, notas/histórico, critérios e novos avisos; remove somente seus registros de teste.
-- `node scripts/check-assessment.cjs`: fluxo visual simulado, fonte ampliada, teclado, dispositivos estreitos, critérios e notas.
+- `node scripts/check-ui.cjs` (após `npm run build`): percorre as telas atuais com dados fictícios de `scripts/ui-fixtures`, no computador e no celular, incluindo correção e leitura até o certificado.
 
 Na implantação, execute `scripts/init_database.py` para criar `rubrics` e `grade_entries` e seus índices. O backup existente abrange essas coleções.
 

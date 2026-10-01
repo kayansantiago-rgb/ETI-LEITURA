@@ -23,7 +23,8 @@ import {
   GraduationCap,
   ClipboardList,
   Bell,
-  ChartColumn
+  ChartColumn,
+  Trophy
 } from 'lucide-react';
 import { getAuth, clearAuth } from '@/lib/auth';
 import Brand from '@/components/Brand';
@@ -35,6 +36,7 @@ const learning = [
   [ClipboardList, 'Minhas atividades', '/activities'],
   [Video, 'Vídeos e materiais', '/videos'],
   [BookOpen, 'Biblioteca', '/library'],
+  [Trophy, 'Ranking de leitores', '/ranking'],
   [PenTool, 'Produção textual', '/text-productions'],
   [ClipboardList, 'Pendências', '/workspace'],
   [FileText, 'Meus resumos', '/summaries']
@@ -45,6 +47,7 @@ const management = [
   [ClipboardList, 'Critérios de correção', '/admin/rubrics'],
   [Video, 'Vídeos e materiais', '/videos'],
   [ChartColumn, 'Relatórios', '/admin/reports'],
+  [Trophy, 'Ranking de leitores', '/ranking'],
   [Users, 'Professores', '/admin/teachers'],
   [ClipboardList, 'Atividades', '/admin/activities'],
   [Library, 'Acervo de livros', '/admin/books'],
@@ -166,7 +169,7 @@ export default function DashboardLayout({ children, focusMode = false }) {
   const otherArea = !mobileLinks.some(([, , path]) => location.pathname === path || location.pathname.startsWith(path + '/'));
   const railPaths = isAdmin
     ? ['/admin/professor', '/admin/classes', '/admin/activities', '/videos', '/library', '/admin/reports', '/admin/users']
-    : ['/dashboard', '/activities', '/quizzes', '/videos', '/library', '/text-productions', '/workspace'];
+    : ['/dashboard', '/activities', '/quizzes', '/videos', '/library', '/ranking', '/text-productions', '/workspace'];
 
   const railItems = isAdmin ? staffLinks : railPaths.map(path => (isAdmin ? [teacher, ...management, [BookOpen, 'Biblioteca', '/library']] : learning).find(item => item[2] === path)).filter(Boolean);
 

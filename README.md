@@ -99,7 +99,9 @@ cd frontend
 npm run test:ui
 ```
 
-O teste abre um navegador isolado sem janela, usa respostas simuladas da API e verifica telas, busca, filtros, bloqueio de páginas administrativas e navegação móvel. As imagens geradas em `docs` usam dados demonstrativos; não representam o conteúdo do banco real.
+O teste abre um navegador isolado sem janela, usa os dados fictícios de `scripts/ui-fixtures` e percorre as telas de aluno e professor no computador e no celular, conferindo erros e rolagem horizontal. Também testa a correção com "Salvar e próximo" e a leitura até o certificado.
+
+Para ver o site sem banco de dados: `node scripts/ui-fixtures/api.cjs` em um terminal e `npm start` na pasta `frontend` em outro.
 
 ## Banco local configurado
 

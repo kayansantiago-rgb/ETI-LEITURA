@@ -1,4 +1,6 @@
 import PageIntro from '@/components/PageIntro';
+import CertificateShelf from '@/components/CertificateShelf';
+import { MedalGrid, useReadingStats } from '@/components/ReadingJourney';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { User, Mail, GraduationCap, Save } from 'lucide-react';
@@ -88,7 +90,7 @@ const Profile = () => {
 
   return (
     <DashboardLayout>
-      <div className="max-w-2xl mx-auto" data-testid="profile-page">
+      <div className="max-w-3xl mx-auto pf" data-testid="profile-page">
         <PageIntro section="MINHA CONTA / IDENTIDADE" title="Meu Perfil" description="Seu espaço, do seu jeito. Mantenha seus dados atualizados."/>
 
         <motion.div
@@ -180,9 +182,36 @@ const Profile = () => {
             </div>
           </form>
         </motion.div>
+        {getUser()?.role === 'student' && (
+          <>
+            <ProfileMedals />
+            <CertificateShelf />
+          </>
+        )}
       </div>
     </DashboardLayout>
   );
 };
+
+
+function ProfileMedals() {
+  const [stats] = useReadingStats();
+  useEffect(() => {
+    // O link "Ver todas" da página inicial leva direto às medalhas.
+    if (stats && window.location.hash === '#conquistas') document.getElementById('conquistas')?.scrollIntoView({ behavior: 'smooth' });
+  }, [stats]);
+  if (!stats) return null;
+  return (
+    <section className="pf-medals" id="conquistas" aria-label="Minhas conquistas">
+      <header>
+        <h2>Minhas conquistas</h2>
+        <span>
+          {stats.medalhas.filter(m => m.conquistada).length} de {stats.medalhas.length} medalhas · {stats.paginas_total} páginas lidas · melhor sequência de {stats.melhor_sequencia} dias
+        </span>
+      </header>
+      <MedalGrid medals={stats.medalhas} />
+    </section>
+  );
+}
 
 export default Profile;

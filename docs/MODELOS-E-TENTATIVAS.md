@@ -22,6 +22,6 @@ Dados anteriores a esta atualização são tratados como tentativa 1. Versões q
 
 - `python -m pytest tests -q`: validação e permissões.
 - `python scripts/check_activity_workflow.py`: fluxo com MongoDB local em banco temporário exclusivo, removido ao finalizar; não altera os registros da escola.
-- `node scripts/check-activity-ui.cjs`: navegador com dados simulados, publicação, devolução, histórico e telas de 320, 390 e 1440 pixels. Requer interface compilada servida na porta 3000.
+- `node scripts/check-ui.cjs` (após `npm run build`): percorre as telas atuais com dados fictícios de `scripts/ui-fixtures`, no computador e no celular, incluindo correção e leitura até o certificado.
 
 Inicializar os índices com `scripts/init_database.py` e reiniciar a API ao instalar esta atualização. A coleção `activity_templates` guarda os modelos. O histórico fica no próprio documento da entrega e é incluído nos backups existentes.

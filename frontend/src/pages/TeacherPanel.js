@@ -16,7 +16,8 @@ import {
   PenTool,
   ChartColumn,
   Clock,
-  Calendar
+  Calendar,
+  Trophy
 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import api from '@/lib/api';
@@ -115,6 +116,14 @@ export default function TeacherPanel() {
       description: 'Acompanhe médias, engajamento de leitura e participação das turmas.',
       linkText: 'Ver Relatórios',
       path: '/admin/reports'
+    },
+    {
+      type: 'ranking',
+      icon: Trophy,
+      title: 'Ranking de Leitores',
+      description: 'Veja quem mais leu em cada turma: livros, certificados e sequência de leitura.',
+      linkText: 'Ver Ranking',
+      path: '/ranking'
     },
     {
       type: 'videos',

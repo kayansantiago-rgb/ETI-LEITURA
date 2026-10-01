@@ -34,5 +34,4 @@ O rascunho continua salvo neste navegador. Em caso de falha de conexão, a tela 
 - `python -m pytest tests -q`: regressões do servidor.
 - `python scripts/check_activity_schedule.py`: banco temporário, permissões, horários, visibilidade, notificações e comentários privados.
 - `python scripts/check_activity_workflow.py`: modelos, reenvios, histórico e correção.
-- `node scripts/check-guided-activities.cjs`: versão compilada, fluxo do aluno/professor, agendamento, temas e larguras de tela.
-- `node scripts/check-activity-ui.cjs`: interface de modelos e reenvios no servidor local.
+- `node scripts/check-ui.cjs` (após `npm run build`): percorre as telas atuais com dados fictícios de `scripts/ui-fixtures`, no computador e no celular, incluindo correção e leitura até o certificado.

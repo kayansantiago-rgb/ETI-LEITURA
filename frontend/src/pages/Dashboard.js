@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import StudentDiscovery from '@/components/StudentDiscovery';
+import ReadingJourney from '@/components/ReadingJourney';
+import ClassRanking from '@/components/ClassRanking';
 import StatusBadge, { activityState } from '@/components/StatusBadge';
 import { getUser } from '@/lib/auth';
 import api from '@/lib/api';
@@ -182,6 +184,8 @@ export default function Dashboard() {
               stats={data?.stats || {}}
             />
 
+            {!staff && <ReadingJourney />}
+
             {/* Seção Central: Continuar Leitura + Recentes & Calendário (Imagem de Referência 3) */}
             <div className="study-section-grid">
               {/* Card Esquerdo: Continuar Leitura & Lançamentos */}
@@ -246,6 +250,8 @@ export default function Dashboard() {
                 <InteractiveCalendar pendingActivities={pending} />
               </section>
             </div>
+
+            {!staff && <ClassRanking limit={5} compact />}
 
           </>
         )}

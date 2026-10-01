@@ -170,7 +170,11 @@ def create_school_router(db,current,admin,staff,hash_password):
     @router.put('/books/{book_id}/position')
     async def save_position(book_id:str,data:ReaderPosition,user=Depends(current)):
         if not await db.books.find_one({'id':book_id}):raise HTTPException(404,'Livro não encontrado')
+        previous=await db.reader_positions.find_one({'user_id':user['id'],'book_id':book_id},{'_id':0,'page':1})
         await db.reader_positions.update_one({'user_id':user['id'],'book_id':book_id},{'$set':{'page':data.page,'total':data.total,'updated_at':now()}},upsert=True)
+        if user['role']=='student':
+            from backend.reading import record_page
+            await record_page(db,user['id'],(previous or {}).get('page'),data.page)
         result={'page':data.page}
         if data.total and data.page<=data.total:
             # O progresso acompanha a página mais avançada já lida; voltar páginas não reduz a porcentagem.
