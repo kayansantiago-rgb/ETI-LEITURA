@@ -287,10 +287,9 @@ def create_activity_router(db, get_current_user, require_admin):
 
     @router.delete('/admin/activities/{activity_id}', status_code=204)
     async def delete_activity(activity_id: str, user=Depends(require_admin)):
-        activity=await visible(activity_id, user)
-        can_manage(activity,user)
-        if await db.activity_submissions.count_documents({'activity_id': activity_id}):
-            raise HTTPException(409, 'Esta atividade já tem respostas. Encerre-a para preservar as entregas.')
+        activity = await visible(activity_id, user)
+        can_manage(activity, user)
+        await db.activity_submissions.delete_many({'activity_id': activity_id})
         await db.activities.delete_one({'id': activity_id})
 
     return router

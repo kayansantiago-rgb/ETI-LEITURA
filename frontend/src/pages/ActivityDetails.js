@@ -94,13 +94,14 @@ export default function ActivityDetails() {
   };
 
   const remove = async () => {
-    if (!window.confirm('Excluir esta atividade sem respostas?')) return;
+    if (!window.confirm('Tem certeza que deseja apagar esta atividade? Esta ação é permanente e removerá a atividade e todas as entregas dos alunos.')) return;
     setBusy(true);
     try {
       await api.delete(`/admin/activities/${id}`);
       setDeleted(true);
+      toast.success('Atividade apagada com sucesso!');
     } catch (e) {
-      toast.error(activityError(e, 'Não foi possível excluir.'));
+      toast.error(activityError(e, 'Não foi possível apagar a atividade.'));
     } finally {
       setBusy(false);
     }

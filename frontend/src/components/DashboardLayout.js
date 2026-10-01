@@ -187,10 +187,21 @@ export default function DashboardLayout({ children, focusMode = false }) {
         </button>}
         <div className="rail-bottom">
           <span className="user-avatar">{user?.nome?.charAt(0)}</span>
-          <div>
+          <div className="flex-1 min-w-0">
             <strong>{user?.nome?.split(' ')[0]}</strong>
             <small>{isAdmin ? 'Ensinar e acompanhar' : user?.turma || 'Seu espaço de estudo'}</small>
           </div>
+          <button
+            className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+            title="Sair da conta"
+            aria-label="Sair da conta"
+            onClick={async () => {
+              await clearAuth();
+              navigate('/login');
+            }}
+          >
+            <LogOut size={18} />
+          </button>
         </div>
       </aside>
       <header className="studio-header">
@@ -211,6 +222,19 @@ export default function DashboardLayout({ children, focusMode = false }) {
             </span>
             <span>{user?.nome?.split(' ')[0]}</span>
           </Link>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 font-bold flex items-center gap-1.5 px-2.5"
+            onClick={async () => {
+              await clearAuth();
+              navigate('/login');
+            }}
+            title="Sair da conta"
+          >
+            <LogOut size={17} />
+            <span className="hidden sm:inline">Sair</span>
+          </Button>
         </div>
       </header>
       <nav className="studio-tabs" aria-label="Áreas principais">

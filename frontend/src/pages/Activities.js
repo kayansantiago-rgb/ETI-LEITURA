@@ -14,12 +14,14 @@ import {
   TrendingUp,
   BarChart3,
   BookOpen,
-  FileCheck
+  FileCheck,
+  Trash2
 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { getUser } from '@/lib/auth';
 import api from '@/lib/api';
+import { toast } from 'sonner';
 
 export const deadline = value => (value ? new Date(value + 'T12:00:00').toLocaleDateString('pt-BR') : 'Sem prazo');
 export const activityError = (e, fallback) => (typeof e.response?.data?.detail === 'string' ? e.response.data.detail : fallback);
@@ -124,6 +126,21 @@ export default function Activities() {
   const totalEsperadoAlunos = Math.max(deliveredList.length + pendingList.length, 18);
   const entregasAtuais = deliveredList.length;
   const taxaEntregaPercent = Math.min(100, Math.round((entregasAtuais / totalEsperadoAlunos) * 100));
+
+  const deleteActivityItem = async (activity, e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (!window.confirm(`Tem certeza que deseja apagar a atividade "${activity.titulo}"? Esta ação é permanente e removerá a atividade e todas as entregas.`)) return;
+    try {
+      await api.delete(`/admin/activities/${activity.id}`);
+      toast.success('Atividade apagada com sucesso!');
+      load();
+    } catch (err) {
+      toast.error(activityError(err, 'Não foi possível apagar a atividade.'));
+    }
+  };
 
   // Métricas do Aluno
   const studentPending = items.filter(a => !a.minha_resposta && !a.encerrada).length;
@@ -497,19 +514,32 @@ export default function Activities() {
                         </p>
                       </div>
 
-                      <Link
-                        to={`${admin ? '/admin/activities' : '/activities'}/${a.id}`}
-                        className="activity-card-action-btn"
-                      >
-                        <span>
-                          {admin
-                            ? 'Ver respostas e corrigir'
-                            : a.minha_resposta
-                            ? 'Ver minha resposta'
-                            : 'Responder atividade'}
-                        </span>
-                        <ArrowRight size={15} />
-                      </Link>
+                      <div className="flex items-center gap-2 mt-3">
+                        <Link
+                          to={`${admin ? '/admin/activities' : '/activities'}/${a.id}`}
+                          className="activity-card-action-btn flex-1"
+                        >
+                          <span>
+                            {admin
+                              ? 'Ver respostas e corrigir'
+                              : a.minha_resposta
+                              ? 'Ver minha resposta'
+                              : 'Responder atividade'}
+                          </span>
+                          <ArrowRight size={15} />
+                        </Link>
+                        {admin && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-destructive border-destructive/30 hover:bg-destructive/10 p-2.5 rounded-xl h-[42px] mt-4"
+                            title="Apagar atividade"
+                            onClick={e => deleteActivityItem(a, e)}
+                          >
+                            <Trash2 size={16} />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </article>
                 ))}

@@ -100,11 +100,8 @@ def create_quiz_router(db, current, staff):
     @router.delete('/quizzes/{id}', status_code=204)
     async def remove(id: str, user=Depends(staff)):
         quiz = await find(id, user)
-        if not quiz.get('rascunho'):
-            raise HTTPException(409, 'Somente rascunhos podem ser excluídos; encerre os quizzes publicados.')
-        result = await db.quizzes.delete_one({'id': id, 'rascunho': True})
-        if not result.deleted_count:
-            raise HTTPException(409, 'Este quiz já foi publicado.')
+        await db.quiz_attempts.delete_many({'quiz_id': id})
+        await db.quizzes.delete_one({'id': id})
 
     @router.get('/quizzes/{id}')
     async def detail(id: str, user=Depends(current)):

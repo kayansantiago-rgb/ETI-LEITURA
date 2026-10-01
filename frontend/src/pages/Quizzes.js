@@ -103,12 +103,12 @@ export default function Quizzes() {
   };
 
   const action = async (q, remove = false) => {
-    if (remove && !window.confirm('Excluir o rascunho "' + q.titulo + '"?')) return;
+    if (remove && !window.confirm('Tem certeza que deseja apagar o quiz "' + q.titulo + '"? Esta ação é permanente e removerá o quiz e as respostas da turma.')) return;
     setBusy(true);
     try {
       await (remove ? api.delete('/quizzes/' + q.id) : api.post('/quizzes/' + q.id + '/publish'));
       load();
-      toast.success(remove ? 'Rascunho excluído.' : 'Quiz publicado para os alunos com sucesso!');
+      toast.success(remove ? 'Quiz apagado com sucesso.' : 'Quiz publicado para os alunos com sucesso!');
     } catch (e) {
       toast.error(message(e));
     } finally {
@@ -240,33 +240,47 @@ export default function Quizzes() {
                     </div>
 
                     <div>
-                      {staff && q.rascunho ? (
+                      {staff ? (
                         <div className="space-y-2">
-                          <Button
-                            className="w-full bg-primary text-primary-foreground font-bold hover:opacity-90 flex items-center justify-center gap-2"
-                            disabled={busy}
-                            onClick={() => action(q)}
-                          >
-                            <Rocket size={16} /> PUBLICAR PARA ALUNOS
-                          </Button>
+                          {q.rascunho ? (
+                            <Button
+                              className="w-full bg-primary text-primary-foreground font-bold hover:opacity-90 flex items-center justify-center gap-2"
+                              disabled={busy}
+                              onClick={() => action(q)}
+                            >
+                              <Rocket size={16} /> PUBLICAR PARA ALUNOS
+                            </Button>
+                          ) : (
+                            <Button
+                              className="w-full activity-card-action-btn"
+                              disabled={busy}
+                              onClick={() => open(q.id)}
+                            >
+                              <span>Acompanhar Turma</span>
+                              <Rocket size={15} />
+                            </Button>
+                          )}
                           <div className="flex gap-2">
+                            {q.rascunho && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex-1 font-semibold"
+                                disabled={busy}
+                                onClick={() => edit(q.id)}
+                              >
+                                <Pencil size={14} className="mr-1" /> Editar
+                              </Button>
+                            )}
                             <Button
                               variant="outline"
                               size="sm"
-                              className="flex-1 font-semibold"
-                              disabled={busy}
-                              onClick={() => edit(q.id)}
-                            >
-                              <Pencil size={14} className="mr-1" /> Editar
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-destructive font-semibold"
+                              className="text-destructive border-destructive/30 hover:bg-destructive/10 font-bold flex-1"
                               disabled={busy}
                               onClick={() => action(q, true)}
+                              title="Apagar quiz"
                             >
-                              <Trash2 size={14} />
+                              <Trash2 size={14} className="mr-1" /> Apagar
                             </Button>
                           </div>
                         </div>
@@ -276,7 +290,7 @@ export default function Quizzes() {
                           disabled={busy}
                           onClick={() => open(q.id)}
                         >
-                          <span>{staff ? 'Acompanhar Turma' : 'Abrir Quiz'}</span>
+                          <span>Abrir Quiz</span>
                           <Rocket size={15} />
                         </Button>
                       )}
@@ -579,10 +593,20 @@ export default function Quizzes() {
                       Atualizar Resultados
                     </Button>
                     {quiz.aberto && (
-                      <Button disabled={busy} size="sm" variant="destructive" onClick={close}>
+                      <Button disabled={busy} size="sm" variant="outline" onClick={close}>
                         Encerrar Quiz
                       </Button>
                     )}
+                    <Button
+                      disabled={busy}
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => {
+                        action(quiz, true).then(() => setQuiz(null));
+                      }}
+                    >
+                      <Trash2 size={14} className="mr-1" /> Apagar Quiz
+                    </Button>
                   </div>
 
                   <div className="quiz-results border-t pt-4 space-y-2">
