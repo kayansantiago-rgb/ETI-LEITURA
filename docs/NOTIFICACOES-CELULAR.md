@@ -13,6 +13,9 @@ As preferências são individuais por aparelho. O aluno pode escolher novas ativ
 
 ## Regras de envio
 
+- **Todo aviso novo do sininho também vai para a barra de notificações** do celular ou computador: atividades corrigidas ou devolvidas, resumos e produções corrigidos, novos quizzes, novos recados do mural e materiais. Para professores, novas entregas para corrigir (sem o nome do aluno na tela de bloqueio).
+- Depois do login aparece um convite para ativar as notificações. Se a permissão já tinha sido dada antes, o aparelho é reativado sozinho. "Agora não" adia o convite por 7 dias; dá para ativar a qualquer momento em **Avisos**.
+
 - Novas atividades publicadas **depois da ativação**, somente da turma do aluno ou de todas as turmas. Publicações antigas não são enviadas em lote. Publicações com mais de sete dias não são recuperadas após uma parada longa.
 - Um lembrete na véspera e um no dia do prazo, entre **8h e 20h em Brasília**. Não são lembretes de exatamente 24 horas antes: o prazo das atividades é uma data, terminando às 23h59.
 - Quem já entregou não recebe lembrete. Na devolução para refazer, vale o prazo individual da nova tentativa, mesmo com a atividade original encerrada.

@@ -29,7 +29,7 @@ self.addEventListener('push',event=>{
     if(!binding||binding!==payload.binding||payload.expires<Date.now())return;
     await self.registration.showNotification(payload.title||'ETI LEITURA',{
       body:payload.body,icon:'/icons/eti-192.png',badge:'/icons/eti-badge.png',
-      tag:payload.tag,renotify:false,data:{url:payload.url,binding},
+      tag:payload.tag,renotify:false,vibrate:[120,60,120],timestamp:Date.now(),data:{url:payload.url,binding},
     });
   })());
 });
@@ -38,7 +38,8 @@ self.addEventListener('notificationclick',event=>{
   event.waitUntil((async()=>{
     if(await bindingStore()!==event.notification.data?.binding)return;
     const target=new URL(event.notification.data?.url||'/notifications',self.location.origin);
-    const url=target.origin===self.location.origin&&(/^\/activities\/[a-zA-Z0-9-]+$/.test(target.pathname)||target.pathname==='/notifications')?target.href:self.location.origin+'/notifications';
+    // Só abre páginas da própria plataforma; qualquer outro destino cai na central de avisos.
+    const url=target.origin===self.location.origin&&/^\/[a-zA-Z0-9\/_-]*$/.test(target.pathname)?target.href:self.location.origin+'/notifications';
     const windows=await self.clients.matchAll({type:'window',includeUncontrolled:true});
     for(const client of windows){if(new URL(client.url).origin===self.location.origin){await client.navigate(url);await client.focus();return;}}
     await self.clients.openWindow(url);

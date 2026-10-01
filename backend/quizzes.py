@@ -92,7 +92,7 @@ def create_quiz_router(db, current, staff):
     @router.post('/quizzes/{id}/publish')
     async def publish(id: str, user=Depends(staff)):
         await find(id, user)
-        result = await db.quizzes.update_one({'id': id, 'rascunho': True}, {'$set': {'rascunho': False, 'aberto': True}})
+        result = await db.quizzes.update_one({'id': id, 'rascunho': True}, {'$set': {'rascunho': False, 'aberto': True, 'publicado_em': datetime.now(timezone.utc).isoformat()}})
         if not result.matched_count:
             raise HTTPException(409, 'Este quiz não é um rascunho.')
         return {'ok': True}

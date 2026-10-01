@@ -1717,3 +1717,38 @@
   box-shadow: none !important;
 }
 .bd-actions > button:not(.qz-btn-primary):hover { border-color: hsl(var(--primary) / .45) !important; color: hsl(var(--primary)) !important; }
+
+/* --------------------------------------------------------------------------
+   Convite para notificações no aparelho
+   -------------------------------------------------------------------------- */
+.pp {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 70;
+  width: min(380px, calc(100% - 24px));
+  display: flex;
+  gap: 14px;
+  padding: 18px 18px 16px;
+  border-radius: 22px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border) / .85);
+  box-shadow: 0 30px 70px -24px hsl(250 40% 10% / .45);
+  animation: ws-pop .35s cubic-bezier(.2, .8, .2, 1);
+}
+.pp-icon { width: 46px; height: 46px; flex-shrink: 0; border-radius: 15px; display: grid; place-items: center; background: var(--eti-gradient); color: #fff; box-shadow: var(--eti-shadow-glow); animation: pp-ring 2.4s ease-in-out infinite; }
+@keyframes pp-ring { 0%, 70%, 100% { transform: rotate(0); } 75% { transform: rotate(-12deg); } 85% { transform: rotate(10deg); } 92% { transform: rotate(-6deg); } }
+.pp-copy { display: grid; gap: 6px; padding-right: 14px; }
+.pp-copy strong { font-family: var(--eti-font-display); font-size: .9375rem; font-weight: 800; }
+.pp-copy p { font-size: .8125rem; line-height: 1.5; color: hsl(var(--muted-foreground)); }
+.pp-actions { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+.pp-primary { height: 38px; padding: 0 16px; border-radius: 12px !important; font-size: .8125rem; font-weight: 700; color: #fff; background: var(--eti-gradient); box-shadow: var(--eti-shadow-glow); }
+.pp-primary:disabled { opacity: .7; }
+.pp-ghost { height: 38px; padding: 0 12px; border-radius: 12px !important; font-size: .8125rem; font-weight: 600; color: hsl(var(--muted-foreground)); }
+.pp-ghost:hover { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+.pp-close { position: absolute; top: 10px; right: 10px; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 9px !important; color: hsl(var(--muted-foreground)); }
+.pp-close:hover { background: hsl(var(--muted)); }
+@media (max-width: 767px) {
+  .pp { left: 12px; right: 12px; width: auto; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (prefers-reduced-motion: reduce) { .pp-icon { animation: none; } }

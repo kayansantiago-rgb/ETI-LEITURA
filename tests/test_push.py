@@ -97,3 +97,27 @@ def test_staff_dispatch_only_new_unread_scoped_notices(monkeypatch,role):
     assert asyncio.run(push.dispatch(db,AT))==1
     assert delivery.call_args.args[2]['id']=='new'
     notices.assert_awaited_once_with(db,{'id':'t','role':role})
+
+def test_student_receives_bell_notices_on_device(monkeypatch):
+    import asyncio
+    from types import SimpleNamespace
+    from unittest.mock import AsyncMock,Mock
+    import backend.push as push
+    import backend.school as school
+    device={**DEVICE,'user_id':'s','token_version':0,'binding':'binding','_id':'device'}
+    async def devices():yield device
+    async def no_activities():
+        return
+        yield
+    user={'id':'s','role':'student','turma':'7º ANO'}
+    db=SimpleNamespace(push_subscriptions=SimpleNamespace(find=Mock(side_effect=lambda q:devices())),users=SimpleNamespace(find_one=AsyncMock(return_value=user)),activities=SimpleNamespace(find=Mock(side_effect=lambda q:no_activities())))
+    notices=AsyncMock(return_value=[
+        {'id':'grade:x:1','titulo':'Atividade corrigida: Leitura','lida':False,'data':'2026-09-21T11:00:00+00:00','link':'/activities/a'},
+        {'id':'activity:a','titulo':'Nova atividade: Leitura','lida':False,'data':'2026-09-21T11:00:00+00:00','link':'/activities/a'},
+        {'id':'mural:m','titulo':'Novo no mural: Feira','lida':True,'data':'2026-09-21T11:00:00+00:00','link':'/dashboard'}])
+    monkeypatch.setattr(school,'notifications',notices)
+    monkeypatch.setattr(push,'configuration',lambda:{'configured':True})
+    delivery=AsyncMock(return_value=True);monkeypatch.setattr(push,'deliver',delivery)
+    assert asyncio.run(push.dispatch(db,AT))==1
+    event=delivery.call_args.args[2]
+    assert (event['id'],event['title'],event['body'],event['url'])==('grade:x:1','Atividade corrigida','Leitura','/activities/a')

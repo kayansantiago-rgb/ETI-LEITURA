@@ -41,3 +41,23 @@ export async function reconcilePush(userId){
   if(reg?.active)await bindWorker(reg,null);
  }
 }
+
+// Inscreve este aparelho para receber avisos na barra de notificações do sistema.
+export async function subscribeDevice({userId,publicKey,prefs={new_activities:true,deadlines:true},api}){
+ let reg;
+ try{
+  reg=await registration();
+  let sub=await reg.pushManager.getSubscription();
+  if(sub){await sub.unsubscribe();sub=null;}
+  sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:publicKeyBytes(publicKey)});
+  const binding=crypto.randomUUID();
+  await bindWorker(reg,binding);
+  await api.put('/push/subscription',{...sub.toJSON(),binding,...prefs});
+  saveDevice({userId,endpoint:sub.endpoint,binding});
+ }catch(e){
+  if(reg){await bindWorker(reg,null).catch(()=>{});const sub=await reg.pushManager.getSubscription().catch(()=>null);await sub?.unsubscribe().catch(()=>{});}
+  throw e;
+ }
+}
+export const isIOS=()=>/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+export const isStandalone=()=>window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;

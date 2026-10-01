@@ -1,5 +1,6 @@
 import { reconcilePush } from '@/lib/push';
 import Accessibility from '@/components/Accessibility';
+import PushPrompt from '@/components/PushPrompt';
 import api from '@/lib/api';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useState, useEffect } from 'react';
@@ -41,7 +42,6 @@ const learning = [
 
 const management = [
   [Users, 'Minhas turmas', '/admin/classes'],
-  [FileText, 'Banco de notas', '/gradebook'],
   [ClipboardList, 'Critérios de correção', '/admin/rubrics'],
   [Sparkles, 'Assistente IA', '/admin/assistant'],
   [Video, 'Vídeos e materiais', '/videos'],
@@ -166,7 +166,7 @@ export default function DashboardLayout({ children, focusMode = false }) {
 
   const otherArea = !mobileLinks.some(([, , path]) => location.pathname === path || location.pathname.startsWith(path + '/'));
   const railPaths = isAdmin
-    ? ['/admin/professor', '/admin/classes', '/admin/activities', '/admin/assistant', '/videos', '/library', '/gradebook', '/admin/reports', '/admin/users']
+    ? ['/admin/professor', '/admin/classes', '/admin/activities', '/admin/assistant', '/videos', '/library', '/admin/reports', '/admin/users']
     : ['/dashboard', '/activities', '/quizzes', '/videos', '/library', '/text-productions', '/workspace'];
 
   const railItems = isAdmin ? staffLinks : railPaths.map(path => (isAdmin ? [teacher, ...management, [BookOpen, 'Biblioteca', '/library']] : learning).find(item => item[2] === path)).filter(Boolean);
@@ -325,6 +325,7 @@ export default function DashboardLayout({ children, focusMode = false }) {
         >
           {children}
         </main>
+        {!focusMode && <PushPrompt />}
         <footer className="platform-footer">
           <span>ETI LEITURA</span>
           <span>Aprendizagem em movimento.</span>

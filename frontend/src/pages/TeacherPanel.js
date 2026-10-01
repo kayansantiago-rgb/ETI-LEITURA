@@ -16,7 +16,6 @@ import {
   PenTool,
   ChartColumn,
   Clock,
-  Award,
   Calendar
 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -100,14 +99,6 @@ export default function TeacherPanel() {
       description: 'Consulte os estudantes cadastrados e gerencie suas informações e turmas.',
       linkText: 'Ver Alunos',
       path: '/admin/users'
-    },
-    {
-      type: 'gradebook',
-      icon: Award,
-      title: 'Banco de Notas',
-      description: 'Consulte os boletins dos alunos e acompanhe as notas acumuladas.',
-      linkText: 'Ver Boletins',
-      path: '/gradebook'
     },
     {
       type: 'mural',

@@ -107,6 +107,18 @@ def events_for(activity, submission, subscription, at):
     return events[-1:]
 
 
+def notice_event(notice, staff=False):
+    """Converte um aviso do sininho ("Tipo: detalhe") em título e texto da notificação."""
+    text = notice.get('titulo') or 'Novo aviso na plataforma'
+    title, _, body = text.partition(': ')
+    if not body:
+        title, body = 'ETI LEITURA', text
+    if staff:
+        # Nomes de alunos não aparecem na tela de bloqueio do professor.
+        body = 'Uma nova entrega está disponível na ETI LEITURA.'
+    return {'id': notice['id'], 'title': title[:80], 'body': body[:180], 'url': notice['link'], 'ttl': 24 * 3600}
+
+
 class NoRedirectSession(requests.Session):
     def request(self, method, url, **kwargs):
         valid_endpoint(url)
@@ -166,13 +178,16 @@ async def dispatch(db, at=None, sender=send_push):
         if not user or user.get('token_version',0) != subscription.get('token_version',0):
             await db.push_subscriptions.delete_one({'_id':subscription['_id'], 'binding':subscription['binding']})
             continue
-        if user['role'] in ('admin', 'teacher'):
+        # Todo aviso novo do sininho também vai para a barra de notificações do aparelho.
+        if subscription.get('new_activities', True):
             from backend.school import notifications
-            if subscription.get('new_activities', True):
-                for notice in await notifications(db, user):
-                    if not notice['lida'] and notice['data'] >= subscription['created_at']:
-                        event = {'id': notice['id'], 'title': 'Nova entrega para corrigir', 'body': 'Uma nova entrega está disponível na ETI LEITURA.', 'url': notice['link'], 'ttl': 3600}
-                        sent += int(await deliver(db, subscription, event, at, sender))
+            for notice in await notifications(db, user):
+                # Atividades e prazos dos alunos seguem as regras de horário de events_for.
+                if user['role'] == 'student' and notice['id'].split(':')[0] in ('activity', 'deadline'):
+                    continue
+                if not notice['lida'] and notice['data'] >= subscription['created_at']:
+                    sent += int(await deliver(db, subscription, notice_event(notice, user['role'] != 'student'), at, sender))
+        if user['role'] in ('admin', 'teacher'):
             continue
         async for activity in db.activities.find({'turma':{'$in':['TODAS',user.get('turma')]},**published_query(at)}):
             sub = await db.activity_submissions.find_one({'activity_id':activity['id'], 'user_id':user['id']})
