@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { getAuth, clearAuth } from '@/lib/auth';
 import Brand from '@/components/Brand';
+import { Button } from '@/components/ui/button';
 
 const learning = [
   [Sparkles, 'Quizzes', '/quizzes'],
