@@ -1,7 +1,8 @@
 import Quizzes from '@/pages/Quizzes';
 import Classes from '@/pages/Classes';
 import SplashScreen from '@/components/SplashScreen';
-import {Rubrics,Gradebook} from '@/pages/Assessment';
+import {Rubrics} from '@/pages/Assessment';
+import Gradebook from '@/pages/Gradebook';
 import {Assistant,Videos} from '@/pages/Teaching';
 import {Workspace,Notifications,Reports,Teachers,PasswordRecovery} from '@/pages/SchoolPages';
 import {lazy,Suspense} from 'react';
@@ -34,6 +35,7 @@ import '@/login.css';
 import '@/platform.css';
 import '@/reading-identity.css';
 import '@/modern.css';
+import '@/workspace.css';
 
 const Reader=lazy(()=>import('@/pages/Reader'));
 

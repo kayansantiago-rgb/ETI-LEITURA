@@ -68,15 +68,20 @@ async def notifications(db,user):
 async def report_data(db,user,turma=None):
     students=await db.users.find(class_query(user,turma),{'_id':0,'id':1,'nome':1,'turma':1}).sort('nome',1).to_list(10000)
     rows=[];months={}
+    scales={a['id']:a.get('valor_nota') for a in await db.activities.find({},{'_id':0,'id':1,'valor_nota':1}).to_list(10000)}
     for u in students:
         entries=[]
         for collection in ['summaries','text_productions','activity_submissions']:
             entries+=await db[collection].find({'user_id':u['id']},{'_id':0}).to_list(10000)
-        grades=[e['nota'] for e in entries if e.get('nota') is not None]
+        def scaled(e):
+            # Notas de atividades são convertidas para a escala 0 a 10 conforme o valor da atividade.
+            maximo=(scales.get(e.get('activity_id')) or 10) if e.get('activity_id') else 10
+            return e['nota']*10/maximo
+        grades=[scaled(e) for e in entries if e.get('nota') is not None]
         for e in entries:
             if e.get('nota') is not None:
                 month=(e.get('corrigido_em') or e.get('updated_at') or e.get('created_at',''))[:7]
-                if month:months.setdefault(month,[]).append(e['nota'])
+                if month:months.setdefault(month,[]).append(scaled(e))
         assigned=await db.activities.find({'turma':{'$in':['TODAS',u.get('turma')]},**published_query()},{'id':1}).to_list(10000)
         delivered=await db.activity_submissions.count_documents({'user_id':u['id'],'activity_id':{'$in':[a['id'] for a in assigned]}})
         rows.append({**u,'atividades_disponiveis':len(assigned),'participacao':round(100*delivered/len(assigned)) if assigned else None,'leituras_concluidas':await db.reading_progress.count_documents({'user_id':u['id'],'percentage':100}),
@@ -148,6 +153,14 @@ def create_school_router(db,current,admin,staff,hash_password):
             return "'"+text if text.startswith(('=','+','-','@','\t','\r','\n')) else text
         for r in rows:writer.writerow([safe(r.get(k)) for k in ['nome','turma','leituras_concluidas','resumos','producoes','atividades_entregues','media','avaliacoes','participacao']])
         return Response('\ufeff'+out.getvalue(),media_type='text/csv; charset=utf-8',headers={'Content-Disposition':'attachment; filename="eti-relatorio.csv"'})
+    @router.get('/admin/reports.pdf')
+    async def export_pdf(turma:str=None,user=Depends(staff)):
+        from backend.report_pdf import build_report_pdf
+        data=await report_data(db,user,turma)
+        label=turma or ('Todas as turmas' if user['role']=='admin' else 'Todas as minhas turmas')
+        content=await asyncio.to_thread(build_report_pdf,data,label,user.get('nome','Professor'))
+        name='eti-relatorio'+('-'+''.join(c if c.isalnum() else '-' for c in turma.lower()) if turma else '')+'.pdf'
+        return Response(content,media_type='application/pdf',headers={'Content-Disposition':f'attachment; filename="{name}"'})
     @router.get('/books/{book_id}/position')
     async def position(book_id:str,user=Depends(current)):
         return await db.reader_positions.find_one({'user_id':user['id'],'book_id':book_id},{'_id':0}) or {'page':1}

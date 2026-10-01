@@ -3,6 +3,7 @@ import ActivityLibrary from '@/components/ActivityLibrary';
 import StatusBadge, { activityState } from '@/components/StatusBadge';
 import EmptyCollection from '@/components/EmptyCollection';
 import ActivityForm from '@/components/ActivityForm';
+import CorrectionDrawer from '@/components/CorrectionDrawer';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
@@ -36,6 +37,7 @@ export default function Activities() {
   const [failed, setFailed] = useState(false);
   const [creating, setCreating] = useState(() => admin && params.get('nova') === '1');
   const [tab, setTab] = useState('published');
+  const [correcting, setCorrecting] = useState(null);
   const [draft, setDraft] = useState(() =>
     params.get('turma')
       ? { titulo: '', valor_nota: 10, descricao: '', turma: params.get('turma'), perguntas: [{ enunciado: '', tipo: 'texto', alternativas: ['', ''] }] }
@@ -496,19 +498,25 @@ export default function Activities() {
                       </div>
 
                       <div className="flex items-center gap-2 mt-3">
-                        <Link
-                          to={`${admin ? '/admin/activities' : '/activities'}/${a.id}`}
-                          className="activity-card-action-btn flex-1"
-                        >
-                          <span>
-                            {admin
-                              ? 'Ver respostas e corrigir'
-                              : a.minha_resposta
-                              ? 'Ver minha resposta'
-                              : 'Responder atividade'}
-                          </span>
-                          <ArrowRight size={15} />
-                        </Link>
+                        {admin ? (
+                          <button
+                            type="button"
+                            onClick={() => setCorrecting(a.id)}
+                            className="activity-card-action-btn flex-1"
+                          >
+                            <span>
+                              {a.entregas - a.corrigidas - (a.devolvidas || 0) > 0
+                                ? `Corrigir ${a.entregas - a.corrigidas - (a.devolvidas || 0)} entrega(s)`
+                                : 'Ver respostas e corrigir'}
+                            </span>
+                            <ArrowRight size={15} />
+                          </button>
+                        ) : (
+                          <Link to={`/activities/${a.id}`} className="activity-card-action-btn flex-1">
+                            <span>{a.minha_resposta ? 'Ver minha resposta' : 'Responder atividade'}</span>
+                            <ArrowRight size={15} />
+                          </Link>
+                        )}
                         {admin && (
                           <Button
                             variant="outline"
@@ -529,6 +537,7 @@ export default function Activities() {
           </>
         )}
       </div>
+      {correcting && <CorrectionDrawer activityId={correcting} onClose={() => setCorrecting(null)} onChanged={load} />}
     </DashboardLayout>
   );
 }

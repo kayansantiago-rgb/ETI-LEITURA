@@ -91,7 +91,7 @@ def create_gradebook_router(db, current, staff):
         rows=[]
         for row in await db.grade_entries.find(query,{'_id':0,'historico':0}).to_list(10000):
             rows.append({**row,'origem':'manual','editavel':user['role']=='admin' or (user['role']=='teacher' and row['professor_id']==user['id'])})
-        activities={a['id']:a for a in await db.activities.find({},{'_id':0,'id':1,'titulo':1,'disciplina':1,'bimestre':1}).to_list(10000)}
+        activities={a['id']:a for a in await db.activities.find({},{'_id':0,'id':1,'titulo':1,'disciplina':1,'bimestre':1,'valor_nota':1}).to_list(10000)}
         for collection,label,path in [('activity_submissions','Atividade','/activities/'),('summaries','Resumo','/summaries'),('text_productions','Produção textual','/text-productions')]:
             for row in await db[collection].find({**query,'nota':{'$ne':None}},{'_id':0}).to_list(10000):
                 if row.get('nota') is None: continue
@@ -99,6 +99,8 @@ def create_gradebook_router(db, current, staff):
                 member=members[row['user_id']]
                 date_value=(row.get('corrigido_em') or row.get('updated_at') or row.get('created_at',''))[:10]
                 link=('/admin/activities/' if user['role']!='student' else path)+row['activity_id'] if collection=='activity_submissions' else ('/admin'+path if user['role']!='student' else path)
-                rows.append({'id':collection+':'+row['id'],'user_id':row['user_id'],'user_nome':member['nome'],'turma':member.get('turma'),'titulo':a.get('titulo') or row.get('titulo') or label,'disciplina':a.get('disciplina') or 'Sem disciplina','bimestre':a.get('bimestre'),'data':date_value,'nota':row['nota'],'peso':1,'feedback':row.get('feedback') or '', 'origem':label,'editavel':False,'link':link})
+                # Atividades podem valer mais de 10 pontos; o banco de notas usa sempre a escala 0 a 10.
+                maximo=a.get('valor_nota') or 10
+                rows.append({'id':collection+':'+row['id'],'user_id':row['user_id'],'user_nome':member['nome'],'turma':member.get('turma'),'titulo':a.get('titulo') or row.get('titulo') or label,'disciplina':a.get('disciplina') or 'Sem disciplina','bimestre':a.get('bimestre'),'data':date_value,'nota':round(row['nota']*10/maximo,2),'nota_original':row['nota'],'valor_maximo':maximo,'peso':1,'feedback':row.get('feedback') or '', 'origem':label,'editavel':False,'link':link})
         return {'alunos':students,'notas':sorted(rows,key=lambda r:r.get('data',''),reverse=True)}
     return router

@@ -41,7 +41,7 @@ class ActivityStatus(BaseModel):
 
 class ActivityGrade(BaseModel):
     versao: Optional[str] = None
-    nota: float = Field(ge=0, le=10)
+    nota: float = Field(ge=0, le=100)
     feedback: str = Field(default='', max_length=10000)
 
 class ReturnAttempt(BaseModel):
@@ -248,7 +248,9 @@ def create_activity_router(db, get_current_user, require_admin):
 
     @router.put('/admin/activities/{activity_id}/responses/{response_id}/correction')
     async def grade_response(activity_id: str, response_id: str, data: ActivityGrade, user=Depends(require_admin)):
-        await visible(activity_id,user)
+        activity = await visible(activity_id,user)
+        max_score = activity.get('valor_nota') if activity.get('valor_nota') is not None else 10.0
+        if data.nota > max_score:raise HTTPException(400,f'A nota máxima desta atividade é {max_score:g}')
         query = {**await response_query(activity_id,user), 'id': response_id}
         previous=await db.activity_submissions.find_one(query,{'_id':0})
         if not previous:raise HTTPException(404,'Resposta não encontrada')
