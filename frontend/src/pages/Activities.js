@@ -100,32 +100,11 @@ export default function Activities() {
   const deliveredUserIds = new Set(engagementResponses.map(r => r.user_id));
 
   // Alunos que ainda não entregaram
-  let pendingList = engagementStudents.filter(s => !deliveredUserIds.has(s.id));
+  const pendingList = engagementStudents.filter(s => !deliveredUserIds.has(s.id));
 
-  // Se a turma não tiver alunos cadastrados no banco ainda, geramos a lista simulada idêntica à screenshot
-  if (!engagementStudents.length && activeEngagementActivity) {
-    const totalEsperado = 18;
-    const numEntregaram = deliveredList.length;
-    const numPendentes = Math.max(0, totalEsperado - numEntregaram);
-    const mockPendingNames = [
-      { nome: 'layane da silva nascimento', email: 'layanenascimento66930@aluno.seduc.to.gov.br' },
-      { nome: 'Angelica Dourado', email: 'angelicadourado4059@aluno.seduc.to.gov.br' },
-      { nome: 'JACKELYNE SILVA SANTOS', email: 'jackelynesantos139356@aluno.seduc.to.gov.br' },
-      { nome: 'thayssa paixao', email: 'thayssasilva139650@aluno.seduc.to.gov.br' },
-      { nome: 'marcos vinicius souza', email: 'marcosvinicius@aluno.seduc.to.gov.br' },
-      { nome: 'beatriz oliveira lima', email: 'beatrizoliveira@aluno.seduc.to.gov.br' },
-      { nome: 'pedro alvares cabral', email: 'pedroalvares@aluno.seduc.to.gov.br' },
-      { nome: 'lucas gabriel costa', email: 'lucasgabriel@aluno.seduc.to.gov.br' },
-    ];
-    pendingList = Array.from({ length: numPendentes }, (_, i) => ({
-      id: `sim_pending_${i}`,
-      ...mockPendingNames[i % mockPendingNames.length]
-    }));
-  }
-
-  const totalEsperadoAlunos = Math.max(deliveredList.length + pendingList.length, 18);
+  const totalEsperadoAlunos = deliveredList.length + pendingList.length;
   const entregasAtuais = deliveredList.length;
-  const taxaEntregaPercent = Math.min(100, Math.round((entregasAtuais / totalEsperadoAlunos) * 100));
+  const taxaEntregaPercent = totalEsperadoAlunos ? Math.min(100, Math.round((entregasAtuais / totalEsperadoAlunos) * 100)) : 0;
 
   const deleteActivityItem = async (activity, e) => {
     if (e) {
@@ -380,7 +359,9 @@ export default function Activities() {
                       {loadingEngagement ? (
                         <p className="text-xs text-muted-foreground p-3">Carregando lista de pendentes…</p>
                       ) : !pendingList.length ? (
-                        <div className="engagement-empty-box">Todos os alunos entregaram a atividade! 🎉</div>
+                        <div className="engagement-empty-box">
+                          {totalEsperadoAlunos ? 'Todos os alunos entregaram a atividade! 🎉' : 'Nenhum aluno cadastrado nesta turma.'}
+                        </div>
                       ) : (
                         pendingList.map(s => (
                           <div key={s.id} className="engagement-student-card">

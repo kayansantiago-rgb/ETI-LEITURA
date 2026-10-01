@@ -1,0 +1,643 @@
+/* ==========================================================================
+   ETI LEITURA — CAMADA VISUAL MODERNA
+   Carregada por último: unifica cores, superfícies, tipografia e navegação
+   sobre os estilos anteriores sem alterar estrutura ou comportamento.
+   ========================================================================== */
+
+:root {
+  --eti-violet: 258 72% 58%;
+  --eti-indigo: 238 70% 56%;
+  --eti-pink: 322 80% 62%;
+  --eti-teal: 168 70% 40%;
+  --eti-amber: 36 95% 55%;
+  --eti-gradient: linear-gradient(135deg, hsl(var(--eti-indigo)) 0%, hsl(var(--eti-violet)) 55%, hsl(var(--eti-pink)) 120%);
+  --eti-shadow-sm: 0 1px 2px hsl(250 40% 20% / .04), 0 2px 8px hsl(250 40% 20% / .04);
+  --eti-shadow-md: 0 1px 2px hsl(250 40% 20% / .05), 0 10px 30px -8px hsl(250 40% 20% / .12);
+  --eti-shadow-glow: 0 10px 28px -10px hsl(var(--eti-violet) / .55);
+  --eti-radius-lg: 22px;
+  --eti-radius: 16px;
+  --eti-radius-sm: 12px;
+  --eti-font-display: 'Plus Jakarta Sans', 'Inter', 'Segoe UI', sans-serif;
+}
+
+/* Tokens globais refinados (claro) */
+:root:not(.dark),
+:root:not(.dark) .atlas-shell {
+  --background: 240 33% 98%;
+  --foreground: 248 30% 14%;
+  --card: 0 0% 100%;
+  --card-foreground: 248 30% 14%;
+  --popover: 0 0% 100%;
+  --primary: 258 72% 58%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 250 30% 95%;
+  --secondary-foreground: 250 30% 22%;
+  --muted: 245 25% 96%;
+  --muted-foreground: 245 10% 44%;
+  --accent: 258 90% 96%;
+  --accent-foreground: 258 60% 44%;
+  --border: 245 22% 91%;
+  --input: 245 20% 88%;
+  --ring: 258 72% 58%;
+}
+
+/* Tokens globais refinados (escuro) */
+.dark,
+.dark .atlas-shell {
+  --background: 248 26% 7%;
+  --foreground: 245 30% 94%;
+  --card: 248 22% 11%;
+  --card-foreground: 245 30% 94%;
+  --popover: 248 22% 12%;
+  --primary: 258 92% 74%;
+  --primary-foreground: 252 50% 12%;
+  --secondary: 248 18% 17%;
+  --secondary-foreground: 245 30% 92%;
+  --muted: 248 18% 15%;
+  --muted-foreground: 245 12% 66%;
+  --accent: 258 35% 20%;
+  --accent-foreground: 258 95% 85%;
+  --border: 248 16% 20%;
+  --input: 248 16% 25%;
+  --ring: 258 92% 74%;
+}
+
+body {
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  font-feature-settings: 'cv11', 'ss01';
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3,
+.platform-main h1, .platform-main h2, .platform-main h3 {
+  font-family: var(--eti-font-display);
+}
+
+::selection { background: hsl(var(--primary) / .2); }
+:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 3px; border-radius: 8px; }
+
+/* Barra de rolagem discreta */
+* { scrollbar-width: thin; scrollbar-color: hsl(var(--foreground) / .18) transparent; }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb { background: hsl(var(--foreground) / .16); border-radius: 99px; border: 3px solid transparent; background-clip: content-box; }
+*::-webkit-scrollbar-thumb:hover { background-color: hsl(var(--foreground) / .28); }
+
+/* --------------------------------------------------------------------------
+   1. FUNDO E ESTRUTURA
+   -------------------------------------------------------------------------- */
+.atlas-shell.studio-shell {
+  background:
+    radial-gradient(900px 480px at 85% -10%, hsl(var(--eti-violet) / .10), transparent 60%),
+    radial-gradient(700px 420px at 10% 0%, hsl(var(--eti-indigo) / .07), transparent 60%),
+    hsl(var(--background));
+  background-attachment: fixed;
+}
+.dark .atlas-shell.studio-shell {
+  background:
+    radial-gradient(900px 480px at 85% -10%, hsl(var(--eti-violet) / .16), transparent 60%),
+    radial-gradient(700px 420px at 10% 0%, hsl(var(--eti-indigo) / .12), transparent 60%),
+    hsl(var(--background));
+  background-attachment: fixed;
+}
+
+/* Linha de contexto redundante com o cabeçalho */
+.atlas-shell .studio-context { display: none !important; }
+
+.studio-shell .platform-main {
+  animation: eti-rise .45s cubic-bezier(.2, .7, .2, 1) both;
+}
+@keyframes eti-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .studio-shell .platform-main, .student-home { animation: none !important; }
+  .atlas-shell * { transition: none !important; }
+}
+
+.studio-shell .platform-footer {
+  border-color: hsl(var(--border) / .7);
+  color: hsl(var(--muted-foreground));
+  font-size: .6875rem;
+}
+
+/* --------------------------------------------------------------------------
+   2. CABEÇALHO (vidro fosco fixo)
+   -------------------------------------------------------------------------- */
+.atlas-shell .studio-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: hsl(var(--card) / .72);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  backdrop-filter: saturate(180%) blur(16px);
+  border-bottom: 1px solid hsl(var(--border) / .7);
+}
+.atlas-shell .studio-role {
+  font-size: .625rem;
+  letter-spacing: .14em;
+  font-weight: 700;
+  color: hsl(var(--muted-foreground));
+  padding: 6px 12px;
+  border-radius: 99px;
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border) / .7);
+}
+.atlas-shell .studio-notices {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  transition: background .2s, border-color .2s, transform .2s;
+}
+.atlas-shell .studio-notices:hover { background: hsl(var(--accent)); border-color: hsl(var(--primary) / .3); }
+.atlas-shell .studio-notices > span {
+  top: -5px; right: -5px;
+  background: linear-gradient(135deg, hsl(var(--eti-pink)), hsl(var(--eti-violet)));
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 0 0 2px hsl(var(--card));
+}
+.atlas-shell .studio-header-actions > button,
+.atlas-shell .studio-header-actions .theme-toggle {
+  border-radius: 12px;
+}
+.atlas-shell .studio-profile {
+  padding: 4px 14px 4px 4px;
+  border-radius: 99px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  transition: border-color .2s, box-shadow .2s;
+}
+.atlas-shell .studio-profile:hover { border-color: hsl(var(--primary) / .35); box-shadow: var(--eti-shadow-sm); }
+
+.atlas-shell .user-avatar {
+  background: var(--eti-gradient);
+  color: #fff;
+  font-weight: 700;
+}
+
+/* Abas (tablet) */
+.atlas-shell .studio-tabs {
+  background: hsl(var(--card) / .72);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border-bottom-color: hsl(var(--border) / .7);
+}
+.atlas-shell .studio-tabs .nav-link { font-weight: 600; }
+
+/* --------------------------------------------------------------------------
+   3. MENU LATERAL (desktop)
+   -------------------------------------------------------------------------- */
+@media (min-width: 1100px) {
+  .atlas-shell { padding-left: 264px; }
+  .atlas-shell .desktop-rail {
+    inset: 12px auto 12px 12px;
+    width: 240px;
+    border-radius: 24px;
+    padding: 24px 14px 16px;
+    background: hsl(var(--card)) !important;
+    border: 1px solid hsl(var(--border) / .8);
+    box-shadow: var(--eti-shadow-md);
+    color: hsl(var(--foreground)) !important;
+  }
+}
+.atlas-shell .desktop-rail .brand strong,
+.atlas-shell .desktop-rail .rail-bottom strong { color: hsl(var(--foreground)) !important; }
+.atlas-shell .desktop-rail .rail-caption {
+  color: hsl(var(--muted-foreground)) !important;
+  font-weight: 700;
+  letter-spacing: .14em;
+  margin: 8px 12px 10px;
+}
+.atlas-shell .desktop-rail .rail-brand { padding: 0 8px 18px; border-bottom: 1px solid hsl(var(--border) / .7); }
+.atlas-shell .desktop-rail .nav-link {
+  position: relative;
+  color: hsl(var(--muted-foreground)) !important;
+  font-weight: 600;
+  font-size: .8125rem;
+  border-radius: 14px;
+  margin: 2px 0;
+  padding: 10px 12px;
+  min-height: 42px;
+  background: transparent;
+  transition: background .2s, color .2s, transform .2s;
+}
+.atlas-shell .desktop-rail .nav-link:hover {
+  background: hsl(var(--muted)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+.atlas-shell .desktop-rail .nav-link.active,
+.dark .atlas-shell .desktop-rail .nav-link.active {
+  background: var(--eti-gradient) !important;
+  color: #fff !important;
+  box-shadow: var(--eti-shadow-glow);
+}
+.atlas-shell .desktop-rail .nav-link.active svg { color: #fff; }
+.atlas-shell .rail-all {
+  color: hsl(var(--muted-foreground)) !important;
+  border-top: 1px solid hsl(var(--border) / .7);
+  border-radius: 0;
+  font-weight: 600;
+  transition: color .2s;
+}
+.atlas-shell .rail-all:hover { color: hsl(var(--primary)) !important; }
+.atlas-shell .rail-bottom {
+  border-top: 0;
+  margin: auto 0 0;
+  padding: 10px;
+  border-radius: 16px;
+  background: hsl(var(--muted));
+}
+.atlas-shell .desktop-rail .rail-bottom small { color: hsl(var(--muted-foreground)) !important; }
+
+/* Gaveta (menu completo) */
+.atlas-shell .studio-drawer.platform-sidebar {
+  background: hsl(var(--card));
+  border-color: hsl(var(--border));
+}
+.atlas-shell .studio-drawer .nav-link {
+  border-radius: 12px;
+  font-weight: 600;
+  color: hsl(var(--muted-foreground));
+}
+.atlas-shell .studio-drawer .nav-link:hover { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+.atlas-shell .studio-drawer .nav-link.active { background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+
+/* Barra inferior (celular) */
+@media (max-width: 767px) {
+  .atlas-shell .mobile-dock {
+    left: 10px; right: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    padding: 6px;
+    border-radius: 22px;
+    border: 1px solid hsl(var(--border) / .8);
+    background: hsl(var(--card) / .85);
+    -webkit-backdrop-filter: saturate(180%) blur(18px);
+    backdrop-filter: saturate(180%) blur(18px);
+    box-shadow: 0 12px 40px -12px hsl(250 40% 20% / .3);
+  }
+  .atlas-shell .mobile-dock-item { border-radius: 16px; min-height: 52px; }
+  .atlas-shell .mobile-dock-item.active .mobile-dock-icon {
+    background: var(--eti-gradient);
+    color: #fff;
+    box-shadow: var(--eti-shadow-glow);
+  }
+  .atlas-shell.studio-shell .platform-body { padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* --------------------------------------------------------------------------
+   4. SUPERFÍCIES (cartões, painéis, formulários)
+   -------------------------------------------------------------------------- */
+.atlas-shell .panel,
+.atlas-shell .inner-workspace .panel,
+.atlas-shell .school-page-content article.panel,
+.atlas-shell [data-testid="profile-page"] > div[class*="rounded-xl"] {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border) / .85) !important;
+  border-radius: var(--eti-radius-lg) !important;
+  box-shadow: var(--eti-shadow-sm);
+}
+.atlas-shell .inner-workspace .activity-collection > .panel {
+  border-top: 1px solid hsl(var(--border) / .85) !important;
+  position: relative;
+  overflow: hidden;
+}
+.atlas-shell .inner-workspace .activity-collection > .panel::before {
+  content: '';
+  position: absolute; inset: 0 0 auto;
+  height: 4px;
+  background: var(--eti-gradient);
+}
+.atlas-shell .platform-main .rounded-xl { border-radius: var(--eti-radius) !important; }
+.atlas-shell .platform-main .shadow-sm { box-shadow: var(--eti-shadow-sm) !important; }
+
+.atlas-shell .platform-main :is(a, button).panel,
+.atlas-shell .platform-main a[class*="card"],
+.atlas-shell .book-card {
+  transition: transform .25s cubic-bezier(.2, .7, .2, 1), box-shadow .25s, border-color .25s;
+}
+.atlas-shell .platform-main :is(a, button).panel:hover,
+.atlas-shell .platform-main a[class*="card"]:hover,
+.atlas-shell .book-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--eti-shadow-md);
+  border-color: hsl(var(--primary) / .3);
+}
+
+/* Botões e campos */
+.atlas-shell .platform-main button,
+.atlas-shell .platform-main a.inline-flex { border-radius: var(--eti-radius-sm); }
+.atlas-shell .platform-main button.bg-primary,
+.atlas-shell .platform-main a.bg-primary {
+  background-image: var(--eti-gradient);
+  box-shadow: var(--eti-shadow-glow);
+  transition: transform .2s, box-shadow .2s, filter .2s;
+}
+.atlas-shell .platform-main button.bg-primary:hover:not(:disabled),
+.atlas-shell .platform-main a.bg-primary:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+.atlas-shell .platform-main input:not([type=checkbox]):not([type=radio]):not([type=range]),
+.atlas-shell .platform-main textarea,
+.atlas-shell .platform-main select {
+  border-radius: var(--eti-radius-sm) !important;
+  border-color: hsl(var(--input));
+  background: hsl(var(--card));
+  transition: border-color .2s, box-shadow .2s;
+}
+.atlas-shell .platform-main input:not([type=checkbox]):not([type=radio]):not([type=range]):focus,
+.atlas-shell .platform-main textarea:focus,
+.atlas-shell .platform-main select:focus {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 4px hsl(var(--primary) / .14);
+  outline: none;
+}
+.atlas-shell .inner-workspace .upload-zone {
+  border-radius: var(--eti-radius-lg) !important;
+  border: 2px dashed hsl(var(--primary) / .35) !important;
+  background: hsl(var(--accent) / .6);
+}
+.atlas-shell .inner-workspace .empty-state { border-radius: var(--eti-radius-lg) !important; }
+
+/* Tabelas */
+.atlas-shell .school-table { border-radius: var(--eti-radius); overflow: hidden; }
+.atlas-shell .inner-workspace .school-table thead { background: hsl(var(--muted)); }
+.atlas-shell .inner-workspace .school-table th {
+  font-size: .6875rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
+
+/* Cabeçalhos das páginas internas */
+.atlas-shell .inner-workspace .teacher-heading {
+  border-bottom: 0;
+  padding: 8px 0 8px;
+  margin-bottom: 26px;
+}
+.atlas-shell.studio-shell .platform-main h1 {
+  font-weight: 800;
+  letter-spacing: -.035em;
+}
+
+/* --------------------------------------------------------------------------
+   5. PAINEL DO ALUNO (hero e destaques)
+   -------------------------------------------------------------------------- */
+.student-hero-greeting h1 { font-size: clamp(28px, 3.4vw, 40px); font-weight: 800; }
+.student-hero-greeting h1 .text-primary {
+  background: var(--eti-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.student-hero-greeting p { font-size: 15px; }
+
+.hero-discovery-container { gap: 18px; }
+
+.timeline-carousel-card {
+  border-radius: 28px;
+  border: 1px solid hsl(var(--border) / .8);
+  box-shadow: var(--eti-shadow-md);
+}
+
+/* Destaque quando o mural ainda não tem fotos */
+.timeline-carousel-card.is-empty {
+  border: 0;
+  background: var(--eti-gradient);
+  color: #fff;
+}
+.timeline-carousel-card.is-empty .timeline-photo-wrapper { background: transparent; }
+.timeline-carousel-card.is-empty .timeline-overlay {
+  background: linear-gradient(0deg, hsl(250 60% 12% / .45) 0%, transparent 70%);
+}
+.timeline-carousel-card.is-empty h2,
+.timeline-carousel-card.is-empty .timeline-date { color: #fff !important; }
+.timeline-carousel-card.is-empty .timeline-date { opacity: .85; }
+.timeline-carousel-card.is-empty .timeline-badge {
+  background: hsl(0 0% 100% / .18);
+  color: #fff;
+  border: 1px solid hsl(0 0% 100% / .3);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.timeline-empty-art {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.timeline-empty-art .art-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(2px);
+}
+.timeline-empty-art .art-orb-a {
+  width: 340px; height: 340px;
+  right: -80px; top: -120px;
+  background: radial-gradient(circle at 30% 30%, hsl(0 0% 100% / .35), hsl(0 0% 100% / 0) 70%);
+}
+.timeline-empty-art .art-orb-b {
+  width: 220px; height: 220px;
+  left: -60px; top: 40px;
+  background: radial-gradient(circle at 50% 50%, hsl(var(--eti-pink) / .55), transparent 70%);
+}
+.timeline-empty-art .art-book {
+  position: absolute;
+  right: 48px; top: 48px;
+  width: 112px; height: 112px;
+  display: grid; place-items: center;
+  border-radius: 32px;
+  color: #fff;
+  background: hsl(0 0% 100% / .14);
+  border: 1px solid hsl(0 0% 100% / .3);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  transform: rotate(-8deg);
+  box-shadow: 0 20px 50px -15px hsl(250 60% 10% / .5);
+  animation: eti-float 6s ease-in-out infinite;
+}
+@keyframes eti-float {
+  0%, 100% { transform: rotate(-8deg) translateY(0); }
+  50% { transform: rotate(-5deg) translateY(-10px); }
+}
+
+/* Cartões de números */
+.hero-stat-card {
+  background: hsl(var(--card));
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 22px;
+  box-shadow: var(--eti-shadow-sm);
+}
+.hero-stat-info strong { font-family: var(--eti-font-display); font-size: 28px; letter-spacing: -.02em; }
+.hero-stat-info span { font-size: 12px; white-space: nowrap; }
+.hero-stat-icon-badge {
+  background: hsl(var(--accent));
+  color: hsl(var(--primary));
+}
+.hero-stats-grid .hero-stat-card:nth-child(2) .hero-stat-icon-badge {
+  background: hsl(var(--eti-pink) / .12);
+  color: hsl(var(--eti-pink));
+}
+
+.hero-library-cta {
+  border-radius: 24px;
+  background:
+    radial-gradient(240px 160px at 100% 0%, hsl(var(--eti-violet) / .18), transparent 70%),
+    hsl(var(--card));
+  border: 1px solid hsl(var(--border) / .85);
+  box-shadow: var(--eti-shadow-sm);
+}
+.dark .hero-library-cta {
+  background:
+    radial-gradient(240px 160px at 100% 0%, hsl(var(--eti-violet) / .28), transparent 70%),
+    hsl(var(--card));
+  border-color: hsl(var(--border));
+}
+.hero-library-cta h2 { color: hsl(var(--foreground)); font-family: var(--eti-font-display); }
+.hero-library-cta h2 span {
+  background: var(--eti-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.hero-library-cta p { color: hsl(var(--muted-foreground)); font-size: 13px; }
+.hero-library-btn {
+  background: var(--eti-gradient) !important;
+  color: #fff !important;
+  border-radius: 14px !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+  box-shadow: var(--eti-shadow-glow) !important;
+  transition: transform .2s, filter .2s !important;
+}
+.hero-library-btn:hover { transform: translateY(-2px); filter: brightness(1.06); }
+
+/* Estante e agenda */
+.reading-shelf-card,
+.study-section-grid > section,
+.study-section-grid > div {
+  border-radius: 24px !important;
+  border: 1px solid hsl(var(--border) / .85) !important;
+  background: hsl(var(--card)) !important;
+  box-shadow: var(--eti-shadow-sm) !important;
+}
+.shelf-section-title {
+  font-family: var(--eti-font-display);
+  letter-spacing: .06em !important;
+}
+.continue-reading-banner {
+  border-radius: 18px !important;
+  transition: transform .25s, box-shadow .25s, border-color .25s;
+}
+.continue-reading-banner:hover { transform: translateY(-2px); box-shadow: var(--eti-shadow-md); }
+.continue-reading-cover { border-radius: 10px !important; box-shadow: 0 8px 18px -8px hsl(250 40% 10% / .5); }
+
+/* Barras de progresso */
+.atlas-shell [role="progressbar"] > div,
+.atlas-shell .progress-fill {
+  background-image: var(--eti-gradient);
+}
+
+/* --------------------------------------------------------------------------
+   6. TEMA ESCURO — ajustes de superfícies antigas fixas em branco
+   -------------------------------------------------------------------------- */
+.dark .hero-stat-card,
+.dark .timeline-carousel-card:not(.is-empty) { background: hsl(var(--card)); }
+.dark .atlas-shell .desktop-rail { box-shadow: 0 0 0 1px hsl(var(--border)), 0 20px 40px -20px #000; }
+
+/* Agenda */
+.calendar-widget-card { background: hsl(var(--card)) !important; }
+.calendar-header h2 { color: hsl(var(--foreground)) !important; font-family: var(--eti-font-display); }
+.calendar-weekday-header { color: hsl(var(--muted-foreground)); font-weight: 700; }
+.calendar-day-cell { color: hsl(var(--foreground) / .8) !important; border-radius: 12px !important; transition: background .2s; }
+.calendar-day-cell:hover:not(.empty) { background: hsl(var(--muted)) !important; }
+.calendar-day-cell.today {
+  background: var(--eti-gradient) !important;
+  color: #fff !important;
+  box-shadow: var(--eti-shadow-glow);
+}
+.calendar-day-cell.has-deadline {
+  border: 0 !important;
+  background: hsl(var(--accent)) !important;
+  color: hsl(var(--accent-foreground)) !important;
+  font-weight: 700;
+  position: relative;
+}
+.calendar-day-cell.has-deadline::after {
+  content: '';
+  position: absolute;
+  bottom: 5px; left: 50%;
+  width: 5px; height: 5px;
+  margin-left: -2.5px;
+  border-radius: 50%;
+  background: hsl(var(--eti-pink));
+}
+.continue-progress-fill,
+.engagement-progress-fill { background: var(--eti-gradient) !important; }
+.continue-progress-bar,
+.engagement-progress-track { background: hsl(var(--muted)) !important; }
+
+/* Filtros em abas (biblioteca e similares) */
+.atlas-shell .filter-tabs {
+  background: hsl(var(--muted));
+  border-radius: 14px;
+  padding: 4px;
+  gap: 2px;
+}
+.atlas-shell .filter-tabs button {
+  border-radius: 11px !important;
+  font-weight: 600;
+  color: hsl(var(--muted-foreground));
+  background: transparent;
+  transition: background .2s, color .2s, box-shadow .2s;
+}
+.atlas-shell .filter-tabs button[aria-pressed="true"] {
+  background: hsl(var(--card)) !important;
+  color: hsl(var(--primary)) !important;
+  box-shadow: var(--eti-shadow-sm);
+}
+.atlas-shell .library-toolbar {
+  border-radius: var(--eti-radius-lg) !important;
+  box-shadow: var(--eti-shadow-sm);
+  border-color: hsl(var(--border) / .85) !important;
+  background: hsl(var(--card)) !important;
+}
+
+/* Hero do aluno em telas pequenas */
+@media (max-width: 767px) {
+  .timeline-carousel-card { min-height: 300px !important; border-radius: 24px; }
+  .timeline-empty-art .art-book { width: 76px; height: 76px; border-radius: 22px; right: 22px; top: 22px; left: auto; }
+  .timeline-empty-art .art-book svg { width: 38px; height: 38px; }
+}
+
+/* --------------------------------------------------------------------------
+   7. ENTRADA (login e cadastro)
+   -------------------------------------------------------------------------- */
+.entry-page h1, .entry-page h2 { font-family: var(--eti-font-display); }
+.entry-card {
+  border-radius: 28px !important;
+  box-shadow: 0 30px 80px -30px hsl(258 80% 20% / .6), 0 0 0 1px hsl(0 0% 100% / .06) !important;
+}
+.entry-card input, .entry-card select {
+  border-radius: 12px !important;
+  transition: border-color .2s, box-shadow .2s;
+}
+.entry-card input:focus, .entry-card select:focus {
+  border-color: hsl(var(--primary)) !important;
+  box-shadow: 0 0 0 4px hsl(var(--primary) / .15) !important;
+  outline: none;
+}
+.entry-card [data-testid="submit-button"] {
+  background-image: var(--eti-gradient) !important;
+  border-radius: 14px !important;
+  box-shadow: var(--eti-shadow-glow) !important;
+  transition: transform .2s, filter .2s;
+}
+.entry-card [data-testid="submit-button"]:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.06); }

@@ -33,6 +33,7 @@ import '@/studio.css';
 import '@/login.css';
 import '@/platform.css';
 import '@/reading-identity.css';
+import '@/modern.css';
 
 const Reader=lazy(()=>import('@/pages/Reader'));
 

@@ -31,7 +31,7 @@ export default function StudentDiscovery({ books = [], posts = [], stats = {} })
 
       <div className="hero-discovery-container">
         {/* Card Principal: Carrossel do Mural (Timeline) */}
-        <section className="timeline-carousel-card" aria-label="Linha do tempo da escola">
+        <section className={`timeline-carousel-card ${currentPost ? '' : 'is-empty'}`} aria-label="Linha do tempo da escola">
           <div className="timeline-photo-wrapper">
             {currentPost ? (
               <img
@@ -40,9 +40,12 @@ export default function StudentDiscovery({ books = [], posts = [], stats = {} })
                 alt={currentPost.titulo || 'Mural da escola'}
               />
             ) : (
-              <div className="flex flex-col items-center justify-center p-8 text-center text-muted-foreground opacity-40">
-                <BookOpen size={64} className="mb-2" />
-                <span className="font-extrabold text-xl tracking-wide">ETI LEITURA</span>
+              <div className="timeline-empty-art" aria-hidden="true">
+                <span className="art-orb art-orb-a" />
+                <span className="art-orb art-orb-b" />
+                <span className="art-book">
+                  <BookOpen size={56} strokeWidth={1.5} />
+                </span>
               </div>
             )}
           </div>
@@ -142,7 +145,7 @@ export default function StudentDiscovery({ books = [], posts = [], stats = {} })
               </p>
             </div>
             <Link to="/library" className="hero-library-btn">
-              <span>EXPLORAR BIBLIOTECA</span>
+              <span>Explorar biblioteca</span>
               <ArrowRight size={16} />
             </Link>
           </div>
