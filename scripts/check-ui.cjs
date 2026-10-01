@@ -20,6 +20,8 @@ const STUDENT_PAGES = [
   ['/library', 'Biblioteca'],
   ['/book/1', 'O Pequeno Príncipe'],
   ['/activities', 'Atividades'],
+  ['/activities/a1', 'Pergunta 1 de 3'],
+  ['/reader/2', 'de 6'],
   ['/quizzes', 'Desafios de leitura'],
   ['/workspace', 'Minhas pendências'],
   ['/notifications', 'Avisos'],

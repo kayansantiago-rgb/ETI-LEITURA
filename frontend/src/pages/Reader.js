@@ -355,7 +355,7 @@ export default function Reader() {
 
         <footer className="rd-footer">
           <div className="rd-scrub">
-            <span className="rd-scrub-fill" style={{ width: `${position}%` }} />
+            <span className="rd-scrub-fill" style={{ width: `${count > 1 ? ((page - 1) / (count - 1)) * 100 : 0}%` }} />
             <input
               type="range"
               min="1"

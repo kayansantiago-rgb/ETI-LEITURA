@@ -7,13 +7,118 @@ import ActivityForm from '@/components/ActivityForm';
 import useDraft, { readDraft, clearDraft } from '@/hooks/useDraft';
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, Award, BookOpen, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Award, BookOpen, Calendar, ChevronDown, ChevronUp, Paperclip, RotateCcw, Clock3, MessageSquareText, User } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { getUser } from '@/lib/auth';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import { deadline, activityError } from '@/pages/Activities';
+
+function dueLabel(prazo) {
+  if (!prazo) return ['Sem prazo', ''];
+  const today = new Date(new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }) + 'T00:00:00');
+  const days = Math.round((new Date(prazo + 'T00:00:00') - today) / 864e5);
+  if (days < 0) return ['Prazo encerrado', 'is-late'];
+  if (days === 0) return ['Entrega até hoje, 23h59', 'is-urgent'];
+  if (days === 1) return ['Entrega até amanhã, 23h59', 'is-urgent'];
+  return [`Entrega em ${days} dias (${deadline(prazo)})`, days <= 3 ? 'is-soon' : ''];
+}
+
+function StudentActivity({ id, activity, answers, setAnswers, canAnswer, busy, onSubmit, draftStatus }) {
+  const mine = activity.minha_resposta;
+  const retry = mine?.reenvio;
+  const prazo = retry?.prazo || activity.prazo;
+  const [due, dueClass] = dueLabel(prazo);
+  const max = activity.valor_nota ?? 10;
+  const state = retry && activity.pode_reenviar ? ['Refazer', 'is-retry'] : mine?.nota != null ? ['Corrigida', 'is-graded'] : mine ? ['Entregue', 'is-sent'] : activity.encerrada ? ['Encerrada', 'is-closed'] : ['A entregar', 'is-open'];
+  return (
+    <div className="ad">
+      <header className="ad-hero">
+        <div className="ad-tags">
+          <span className="ws-chip">{activity.turma === 'TODAS' ? 'Todas as turmas' : activity.turma}</span>
+          {activity.disciplina && <span className="ws-chip is-soft">{activity.disciplina}</span>}
+          <span className={`ad-state ${state[1]}`}>{state[0]}</span>
+        </div>
+        <h1>{activity.titulo}</h1>
+        <div className="ad-meta">
+          <span>
+            <User size={14} /> {activity.professor_nome}
+          </span>
+          <span>
+            <Award size={14} /> Vale {max.toLocaleString('pt-BR')} pontos
+          </span>
+          <span className={`ad-due ${canAnswer ? dueClass : ''}`}>
+            <Clock3 size={14} /> {canAnswer ? due : `Prazo ${deadline(prazo)}`}
+          </span>
+        </div>
+        {activity.descricao && <p className="ad-desc">{activity.descricao}</p>}
+        {(activity.book_id || !!activity.anexos?.length) && (
+          <div className="ad-links">
+            {activity.book_id && (
+              <Link to={`/book/${activity.book_id}`}>
+                <BookOpen size={14} /> Livro da atividade
+              </Link>
+            )}
+            {activity.anexos?.map((a, i) => (
+              <a key={i} href={a.url} target="_blank" rel="noreferrer">
+                <Paperclip size={14} /> {a.nome}
+              </a>
+            ))}
+          </div>
+        )}
+      </header>
+
+      {retry && activity.pode_reenviar && (
+        <section className="ad-retry">
+          <RotateCcw size={20} />
+          <div>
+            <strong>O professor pediu para você refazer</strong>
+            <p>{retry.orientacoes}</p>
+            <small>Nova entrega até {deadline(retry.prazo)}, 23h59.</small>
+          </div>
+        </section>
+      )}
+
+      {mine && mine.nota != null && !activity.pode_reenviar && (
+        <section className="ad-result">
+          <div className="ad-score">
+            <strong>{mine.nota.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}</strong>
+            <span>de {max.toLocaleString('pt-BR')}</span>
+          </div>
+          <div className="ad-feedback">
+            <span>
+              <MessageSquareText size={15} /> Comentário do professor
+            </span>
+            <p>{mine.feedback || 'Sem comentário.'}</p>
+            <small>Tentativa {mine.tentativa || 1}</small>
+          </div>
+        </section>
+      )}
+
+      {mine && mine.nota == null && !activity.pode_reenviar && (
+        <section className="ad-sent">
+          <CheckCircle2 size={20} />
+          <div>
+            <strong>Respostas enviadas!</strong>
+            <p>Agora é só aguardar a correção. Você recebe um aviso quando a nota sair.</p>
+          </div>
+        </section>
+      )}
+
+      <ActivitySteps
+        key={id}
+        activity={activity}
+        answers={answers}
+        setAnswers={setAnswers}
+        canAnswer={canAnswer}
+        busy={busy}
+        onSubmit={onSubmit}
+        draftStatus={draftStatus}
+      />
+    </div>
+  );
+}
 
 export default function ActivityDetails() {
   const { id } = useParams();
@@ -109,7 +214,7 @@ export default function ActivityDetails() {
 
   return (
     <DashboardLayout>
-      <Link to={admin ? '/admin/activities' : '/activities'} className="inline-flex items-center gap-2 text-xs font-semibold text-primary mb-5 hover:underline">
+      <Link to={admin ? '/admin/activities' : '/activities'} className="ws-back">
         <ArrowLeft size={15} /> Voltar às atividades
       </Link>
 
@@ -124,6 +229,17 @@ export default function ActivityDetails() {
         </div>
       ) : !activity ? (
         <p className="empty-state" role="status">Carregando atividade…</p>
+      ) : !admin ? (
+        <StudentActivity
+          id={id}
+          activity={activity}
+          answers={answers}
+          setAnswers={setAnswers}
+          canAnswer={canAnswer}
+          busy={busy}
+          onSubmit={submit}
+          draftStatus={draftStatus}
+        />
       ) : (
         <div className="space-y-6">
           {duplicate && (

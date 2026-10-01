@@ -79,6 +79,7 @@ export function Notifications() {
       </PageIntro>
       <div className="nt">
         <div className="nt-main">
+          <PushSettings />
           <div className="ws-card ws-toolbar">
             <div className="ws-segment" role="group" aria-label="Filtrar avisos">
               <button type="button" aria-pressed={!onlyUnread} onClick={() => setOnlyUnread(false)}>
@@ -154,9 +155,6 @@ export function Notifications() {
             ))
           )}
         </div>
-        <aside className="nt-side">
-          <PushSettings />
-        </aside>
       </div>
     </DashboardLayout>
   );
