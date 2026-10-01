@@ -913,6 +913,9 @@ async def delete_book_admin(book_id: str, admin_user: dict = Depends(require_adm
     await db.summaries.delete_many({"book_id": book_id})
     await db.reading_progress.delete_many({"book_id": book_id})
     await db.reader_positions.delete_many({"book_id": book_id})
+    # Certificados já emitidos são preservados: guardam título e autor do livro.
+    await db.book_quizzes.delete_many({"book_id": book_id})
+    await db.book_quiz_attempts.delete_many({"book_id": book_id})
     
     return None
 
@@ -1231,6 +1234,8 @@ from backend.push import create_push_router, ensure_indexes as ensure_push_index
 api_router.include_router(create_push_router(db,get_current_user))
 from backend.quizzes import create_quiz_router
 api_router.include_router(create_quiz_router(db, get_current_user, require_staff))
+from backend.book_quiz import create_book_quiz_router, ensure_indexes as ensure_book_quiz_indexes
+api_router.include_router(create_book_quiz_router(db, get_current_user, require_staff))
 app.include_router(api_router)
 
 # Mount static files for uploads
@@ -1256,6 +1261,7 @@ logger = logging.getLogger(__name__)
 @app.on_event("startup")
 async def start_push_worker():
     await ensure_push_indexes(db)
+    await ensure_book_quiz_indexes(db)
     app.state.push_task = asyncio.create_task(push_loop(db))
 
 @app.on_event("shutdown")

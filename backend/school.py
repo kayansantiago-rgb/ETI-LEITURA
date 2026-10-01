@@ -25,6 +25,7 @@ class RecoveryComplete(BaseModel):
     password: str = Field(min_length=10,max_length=72)
 class ReaderPosition(BaseModel):
     page: int = Field(ge=1,le=100000)
+    total: int | None = Field(default=None,ge=1,le=100000)
 
 def now():return datetime.now(timezone.utc).isoformat()
 def teacher_activity_query(user):
@@ -167,8 +168,15 @@ def create_school_router(db,current,admin,staff,hash_password):
     @router.put('/books/{book_id}/position')
     async def save_position(book_id:str,data:ReaderPosition,user=Depends(current)):
         if not await db.books.find_one({'id':book_id}):raise HTTPException(404,'Livro não encontrado')
-        await db.reader_positions.update_one({'user_id':user['id'],'book_id':book_id},{'$set':{'page':data.page,'updated_at':now()}},upsert=True)
-        return {'page':data.page}
+        await db.reader_positions.update_one({'user_id':user['id'],'book_id':book_id},{'$set':{'page':data.page,'total':data.total,'updated_at':now()}},upsert=True)
+        result={'page':data.page}
+        if data.total and data.page<=data.total:
+            # O progresso acompanha a página mais avançada já lida; voltar páginas não reduz a porcentagem.
+            percentage=100 if data.page==data.total else min(99,round(data.page*100/data.total))
+            await db.reading_progress.update_one({'user_id':user['id'],'book_id':book_id},{'$max':{'percentage':percentage},'$set':{'updated_at':now()},'$setOnInsert':{'id':str(uuid4())}},upsert=True)
+            saved=await db.reading_progress.find_one({'user_id':user['id'],'book_id':book_id},{'_id':0,'percentage':1})
+            result['percentage']=saved['percentage'] if saved else percentage
+        return result
     async def recovery_link(target):
         token=secrets.token_urlsafe(32)
         await db.password_resets.delete_many({'user_id':target['id']})

@@ -40,12 +40,12 @@ const coverFor = id => COVERS[[...String(id)].reduce((sum, c) => sum + c.charCod
 const stateOf = q => (q.rascunho ? 'draft' : q.aberto ? 'open' : 'closed');
 const STATE = { draft: 'Rascunho', open: 'Aberto', closed: 'Encerrado' };
 
-function ScoreRing({ value, total, size = 148 }) {
+export function ScoreRing({ value, total, size = 148, main, sub = 'acertos' }) {
   const ratio = total ? value / total : 0;
   const r = 52;
   const c = 2 * Math.PI * r;
   return (
-    <svg className="qz-ring" width={size} height={size} viewBox="0 0 120 120" role="img" aria-label={`${value} de ${total} acertos`}>
+    <svg className="qz-ring" width={size} height={size} viewBox="0 0 120 120" role="img" aria-label={main ? `${main} ${sub}` : `${value} de ${total} ${sub}`}>
       <defs>
         <linearGradient id="qz-ring-grad" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="hsl(238 70% 60%)" />
@@ -56,10 +56,10 @@ function ScoreRing({ value, total, size = 148 }) {
       <circle cx="60" cy="60" r={r} className="qz-ring-track" />
       <circle cx="60" cy="60" r={r} className="qz-ring-value" strokeDasharray={c} strokeDashoffset={c * (1 - ratio)} />
       <text x="60" y="58" textAnchor="middle" className="qz-ring-main">
-        {value}/{total}
+        {main ?? `${value}/${total}`}
       </text>
       <text x="60" y="78" textAnchor="middle" className="qz-ring-sub">
-        acertos
+        {sub}
       </text>
     </svg>
   );
@@ -557,7 +557,7 @@ function StudentResult({ quiz }) {
   );
 }
 
-function StudentPlay({ quiz, busy, onSubmit }) {
+export function StudentPlay({ quiz, busy, onSubmit }) {
   const [answers, setAnswers] = useState([]);
   const [step, setStep] = useState(0);
   const current = quiz.perguntas[step];

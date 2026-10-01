@@ -4,7 +4,8 @@ import EmptyCollection from '@/components/EmptyCollection';
 import {getUser} from '@/lib/auth';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Edit3, Trash2, Save, X } from 'lucide-react';
+import { BookOpen, Edit3, Trash2, Save, X, ListChecks } from 'lucide-react';
+import BookQuizEditor from '@/components/BookQuizEditor';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -19,6 +20,7 @@ const AdminBooks = () => {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingBook, setEditingBook] = useState(null);
+  const [quizBook, setQuizBook] = useState(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
@@ -161,6 +163,10 @@ const AdminBooks = () => {
                   </p>
 
                   {/* Actions */}
+                  <Button variant="outline" size="sm" className="w-full mb-2" onClick={() => setQuizBook(book)}>
+                    <ListChecks className="h-3 w-3 mr-1" />
+                    Questionário e certificado
+                  </Button>
                   {getUser()?.role==='admin'&&<div className="flex gap-2">
                     <Button
                       variant="outline"
@@ -269,6 +275,7 @@ const AdminBooks = () => {
             </div>
           </DialogContent>
         </Dialog>
+        {quizBook && <BookQuizEditor book={quizBook} onClose={() => setQuizBook(null)} />}
       </div>
     </DashboardLayout>
   );
