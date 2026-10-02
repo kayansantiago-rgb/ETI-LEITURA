@@ -1,3 +1,4 @@
+import { confirmAction } from '@/components/ConfirmHost';
 import StatusBadge from '@/components/StatusBadge';
 import PageIntro from '@/components/PageIntro';
 import EmptyCollection from '@/components/EmptyCollection';
@@ -150,7 +151,7 @@ const TextProductions = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Deseja excluir esta produção?')) {
+    if ((await confirmAction({ title: 'Excluir produção?', message: 'Deseja excluir esta produção?', confirmLabel: 'Excluir' }))) {
       try {
         await api.delete(`/text-productions/${id}`);
         toast.success('Produção excluída!');

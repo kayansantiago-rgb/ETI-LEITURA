@@ -1,3 +1,4 @@
+import { confirmAction } from '@/components/ConfirmHost';
 import QuizRanking from '@/components/QuizRanking';
 import TimedQuiz, { QuizOptions } from '@/components/TimedQuiz';
 import {
@@ -153,7 +154,7 @@ function QuizEditor({ form, setForm, busy, user, onSubmit, onCancel }) {
         )
       )
         throw Error();
-      if (form.perguntas.some(q => q.texto.trim()) && !window.confirm('Substituir as perguntas atuais pelas perguntas do arquivo?')) return;
+      if (form.perguntas.some(q => q.texto.trim()) && !(await confirmAction({ title: 'Substituir perguntas?', message: 'Substituir as perguntas atuais pelas perguntas do arquivo?', confirmLabel: 'Substituir', tone: 'question' }))) return;
       setForm({ ...form, perguntas: questions.map(({ texto, opcoes, correta }) => ({ texto, opcoes, correta })) });
       toast.success('Perguntas importadas! Revise e salve o quiz.');
     } catch {
@@ -666,14 +667,14 @@ export default function Quizzes() {
   const publish = q => run(() => api.post('/quizzes/' + q.id + '/publish'), 'Quiz publicado para a turma!').then(ok => ok && load());
 
   const remove = async q => {
-    if (!window.confirm(`Apagar o quiz "${q.titulo}"? As respostas da turma também serão removidas.`)) return false;
+    if (!(await confirmAction({ title: 'Apagar quiz?', message: `Apagar o quiz "${q.titulo}"? As respostas da turma também serão removidas.`, confirmLabel: 'Apagar' }))) return false;
     const ok = await run(() => api.delete('/quizzes/' + q.id), 'Quiz apagado.');
     if (ok) load();
     return ok;
   };
 
-  const leave = () => {
-    if (!staff && quiz && !quiz.resultado && quiz.aberto && !window.confirm(quiz.segundos ? 'Sair do desafio? O tempo da pergunta continuará contando.' : 'Sair do desafio? Suas escolhas ainda não enviadas serão perdidas.')) return;
+  const leave = async () => {
+    if (!staff && quiz && !quiz.resultado && quiz.aberto && !(await confirmAction({ title: 'Sair do desafio?', message: quiz.segundos ? 'Sair do desafio? O tempo da pergunta continuará contando.' : 'Sair do desafio? Suas escolhas ainda não enviadas serão perdidas.', confirmLabel: 'Sair', tone: 'question' }))) return;
     setQuiz(null);
     load();
   };

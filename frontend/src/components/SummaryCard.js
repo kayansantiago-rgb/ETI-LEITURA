@@ -1,3 +1,4 @@
+import { confirmAction } from '@/components/ConfirmHost';
 import StatusBadge from '@/components/StatusBadge';
 import { motion } from 'framer-motion';
 import { FileText, Calendar, Trash2, Star, CheckCircle, MessageSquare } from 'lucide-react';
@@ -11,9 +12,9 @@ const SummaryCard = ({ summary, onDelete }) => {
   const navigate = useNavigate();
   const isCorrected = summary.nota !== null && summary.nota !== undefined;
 
-  const handleDelete = (e) => {
+  const handleDelete = async (e) => {
     e.stopPropagation();
-    if (window.confirm('Tem certeza que deseja excluir este resumo?')) {
+    if ((await confirmAction({ title: 'Excluir resumo?', message: 'Tem certeza que deseja excluir este resumo?', confirmLabel: 'Excluir' }))) {
       onDelete(summary.id);
     }
   };

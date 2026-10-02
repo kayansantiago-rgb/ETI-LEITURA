@@ -1,3 +1,4 @@
+import { confirmAction } from '@/components/ConfirmHost';
 import SubjectBadge from '@/components/SubjectBadge';
 import {useEffect,useState} from 'react';
 import {Button} from '@/components/ui/button';
@@ -16,7 +17,7 @@ export default function ActivityLibrary({onUse}){
  const [items,setItems]=useState([]),[loading,setLoading]=useState(true),[failed,setFailed]=useState(false),[search,setSearch]=useState(''),[form,setForm]=useState(null),[busy,setBusy]=useState(false);
  const load=async()=>{setLoading(true);setFailed(false);try{setItems((await api.get('/admin/activity-templates')).data);}catch{setFailed(true);}finally{setLoading(false);}};
  useEffect(()=>{load();},[]);
- const remove=async item=>{if(!window.confirm(`Excluir o modelo “${item.titulo}”? As atividades já publicadas serão preservadas.`))return;setBusy(true);try{await api.delete('/admin/activity-templates/'+item.id);setItems(list=>list.filter(x=>x.id!==item.id));toast.success('Modelo excluído.');}catch{toast.error('Não foi possível excluir o modelo.');}finally{setBusy(false);}};
+ const remove=async item=>{if(!(await confirmAction({ title: 'Excluir modelo?', message: `Excluir o modelo “${item.titulo}”? As atividades já publicadas serão preservadas.`, confirmLabel: 'Excluir' })))return;setBusy(true);try{await api.delete('/admin/activity-templates/'+item.id);setItems(list=>list.filter(x=>x.id!==item.id));toast.success('Modelo excluído.');}catch{toast.error('Não foi possível excluir o modelo.');}finally{setBusy(false);}};
  const normalize=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
  const filtered=items.filter(x=>normalize(x.titulo+' '+(x.disciplina||'')).includes(normalize(search)));
  return <section aria-label="Biblioteca de atividades" className="space-y-5">

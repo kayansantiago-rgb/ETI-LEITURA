@@ -224,7 +224,7 @@ class CorrectionCreate(BaseModel):
 def get_nivel_ensino_from_turma(turma: str) -> str:
     """Determina o nível de ensino baseado na turma"""
     turmas_fundamental = ["7º ANO", "8º ANO", "9º ANO"]
-    turmas_medio = ["1º SÉRIE A", "1º SÉRIE B", "2º SÉRIE", "3º SÉRIE A", "3º SÉRIE B"]
+    turmas_medio = ["1º SÉRIE A", "1º SÉRIE B", "2º SÉRIE", "2º SÉRIE A", "2º SÉRIE B", "3º SÉRIE A", "3º SÉRIE B"]
 
     if turma in turmas_fundamental:
         return "FUNDAMENTAL"
@@ -406,7 +406,7 @@ async def upload_avatar(
 
 # ========== BOOKS ROUTES ==========
 
-ALL_CLASSES = ["7º ANO", "8º ANO", "9º ANO", "1º SÉRIE A", "1º SÉRIE B", "2º SÉRIE", "3º SÉRIE A", "3º SÉRIE B"]
+ALL_CLASSES = ["7º ANO", "8º ANO", "9º ANO", "1º SÉRIE A", "1º SÉRIE B", "2º SÉRIE", "2º SÉRIE A", "2º SÉRIE B", "3º SÉRIE A", "3º SÉRIE B"]
 
 
 def book_visible_query(user: dict) -> dict:

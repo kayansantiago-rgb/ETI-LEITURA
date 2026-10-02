@@ -1,3 +1,4 @@
+import { confirmAction } from '@/components/ConfirmHost';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
@@ -203,7 +204,7 @@ export default function AdminBooks() {
   useEffect(load, []);
 
   const remove = async book => {
-    if (!window.confirm(`Excluir "${book.titulo}"? Resumos, progresso e questionário deste livro também serão removidos. Certificados já emitidos continuam válidos.`)) return;
+    if (!(await confirmAction({ title: 'Excluir livro?', message: `Excluir "${book.titulo}"? Resumos, progresso e questionário deste livro também serão removidos. Certificados já emitidos continuam válidos.`, confirmLabel: 'Excluir' }))) return;
     try {
       await api.delete(`/admin/books/${book.id}`);
       setBooks(list => list.filter(b => b.id !== book.id));

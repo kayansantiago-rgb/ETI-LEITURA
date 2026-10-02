@@ -1,3 +1,4 @@
+import { confirmAction } from '@/components/ConfirmHost';
 import { publicationLabel } from '@/lib/publication';
 import ActivityLibrary from '@/components/ActivityLibrary';
 import ActivityForm from '@/components/ActivityForm';
@@ -6,7 +7,6 @@ import DashboardLayout from '@/components/DashboardLayout';
 import PageIntro from '@/components/PageIntro';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   Plus,
@@ -21,10 +21,10 @@ import {
   CheckCircle2,
   Send,
   Settings2,
-  X,
   BookOpen,
   TrendingUp,
-  RotateCcw
+  RotateCcw,
+  ArrowLeft
 } from 'lucide-react';
 import { TURMAS } from '@/constants/turmas';
 import { getUser } from '@/lib/auth';
@@ -60,40 +60,6 @@ function staffState(a) {
   if (a.agendada) return ['Agendada', 'is-scheduled'];
   if (a.encerrada) return ['Encerrada', 'is-closed'];
   return ['Aberta', 'is-open'];
-}
-
-function FormSheet({ title, children, onClose }) {
-  useEffect(() => {
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    const onKey = e => e.key === 'Escape' && onClose();
-    window.addEventListener('keydown', onKey);
-    return () => {
-      document.body.style.overflow = overflow;
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [onClose]);
-  return createPortal(
-    <div className="ws-overlay" onMouseDown={e => e.target === e.currentTarget && onClose()}>
-      <section className="ws-sheet at-sheet" role="dialog" aria-modal="true" aria-label={title}>
-        <header className="ws-sheet-head">
-          <span className="qz-settings-icon">
-            <ClipboardList size={18} />
-          </span>
-          <div className="flex-1 min-w-0">
-            <p className="ws-eyebrow">Atividades escolares</p>
-            <h2>{title}</h2>
-            <p>Monte as perguntas, escolha a turma e o prazo. Você pode agendar a publicação.</p>
-          </div>
-          <button type="button" className="ws-icon-btn" onClick={onClose} aria-label="Fechar">
-            <X size={19} />
-          </button>
-        </header>
-        <div className="ws-sheet-body">{children}</div>
-      </section>
-    </div>,
-    document.body
-  );
 }
 
 function StaffCard({ a, onCorrect, onDelete }) {
@@ -231,7 +197,7 @@ export default function Activities() {
   }, []);
 
   const remove = async a => {
-    if (!window.confirm(`Apagar a atividade "${a.titulo}"? Esta ação é permanente e remove também as entregas.`)) return;
+    if (!(await confirmAction({ title: 'Apagar atividade?', message: `Apagar a atividade "${a.titulo}"? Esta ação é permanente e remove também as entregas.`, confirmLabel: 'Apagar' }))) return;
     try {
       await api.delete(`/admin/activities/${a.id}`);
       setItems(list => list.filter(x => x.id !== a.id));
@@ -288,6 +254,25 @@ export default function Activities() {
         ['sent', 'Entregues'],
         ['graded', 'Corrigidas']
       ];
+
+  if (creating) {
+    return (
+      <DashboardLayout>
+        <button type="button" className="ws-back" onClick={() => setCreating(false)}>
+          <ArrowLeft size={15} /> Voltar às atividades
+        </button>
+        <ActivityForm
+          draft={draft}
+          onCancel={() => setCreating(false)}
+          onSaved={saved => {
+            setCreating(false);
+            setTab(saved?.publicar_em && new Date(saved.publicar_em) > new Date() ? 'scheduled' : 'published');
+            load();
+          }}
+        />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -402,19 +387,6 @@ export default function Activities() {
         </div>
       )}
 
-      {creating && (
-        <FormSheet title={draft?.titulo ? 'Usar modelo' : 'Nova atividade'} onClose={() => setCreating(false)}>
-          <ActivityForm
-            draft={draft}
-            onCancel={() => setCreating(false)}
-            onSaved={saved => {
-              setCreating(false);
-              setTab(saved?.publicar_em && new Date(saved.publicar_em) > new Date() ? 'scheduled' : 'published');
-              load();
-            }}
-          />
-        </FormSheet>
-      )}
       {correcting && <CorrectionDrawer activityId={correcting} onClose={() => setCorrecting(null)} onChanged={load} />}
     </DashboardLayout>
   );

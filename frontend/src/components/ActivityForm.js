@@ -1,9 +1,6 @@
 import { publicationInput } from '@/lib/publication';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { TURMAS } from '@/constants/turmas';
 import { getUser } from '@/lib/auth';
 import api from '@/lib/api';
@@ -130,273 +127,219 @@ export default function ActivityForm({ initial, draft, template = false, onSaved
     }
   };
 
+  const heading = template ? (initial ? 'Editar modelo' : 'Novo modelo') : initial ? 'Editar atividade' : 'Nova atividade';
+  const submitLabel = busy
+    ? 'Salvando…'
+    : template
+    ? 'Salvar modelo'
+    : scheduled
+    ? initial
+      ? 'Salvar agendamento'
+      : 'Agendar atividade'
+    : initial
+    ? 'Salvar alterações'
+    : 'Publicar atividade';
+  const filled = form.perguntas.filter(q => q.enunciado.trim() && (q.tipo !== 'alternativa' || q.alternativas.every(a => a.trim()))).length;
+
   return (
-    <form className="panel mb-7" onSubmit={save}>
-      <fieldset disabled={busy} className="space-y-5">
-        <h2>{template ? (initial ? 'Editar modelo' : 'Novo modelo') : initial ? 'Editar atividade' : 'Nova atividade'}</h2>
-
-        <div>
-          <Label htmlFor="activity-title">Título *</Label>
-          <Input id="activity-title" required maxLength={160} value={form.titulo} onChange={e => set('titulo', e.target.value)} />
-        </div>
-
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="activity-score">Valor da atividade (Pontos) *</Label>
-            <Input
-              id="activity-score"
-              type="number"
-              step="0.5"
-              min="0"
-              max="100"
+    <form className="af" onSubmit={save}>
+      <fieldset disabled={busy} className="af-grid">
+        <div className="af-main">
+          <section className="af-card af-intro">
+            <p className="ws-eyebrow">{heading}</p>
+            <input
+              id="activity-title"
+              className="af-title"
+              aria-label="Título da atividade"
               required
-              value={form.valor_nota ?? 10}
-              onChange={e => set('valor_nota', e.target.value)}
+              maxLength={160}
+              placeholder="Título da atividade"
+              value={form.titulo}
+              onChange={e => set('titulo', e.target.value)}
             />
+            <textarea
+              id="activity-description"
+              className="af-desc"
+              aria-label="Orientações para os alunos"
+              maxLength={10000}
+              placeholder="Orientações para os alunos (opcional): o que ler, como responder…"
+              value={form.descricao}
+              onChange={e => set('descricao', e.target.value)}
+            />
+          </section>
+
+          <div className="af-questions-head">
+            <h3>
+              Perguntas <span>{form.perguntas.length}</span>
+            </h3>
+            <small>
+              {filled} de {form.perguntas.length} completas
+            </small>
           </div>
-          <div>
-            <Label htmlFor="activity-period">Bimestre</Label>
-            <select
-              id="activity-period"
-              className="native-select"
-              value={form.bimestre || ''}
-              onChange={e => set('bimestre', e.target.value)}
-            >
-              <option value="">Não informado</option>
-              {[1, 2, 3, 4].map(p => (
-                <option key={p} value={p}>
-                  {p}º bimestre
-                </option>
-              ))}
-            </select>
-          </div>
+
+          {form.perguntas.map((q, i) => (
+            <section className="af-card af-q" key={i}>
+              <header>
+                <span className="qz-q-number">{i + 1}</span>
+                <div className="af-type" role="group" aria-label={`Tipo da pergunta ${i + 1}`}>
+                  <button type="button" aria-pressed={q.tipo === 'texto'} onClick={() => change(i, { tipo: 'texto' })}>
+                    Resposta escrita
+                  </button>
+                  <button type="button" aria-pressed={q.tipo === 'alternativa'} onClick={() => change(i, { tipo: 'alternativa' })}>
+                    Múltipla escolha
+                  </button>
+                </div>
+                {form.perguntas.length > 1 && (
+                  <button type="button" className="ws-icon-btn" aria-label={`Remover pergunta ${i + 1}`} onClick={() => set('perguntas', form.perguntas.filter((_, j) => i !== j))}>
+                    ×
+                  </button>
+                )}
+              </header>
+              <textarea
+                id={`question-${i}`}
+                className="qz-q-text"
+                aria-label={`Pergunta ${i + 1}`}
+                required
+                maxLength={3000}
+                placeholder="Escreva a pergunta…"
+                value={q.enunciado}
+                onChange={e => change(i, { enunciado: e.target.value })}
+              />
+              {q.tipo === 'alternativa' && (
+                <div className="qz-q-options">
+                  {q.alternativas.map((v, j) => (
+                    <div className="qz-q-option" key={j}>
+                      <span className="qz-q-letter">{String.fromCharCode(65 + j)}</span>
+                      <input
+                        required
+                        maxLength={500}
+                        aria-label={`Alternativa ${j + 1} da pergunta ${i + 1}`}
+                        placeholder={`Alternativa ${String.fromCharCode(65 + j)}`}
+                        value={v}
+                        onChange={e => change(i, { alternativas: q.alternativas.map((x, k) => (k === j ? e.target.value : x)) })}
+                      />
+                      {q.alternativas.length > 2 && (
+                        <button type="button" className="ws-icon-btn" aria-label={`Remover alternativa ${j + 1}`} onClick={() => change(i, { alternativas: q.alternativas.filter((_, k) => k !== j) })}>
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  {q.alternativas.length < 6 && (
+                    <button type="button" className="qz-add-option" onClick={() => change(i, { alternativas: [...q.alternativas, ''] })}>
+                      + Adicionar alternativa
+                    </button>
+                  )}
+                </div>
+              )}
+            </section>
+          ))}
+
+          <button type="button" className="qz-add-question" disabled={form.perguntas.length >= 20} onClick={() => set('perguntas', [...form.perguntas, question()])}>
+            + Adicionar pergunta
+          </button>
         </div>
 
-        <div>
-          <Label htmlFor="activity-description">Orientações para os alunos</Label>
-          <Textarea
-            id="activity-description"
-            maxLength={10000}
-            value={form.descricao}
-            onChange={e => set('descricao', e.target.value)}
-          />
-        </div>
-
-        {!template && (
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="activity-class">Turma</Label>
-              <select
-                id="activity-class"
-                className="native-select"
-                value={form.turma}
-                onChange={e => set('turma', e.target.value)}
-              >
-                {user.role === 'admin' && <option value="TODAS">Todas as turmas</option>}
-                {classes.map(t => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
+        <aside className="af-side">
+          <section className="af-card af-settings">
+            <h3>Configurações</h3>
+            {!template && (
+              <label className="qz-field">
+                <span>Turma</span>
+                <select id="activity-class" value={form.turma} onChange={e => set('turma', e.target.value)}>
+                  {user.role === 'admin' && <option value="TODAS">Todas as turmas</option>}
+                  {classes.map(t => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <div className="af-two">
+              <label className="qz-field">
+                <span>Vale (pontos)</span>
+                <input id="activity-score" type="number" step="0.5" min="0" max="100" required value={form.valor_nota ?? 10} onChange={e => set('valor_nota', e.target.value)} />
+              </label>
+              <label className="qz-field">
+                <span>Bimestre</span>
+                <select id="activity-period" value={form.bimestre || ''} onChange={e => set('bimestre', e.target.value)}>
+                  <option value="">—</option>
+                  {[1, 2, 3, 4].map(p => (
+                    <option key={p} value={p}>
+                      {p}º
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            {!template && (
+              <label className="qz-field">
+                <span>Prazo de entrega (opcional)</span>
+                <input id="activity-deadline" type="date" value={form.prazo} onChange={e => set('prazo', e.target.value)} />
+                <small className="af-hint">Até 23h59, horário de Brasília.</small>
+              </label>
+            )}
+            <label className="qz-field">
+              <span>Livro relacionado</span>
+              <select id="activity-book" value={form.book_id} onChange={e => set('book_id', e.target.value)}>
+                <option value="">Nenhum</option>
+                {books.map(b => (
+                  <option key={b.id} value={b.id}>
+                    {b.titulo}
                   </option>
                 ))}
               </select>
-            </div>
-            <div>
-              <Label htmlFor="activity-deadline">Data limite (opcional)</Label>
-              <Input
-                id="activity-deadline"
-                type="date"
-                value={form.prazo}
-                onChange={e => set('prazo', e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground mt-1">Até 23h59, horário de Brasília.</p>
-            </div>
-          </div>
-        )}
-
-        {!template && canSchedule && (
-          <section className="publication-planner">
-            <div>
-              <p className="eyebrow">NO SEU TEMPO</p>
-              <h3>Quando os alunos poderão acessar?</h3>
-              <p>Prepare agora e escolha o momento de publicar.</p>
-            </div>
-            <div className="publication-options">
-              <label className={!scheduled ? 'selected' : ''}>
-                <input
-                  type="radio"
-                  name="publication-mode"
-                  checked={!scheduled}
-                  onChange={() => setScheduled(false)}
-                />
-                <span>
-                  <strong>Publicar agora</strong>
-                  <small>Disponível assim que você salvar.</small>
-                </span>
+            </label>
+            <div className="qz-field">
+              <span>Materiais de apoio</span>
+              <label className={`qz-import af-attach ${form.anexos.length >= 5 ? 'is-disabled' : ''}`}>
+                + PDF ou imagem ({form.anexos.length}/5)
+                <input id="activity-attachment" type="file" accept="application/pdf,image/png,image/jpeg,image/webp,image/gif" disabled={form.anexos.length >= 5} onChange={attach} />
               </label>
-              <label className={scheduled ? 'selected' : ''}>
-                <input
-                  type="radio"
-                  name="publication-mode"
-                  checked={scheduled}
-                  onChange={() => setScheduled(true)}
-                />
-                <span>
-                  <strong>Agendar publicação</strong>
-                  <small>Disponível na data e hora escolhidas.</small>
-                </span>
-              </label>
+              {form.anexos.map((a, i) => (
+                <div className="af-file" key={i}>
+                  <span>{a.nome}</span>
+                  <button type="button" aria-label={`Remover ${a.nome}`} onClick={() => set('anexos', form.anexos.filter((_, j) => j !== i))}>
+                    ×
+                  </button>
+                </div>
+              ))}
             </div>
-            {scheduled && (
-              <div>
-                <Label htmlFor="activity-publication">Data e hora de publicação (Brasília)</Label>
-                <Input
-                  id="activity-publication"
-                  type="datetime-local"
-                  required
-                  value={publishAt}
-                  onChange={e => setPublishAt(e.target.value)}
-                />
-                <p className="text-xs mt-2">
-                  Até esse momento, a atividade fica visível somente para professores autorizados.
-                </p>
-              </div>
-            )}
           </section>
-        )}
 
-        <div>
-          <Label htmlFor="activity-book">Livro relacionado</Label>
-          <select
-            id="activity-book"
-            className="native-select"
-            value={form.book_id}
-            onChange={e => set('book_id', e.target.value)}
-          >
-            <option value="">Sem livro relacionado</option>
-            {books.map(b => (
-              <option key={b.id} value={b.id}>
-                {b.titulo}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <Label htmlFor="activity-attachment">Materiais de apoio (até 5 PDFs ou imagens)</Label>
-          <Input
-            id="activity-attachment"
-            type="file"
-            accept="application/pdf,image/png,image/jpeg,image/webp,image/gif"
-            disabled={form.anexos.length >= 5}
-            onChange={attach}
-          />
-          {form.anexos.map((a, i) => (
-            <div className="flex gap-3 text-sm mt-2" key={i}>
-              <span>{a.nome}</span>
-              <button type="button" onClick={() => set('anexos', form.anexos.filter((_, j) => j !== i))}>
-                Remover
-              </button>
-            </div>
-          ))}
-        </div>
-
-        {form.perguntas.map((q, i) => (
-          <section className="rounded-xl border p-4 space-y-3" key={i}>
-            <div className="flex justify-between">
-              <Label htmlFor={`question-${i}`}>Pergunta {i + 1} *</Label>
-              {form.perguntas.length > 1 && (
-                <button type="button" onClick={() => set('perguntas', form.perguntas.filter((_, j) => i !== j))}>
-                  Remover
+          {!template && canSchedule && (
+            <section className="af-card af-publish">
+              <h3>Publicação</h3>
+              <div className="ws-segment af-publish-mode" role="group" aria-label="Quando publicar">
+                <button type="button" aria-pressed={!scheduled} onClick={() => setScheduled(false)}>
+                  Agora
                 </button>
-              )}
-            </div>
-            <Textarea
-              id={`question-${i}`}
-              required
-              maxLength={3000}
-              value={q.enunciado}
-              onChange={e => change(i, { enunciado: e.target.value })}
-            />
-            <select
-              aria-label={`Tipo da pergunta ${i + 1}`}
-              className="native-select"
-              value={q.tipo}
-              onChange={e => change(i, { tipo: e.target.value })}
-            >
-              <option value="texto">Resposta escrita</option>
-              <option value="alternativa">Múltipla escolha</option>
-            </select>
-            {q.tipo === 'alternativa' && (
-              <div className="space-y-2">
-                {q.alternativas.map((v, j) => (
-                  <div className="flex gap-2" key={j}>
-                    <Input
-                      required
-                      maxLength={500}
-                      aria-label={`Alternativa ${j + 1} da pergunta ${i + 1}`}
-                      placeholder={`Alternativa ${j + 1}`}
-                      value={v}
-                      onChange={e =>
-                        change(i, {
-                          alternativas: q.alternativas.map((x, k) => (k === j ? e.target.value : x))
-                        })
-                      }
-                    />
-                    {q.alternativas.length > 2 && (
-                      <button
-                        type="button"
-                        aria-label={`Remover alternativa ${j + 1}`}
-                        onClick={() =>
-                          change(i, { alternativas: q.alternativas.filter((_, k) => k !== j) })
-                        }
-                      >
-                        ×
-                      </button>
-                    )}
-                  </div>
-                ))}
-                {q.alternativas.length < 6 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => change(i, { alternativas: [...q.alternativas, ''] })}
-                  >
-                    Adicionar alternativa
-                  </Button>
-                )}
-                <p className="text-xs text-muted-foreground">O professor revisa as respostas e atribui a nota.</p>
+                <button type="button" aria-pressed={scheduled} onClick={() => setScheduled(true)}>
+                  Agendar
+                </button>
               </div>
-            )}
-          </section>
-        ))}
+              {scheduled ? (
+                <label className="qz-field">
+                  <span>Data e hora (Brasília)</span>
+                  <input id="activity-publication" type="datetime-local" required value={publishAt} onChange={e => setPublishAt(e.target.value)} />
+                  <small className="af-hint">Até lá, só professores autorizados veem a atividade.</small>
+                </label>
+              ) : (
+                <small className="af-hint">Os alunos recebem a atividade assim que você publicar.</small>
+              )}
+            </section>
+          )}
 
-        <Button
-          type="button"
-          variant="outline"
-          disabled={form.perguntas.length >= 20}
-          onClick={() => set('perguntas', [...form.perguntas, question()])}
-        >
-          Adicionar pergunta
-        </Button>
-
-        <div className="flex flex-wrap gap-3">
-          <Button type="submit">
-            {busy
-              ? 'Salvando…'
-              : template
-              ? 'Salvar modelo'
-              : scheduled
-              ? initial
-                ? 'Salvar agendamento'
-                : 'Agendar atividade'
-              : initial
-              ? 'Salvar alterações'
-              : 'Publicar atividade'}
-          </Button>
-          <Button type="button" variant="ghost" onClick={onCancel}>
-            Cancelar
-          </Button>
-        </div>
+          <div className="af-actions">
+            <Button type="submit" className="qz-btn-primary">
+              {submitLabel}
+            </Button>
+            <Button type="button" variant="ghost" onClick={onCancel}>
+              Cancelar
+            </Button>
+          </div>
+        </aside>
       </fieldset>
     </form>
   );

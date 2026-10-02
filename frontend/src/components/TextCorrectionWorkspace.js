@@ -1,3 +1,4 @@
+import { confirmAction } from '@/components/ConfirmHost';
 import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Search, CheckCircle2, Clock3, Sparkles, ListChecks, MessageSquareText, Trash2, BookOpen, PenTool } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -222,7 +223,7 @@ export default function TextCorrectionWorkspace({ items, kind, canDelete, onSave
   });
 
   const remove = async () => {
-    if (!window.confirm(`Excluir este texto de ${current.user_nome}? Esta ação é permanente.`)) return;
+    if (!(await confirmAction({ title: 'Excluir texto do aluno?', message: `Excluir este texto de ${current.user_nome}? Esta ação é permanente.`, confirmLabel: 'Excluir' }))) return;
     try {
       await api.delete(config.remove(current.id));
       toast.success('Texto excluído.');

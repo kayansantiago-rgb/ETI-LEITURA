@@ -13,6 +13,7 @@ import { ThemeProvider } from 'next-themes';
 import TeacherPanel from '@/pages/TeacherPanel';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
+import ConfirmHost from '@/components/ConfirmHost';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AuthPage from '@/pages/AuthPage';
 import Dashboard from '@/pages/Dashboard';
@@ -182,6 +183,7 @@ function App() {
         </Routes>
       </BrowserRouter>
       <Toaster position="top-right" richColors />
+      <ConfirmHost />
     </div></SplashScreen></ThemeProvider>
   );
 }

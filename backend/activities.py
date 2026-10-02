@@ -56,7 +56,7 @@ def retry_open(submission):
 def revision_query(row):
     return {'id': row['id'], 'updated_at': row.get('updated_at'), 'corrigido_em': row.get('corrigido_em'), 'reenvio': row.get('reenvio')}
 
-CLASSES = {'TODAS', '7º ANO', '8º ANO', '9º ANO', '1º SÉRIE A', '1º SÉRIE B', '2º SÉRIE', '3º SÉRIE A', '3º SÉRIE B'}
+CLASSES = {'TODAS', '7º ANO', '8º ANO', '9º ANO', '1º SÉRIE A', '1º SÉRIE B', '2º SÉRIE', '2º SÉRIE A', '2º SÉRIE B', '3º SÉRIE A', '3º SÉRIE B'}
 
 def published_query(at=None):
     return {'$or':[{'publicar_em':None},{'publicar_em':{'$lte':(at or datetime.now(timezone.utc)).isoformat()}}]}

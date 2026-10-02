@@ -1,3 +1,4 @@
+import { confirmAction } from '@/components/ConfirmHost';
 import PageIntro from '@/components/PageIntro';
 import EmptyCollection from '@/components/EmptyCollection';
 import { useState, useEffect } from 'react';
@@ -99,7 +100,7 @@ const AdminCalendar = () => {
   };
 
   const handleDelete = async (eventId) => {
-    if (!window.confirm('Deseja excluir este evento?')) return;
+    if (!(await confirmAction({ title: 'Excluir evento?', message: 'Deseja excluir este evento?', confirmLabel: 'Excluir' }))) return;
     
     try {
       await api.delete(`/admin/calendar/${eventId}`);

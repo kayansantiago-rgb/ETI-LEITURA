@@ -1,3 +1,4 @@
+import { confirmAction } from '@/components/ConfirmHost';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, Plus, Trash2, X, Upload, Award } from 'lucide-react';
@@ -50,7 +51,7 @@ export default function BookQuizEditor({ book, onClose }) {
   };
 
   const remove = async () => {
-    if (!window.confirm('Remover o questionário deste livro? Certificados já emitidos continuam válidos.')) return;
+    if (!(await confirmAction({ title: 'Remover questionário?', message: 'Remover o questionário deste livro? Certificados já emitidos continuam válidos.', confirmLabel: 'Remover' }))) return;
     setBusy(true);
     try {
       await api.delete(`/admin/books/${book.id}/quiz`);

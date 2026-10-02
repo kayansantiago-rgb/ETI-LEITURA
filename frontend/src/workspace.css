@@ -2464,3 +2464,109 @@ html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after 
 .cp-options button { display: inline-flex; align-items: center; gap: 4px; padding: 7px 12px; border-radius: 99px !important; font-size: .8125rem; font-weight: 700; border: 1.5px solid hsl(var(--border)); color: hsl(var(--muted-foreground)); background: hsl(var(--card)); transition: all .15s; }
 .cp-options button[aria-pressed="true"] { border-color: hsl(var(--primary)); background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
 .cp small { font-size: .75rem; color: hsl(var(--muted-foreground)); }
+
+/* --------------------------------------------------------------------------
+   Caixa de confirmação da plataforma
+   -------------------------------------------------------------------------- */
+.cf-overlay { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 20px; background: hsl(250 40% 8% / .5); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); animation: ws-fade .18s ease-out; }
+.cf { width: min(420px, 100%); display: grid; justify-items: center; gap: 10px; padding: 28px 26px 22px; text-align: center; border-radius: 26px; background: hsl(var(--card)); color: hsl(var(--foreground)); box-shadow: 0 40px 90px -30px hsl(250 40% 8% / .7); animation: ws-pop .25s cubic-bezier(.2, .8, .2, 1); }
+.cf-icon { width: 60px; height: 60px; display: grid; place-items: center; border-radius: 20px; color: hsl(var(--primary)); background: hsl(var(--accent)); }
+.cf.is-danger .cf-icon { color: hsl(0 72% 52%); background: hsl(0 80% 60% / .12); }
+.cf h2 { font-family: var(--eti-font-display); font-size: 1.25rem; font-weight: 800; letter-spacing: -.01em; }
+.cf p { font-size: .875rem; line-height: 1.6; color: hsl(var(--muted-foreground)); }
+.cf-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-top: 10px; }
+.cf-actions button { height: 46px; border-radius: 14px !important; font-weight: 700; font-size: .9375rem; }
+.cf-cancel { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+.cf-cancel:hover { filter: brightness(.96); }
+.cf-confirm { color: #fff; background: var(--eti-gradient); box-shadow: var(--eti-shadow-glow); }
+.cf.is-danger .cf-confirm { background: linear-gradient(135deg, hsl(0 75% 55%), hsl(345 80% 52%)); box-shadow: 0 10px 24px -10px hsl(0 75% 50% / .6); }
+.cf-confirm:hover { filter: brightness(1.06); }
+
+/* --------------------------------------------------------------------------
+   Logo animada
+   -------------------------------------------------------------------------- */
+.eti-logo { flex-shrink: 0; display: block; filter: drop-shadow(0 6px 12px hsl(258 70% 40% / .35)); }
+.eti-logo.is-animated .eti-logo-page { transform-origin: 40px 40px; animation: eti-logo-flip 7s cubic-bezier(.45, .05, .35, 1) infinite; }
+@keyframes eti-logo-flip {
+  0%, 70% { transform: scaleX(1); opacity: 0; }
+  71% { opacity: 1; }
+  85% { transform: scaleX(-1); opacity: 1; }
+  86%, 100% { transform: scaleX(-1); opacity: 0; }
+}
+.eti-logo.is-animated .eti-logo-star { transform-origin: 63px 15px; animation: eti-logo-star 2.8s ease-in-out infinite; }
+@keyframes eti-logo-star { 0%, 100% { transform: scale(.7) rotate(0); opacity: .7; } 50% { transform: scale(1.15) rotate(20deg); opacity: 1; } }
+.eti-logo.is-animated .eti-logo-shine { animation: eti-logo-shine 5s ease-in-out infinite; }
+@keyframes eti-logo-shine { 0%, 60% { transform: translateX(0) rotate(20deg); } 100% { transform: translateX(150px) rotate(20deg); } }
+.brand:hover .eti-logo.is-animated .eti-logo-page { animation-duration: 1.4s; }
+html.reduce-motion .eti-logo *, .reduce-motion .eti-logo * { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { .eti-logo * { animation: none !important; } }
+@media (max-width: 640px) { .eti-brand .eti-logo { width: 34px; height: 34px; } }
+
+/* --------------------------------------------------------------------------
+   Carregamento da página inicial
+   -------------------------------------------------------------------------- */
+.hl { display: grid; gap: 18px; animation: ws-fade .3s ease-out; }
+.hl-hero { display: flex; align-items: center; gap: 22px; padding: 26px 30px; border-radius: 28px; color: #fff; background: var(--eti-gradient); box-shadow: var(--eti-shadow-md); overflow: hidden; position: relative; }
+.hl-hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 30%, hsl(0 0% 100% / .18) 50%, transparent 70%); background-size: 200% 100%; animation: rd-shimmer 1.6s infinite linear; }
+.hl-hero > div:last-child { display: grid; gap: 4px; position: relative; z-index: 1; }
+.hl-hero strong { font-family: var(--eti-font-display); font-size: clamp(1.25rem, 3vw, 1.75rem); font-weight: 800; letter-spacing: -.02em; }
+.hl-hero span { font-size: .9375rem; opacity: .88; }
+.hl-owl { position: relative; flex-shrink: 0; width: 96px; height: 96px; display: grid; place-items: center; border-radius: 28px; background: hsl(0 0% 100% / .16); z-index: 1; }
+.hl-owl svg { animation: sp-owl 2.4s ease-in-out infinite; }
+.hl-book { position: absolute; bottom: 8px; left: 50%; width: 54px; height: 22px; transform: translateX(-50%); display: flex; perspective: 200px; }
+.hl-book i { flex: 1; background: #fff; border-radius: 3px 0 0 3px; box-shadow: inset -4px 0 6px -4px #7c3aed66; }
+.hl-book i + i { border-radius: 0 3px 3px 0; transform-origin: left center; animation: hl-flip 1.2s ease-in-out infinite; background: #ede9fe; }
+@keyframes hl-flip { 0% { transform: rotateY(0); } 50% { transform: rotateY(-170deg); } 100% { transform: rotateY(0); } }
+.hl-dots { display: inline-flex; gap: 5px; margin-top: 6px; }
+.hl-dots i { width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: hl-dot 1s ease-in-out infinite; }
+.hl-dots i:nth-child(2) { animation-delay: .15s; }
+.hl-dots i:nth-child(3) { animation-delay: .3s; }
+@keyframes hl-dot { 0%, 100% { opacity: .35; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-4px); } }
+.hl-skeleton { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.hl-skeleton span { height: 120px; border-radius: 22px; background: linear-gradient(110deg, hsl(var(--muted)) 30%, hsl(var(--card)) 50%, hsl(var(--muted)) 70%); background-size: 200% 100%; animation: rd-shimmer 1.3s infinite linear; }
+.hl-skeleton .is-wide { grid-column: span 2; height: 180px; }
+@media (max-width: 640px) {
+  .hl-hero { flex-direction: column; text-align: center; padding: 22px; }
+  .hl-skeleton { grid-template-columns: 1fr 1fr; }
+}
+
+/* --------------------------------------------------------------------------
+   Editor de atividade (página inteira)
+   -------------------------------------------------------------------------- */
+.af { margin-bottom: 24px; }
+.af-grid { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 20px; align-items: start; min-width: 0; border: 0; padding: 0; margin: 0; }
+.af-main { display: grid; gap: 14px; min-width: 0; }
+.af-card { padding: 20px 22px; border-radius: 22px; background: hsl(var(--card)); border: 1px solid hsl(var(--border) / .85); box-shadow: var(--eti-shadow-sm); }
+.af-intro { display: grid; gap: 10px; position: relative; overflow: hidden; }
+.af-intro::before { content: ''; position: absolute; inset: 0 0 auto; height: 5px; background: var(--eti-gradient); }
+.af-title { width: 100%; border: 0 !important; background: transparent !important; box-shadow: none !important; outline: none; padding: 4px 0 !important; font-family: var(--eti-font-display); font-size: clamp(1.375rem, 3vw, 1.875rem) !important; font-weight: 800; letter-spacing: -.02em; color: hsl(var(--foreground)); border-bottom: 2px dashed hsl(var(--border)) !important; border-radius: 0 !important; min-height: 0 !important; }
+.af-title:focus { border-bottom-color: hsl(var(--primary)) !important; }
+.af-desc { width: 100%; min-height: 80px; resize: vertical; padding: 12px 14px !important; border-radius: 14px !important; border: 1px solid hsl(var(--input)); background: hsl(var(--background)) !important; font-size: .9375rem; line-height: 1.6; }
+.af-questions-head { display: flex; align-items: baseline; justify-content: space-between; padding: 4px 4px 0; }
+.af-questions-head h3 { display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 800; }
+.af-questions-head h3 span { font-size: .75rem; padding: 2px 9px; border-radius: 99px; background: hsl(var(--accent)); color: hsl(var(--accent-foreground)); }
+.af-questions-head small { font-size: .75rem; color: hsl(var(--muted-foreground)); }
+.af-q { display: grid; gap: 10px; }
+.af-q header { display: flex; align-items: center; gap: 10px; }
+.af-type { display: inline-flex; gap: 2px; padding: 3px; border-radius: 12px; background: hsl(var(--muted)); margin-right: auto; }
+.af-type button { padding: 6px 12px; min-height: 0 !important; border-radius: 9px !important; font-size: .75rem; font-weight: 700; color: hsl(var(--muted-foreground)); }
+.af-type button[aria-pressed="true"] { background: hsl(var(--card)); color: hsl(var(--primary)); box-shadow: var(--eti-shadow-sm); }
+.af-side { position: sticky; top: 96px; display: grid; gap: 14px; }
+.af-settings, .af-publish { display: grid; gap: 12px; }
+.af-side h3 { font-size: .9375rem; font-weight: 800; }
+.af-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.af-hint { font-size: .6875rem; color: hsl(var(--muted-foreground)); line-height: 1.4; }
+.af-attach { height: 40px; font-size: .75rem; }
+.af-attach.is-disabled { opacity: .5; pointer-events: none; }
+.af-file { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: 10px; background: hsl(var(--muted)); font-size: .75rem; }
+.af-file span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.af-file button { font-size: 1rem; color: hsl(var(--muted-foreground)); }
+.af-publish-mode { width: 100%; }
+.af-publish-mode button { flex: 1; justify-content: center; }
+.af-actions { display: grid; gap: 6px; }
+.af-actions button { height: 48px; border-radius: 14px !important; font-weight: 700; }
+.af .qz-field input, .af .qz-field select { min-height: 0 !important; }
+@media (max-width: 1000px) {
+  .af-grid { grid-template-columns: 1fr; }
+  .af-side { position: static; }
+}

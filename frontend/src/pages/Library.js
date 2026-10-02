@@ -1,3 +1,4 @@
+import { confirmAction } from '@/components/ConfirmHost';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, BookOpen, BookMarked, CheckCircle2, Trophy, ArrowRight, Library as LibraryIcon } from 'lucide-react';
@@ -68,7 +69,7 @@ const Library = () => {
   }, []);
 
   const handleDeleteBook = async bookId => {
-    if (!window.confirm('Tem certeza que deseja excluir este livro? Todos os resumos e progresso relacionados serão removidos.')) return;
+    if (!(await confirmAction({ title: 'Excluir livro?', message: 'Tem certeza que deseja excluir este livro? Todos os resumos e progresso relacionados serão removidos.', confirmLabel: 'Excluir' }))) return;
     try {
       await api.delete(`/admin/books/${bookId}`);
       setBooks(books.filter(b => b.id !== bookId));

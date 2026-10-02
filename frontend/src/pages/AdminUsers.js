@@ -1,3 +1,4 @@
+import { confirmAction } from '@/components/ConfirmHost';
 import PageIntro from '@/components/PageIntro';
 import EmptyCollection from '@/components/EmptyCollection';
 import {getUser} from '@/lib/auth';
@@ -44,7 +45,7 @@ const AdminUsers = () => {
   };
 
   const handleDeleteUser = async (userId, userName) => {
-    if (window.confirm(`Tem certeza que deseja excluir o usuário "${userName}"? Todos os resumos, produções textuais e progresso serão removidos permanentemente.`)) {
+    if ((await confirmAction({ title: 'Excluir aluno?', message: `Tem certeza que deseja excluir o usuário "${userName}"? Todos os resumos, produções textuais e progresso serão removidos permanentemente.`, confirmLabel: 'Excluir' }))) {
       try {
         await api.delete(`/admin/users/${userId}`);
         setUsers(users.filter(u => u.id !== userId));

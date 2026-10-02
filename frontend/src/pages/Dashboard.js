@@ -6,7 +6,6 @@ import {
   ArrowRight,
   ClipboardList,
   MessageSquare,
-  Sparkles,
   Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
@@ -15,6 +14,7 @@ import {
 import DashboardLayout from '@/components/DashboardLayout';
 import StudentDiscovery from '@/components/StudentDiscovery';
 import ReadingJourney from '@/components/ReadingJourney';
+import HomeLoader from '@/components/HomeLoader';
 import ClassRanking from '@/components/ClassRanking';
 import StatusBadge, { activityState } from '@/components/StatusBadge';
 import { getUser } from '@/lib/auth';
@@ -162,10 +162,7 @@ export default function Dashboard() {
     <DashboardLayout>
       <div className="student-home" data-testid="dashboard-page">
         {loading ? (
-          <div className="panel p-12 text-center text-muted-foreground" role="status">
-            <Sparkles className="animate-spin inline-block mb-3 text-primary" size={28} />
-            <p className="font-semibold text-base">Preparando seu espaço de estudo com carinho…</p>
-          </div>
+          <HomeLoader />
         ) : (
           <>
             {!!data?.failed.length && (

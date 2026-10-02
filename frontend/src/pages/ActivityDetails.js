@@ -1,3 +1,4 @@
+import { confirmAction } from '@/components/ConfirmHost';
 import CorrectionWorkspace from '@/components/CorrectionWorkspace';
 import ActivitySteps from '@/components/ActivitySteps';
 import { publicationLabel } from '@/lib/publication';
@@ -199,7 +200,7 @@ export default function ActivityDetails() {
   };
 
   const remove = async () => {
-    if (!window.confirm('Tem certeza que deseja apagar esta atividade? Esta ação é permanente e removerá a atividade e todas as entregas dos alunos.')) return;
+    if (!(await confirmAction({ title: 'Apagar atividade?', message: 'Tem certeza que deseja apagar esta atividade? Esta ação é permanente e removerá a atividade e todas as entregas dos alunos.', confirmLabel: 'Apagar' }))) return;
     setBusy(true);
     try {
       await api.delete(`/admin/activities/${id}`);

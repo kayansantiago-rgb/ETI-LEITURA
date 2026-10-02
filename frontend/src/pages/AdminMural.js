@@ -1,3 +1,4 @@
+import { confirmAction } from '@/components/ConfirmHost';
 import { getUser } from '@/lib/auth';
 import PageIntro from '@/components/PageIntro';
 import EmptyCollection from '@/components/EmptyCollection';
@@ -121,7 +122,7 @@ const AdminMural = () => {
   };
 
   const handleDelete = async (postId) => {
-    if (window.confirm('Deseja excluir este post do mural?')) {
+    if ((await confirmAction({ title: 'Excluir publicação do mural?', message: 'Deseja excluir este post do mural?', confirmLabel: 'Excluir' }))) {
       try {
         await api.delete(`/admin/mural/${postId}`);
         setPosts(posts.filter(p => p.id !== postId));
