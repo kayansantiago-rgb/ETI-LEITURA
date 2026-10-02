@@ -142,7 +142,8 @@ function MaterialForm({ initial, onClose, onSaved }) {
             <X size={18} />
           </button>
         </header>
-        <fieldset disabled={busy} className="vd-form-body">
+        <div className="vd-form-body">
+<fieldset disabled={busy} className="vd-form-fields">
           <label className="qz-field">
             <span>Título</span>
             <input id="material-title" required maxLength={160} placeholder="Ex.: Como fazer um bom resumo" value={form.titulo} onChange={e => change('titulo', e.target.value)} />
@@ -193,6 +194,7 @@ function MaterialForm({ initial, onClose, onSaved }) {
             ))}
           </div>
         </fieldset>
+</div>
         <footer className="bqe-footer">
           <span className="flex-1" />
           <Button type="button" variant="ghost" onClick={onClose}>

@@ -61,7 +61,8 @@ function EventForm({ initial, onClose, onSaved }) {
             <X size={18} />
           </button>
         </header>
-        <fieldset disabled={busy} className="vd-form-body">
+        <div className="vd-form-body">
+<fieldset disabled={busy} className="vd-form-fields">
           <label className="qz-field">
             <span>Título</span>
             <input id="titulo" data-testid="input-event-titulo" required maxLength={160} placeholder="Ex.: Apresentação do livro Dom Casmurro" value={form.titulo} onChange={e => set('titulo', e.target.value)} />
@@ -83,6 +84,7 @@ function EventForm({ initial, onClose, onSaved }) {
             </div>
           </div>
         </fieldset>
+</div>
         <footer className="bqe-footer">
           <span className="flex-1" />
           <Button type="button" variant="ghost" onClick={onClose}>

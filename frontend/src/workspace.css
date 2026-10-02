@@ -2890,3 +2890,15 @@ html.reduce-motion .eti-logo *, .reduce-motion .eti-logo * { animation: none !im
   .ws-sheet, .cx-drawer, .a11y-panel { max-height: calc(100dvh - 16px); border-radius: 22px; }
   .cx-drawer { height: calc(100dvh - 16px); }
 }
+
+/* Rolagem dentro das janelas (formulários, histórico, acessibilidade) */
+.vd-form-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.vd-form-body, .ws-sheet-body, .a11y-body, .vd-viewer { scrollbar-width: thin; scrollbar-color: hsl(var(--primary) / .45) transparent; }
+.vd-form-body::-webkit-scrollbar, .ws-sheet-body::-webkit-scrollbar, .a11y-body::-webkit-scrollbar, .vd-viewer::-webkit-scrollbar { width: 10px; }
+.vd-form-body::-webkit-scrollbar-thumb, .ws-sheet-body::-webkit-scrollbar-thumb, .a11y-body::-webkit-scrollbar-thumb, .vd-viewer::-webkit-scrollbar-thumb { background: hsl(var(--primary) / .4); border-radius: 99px; border: 3px solid transparent; background-clip: content-box; }
+.vd-form-body::-webkit-scrollbar-thumb:hover, .ws-sheet-body::-webkit-scrollbar-thumb:hover, .a11y-body::-webkit-scrollbar-thumb:hover { background-color: hsl(var(--primary) / .65); }
+.vd-form-body { display: block; }
+.vd-form-fields { display: grid; gap: 14px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.vd-form-fields .qz-field input, .vd-form-fields .qz-field select, .vd-form-fields .qz-field textarea { min-height: 0 !important; }
+.vd-form-fields .qz-field textarea { padding: 10px 12px; border-radius: 12px; border: 1px solid hsl(var(--input)); background: hsl(var(--background)); font-size: .875rem; line-height: 1.5; resize: vertical; }
+.vd-form-fields .qz-field input:focus, .vd-form-fields .qz-field select:focus, .vd-form-fields .qz-field textarea:focus { outline: none; border-color: hsl(var(--primary)); box-shadow: 0 0 0 4px hsl(var(--primary) / .14); }

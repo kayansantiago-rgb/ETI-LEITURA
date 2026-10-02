@@ -134,7 +134,8 @@ function PostForm({ onClose, onSaved }) {
             <X size={18} />
           </button>
         </header>
-        <fieldset disabled={busy} className="vd-form-body">
+        <div className="vd-form-body">
+<fieldset disabled={busy} className="vd-form-fields">
           <div className="ws-segment mu-type" role="group" aria-label="Tipo de publicação">
             <button
               type="button"
@@ -215,6 +216,7 @@ function PostForm({ onClose, onSaved }) {
             <textarea id="descricao" rows={3} maxLength={2000} placeholder="Conte o que aconteceu, quem participou…" value={form.descricao} onChange={e => set('descricao', e.target.value)} />
           </label>
         </fieldset>
+</div>
         <footer className="bqe-footer">
           <span className="flex-1" />
           <Button type="button" variant="ghost" onClick={onClose}>
