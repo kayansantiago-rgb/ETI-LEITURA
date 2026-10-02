@@ -67,6 +67,15 @@ function route(p, q, isAdmin) {
   if (p === '/api/gradebook') return { notas: [{ id: 'g1', disciplina: 'Língua Portuguesa', bimestre: 3, nota: 8.5, feedback: 'Excelente evolução na interpretação!', data: day(-2) }], medias: [] };
   if (p === '/api/push/config') return { configured: true, public_key: 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U' };
   if (p === '/api/push/status') return { enabled: false, subscribed: false };
+  if (p === '/api/admin/students/attention') {
+    const rows = [
+      { id: 'u1', nome: 'João Pedro Alves', turma: '8º ANO', dias_sem_ler: 12, ultima_leitura: day(-12), atrasadas: [{ id: 'a3', titulo: 'Quiz de vocabulário', prazo: day(-3) }], refazer: [], lembrado_hoje: false },
+      { id: 'u2', nome: 'Lucas Prado', turma: '7º ANO', dias_sem_ler: null, ultima_leitura: null, atrasadas: [], refazer: [{ id: 'a1', titulo: 'Interpretação: capítulo 3' }], lembrado_hoje: false },
+      { id: 'u4', nome: 'Beatriz Alves', turma: '7º ANO', dias_sem_ler: 8, ultima_leitura: day(-8), atrasadas: [], refazer: [], lembrado_hoje: true }
+    ];
+    const t = q && q.get('turma');
+    return t ? rows.filter(r => r.turma === t) : rows;
+  }
   if (p === '/api/admin/teachers') return [
     { id: 't1', nome: 'Ana Souza', email: 'ana@example.com', turmas: ['7º ANO', '8º ANO'], active: true },
     { id: 't2', nome: 'Carlos Mendes', email: 'carlos@example.com', turmas: ['9º ANO', '1º SÉRIE A', '1º SÉRIE B'], active: true },

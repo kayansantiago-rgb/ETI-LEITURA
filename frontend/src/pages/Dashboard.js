@@ -14,6 +14,7 @@ import {
 import DashboardLayout from '@/components/DashboardLayout';
 import StudentDiscovery from '@/components/StudentDiscovery';
 import ReadingJourney from '@/components/ReadingJourney';
+import InstallApp from '@/components/InstallApp';
 import HomeLoader from '@/components/HomeLoader';
 import ClassRanking from '@/components/ClassRanking';
 import StatusBadge, { activityState } from '@/components/StatusBadge';
@@ -182,6 +183,8 @@ export default function Dashboard() {
             />
 
             {!staff && <ReadingJourney />}
+
+            <InstallApp />
 
             {/* Seção Central: Continuar Leitura + Recentes & Calendário (Imagem de Referência 3) */}
             <div className="study-section-grid">

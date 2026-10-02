@@ -35,7 +35,7 @@ const TEACHER_PAGES = [
   ['/admin/summaries', 'Resumos dos alunos'],
   ['/admin/text-productions', 'Produções textuais'],
   ['/admin/books', 'Gerenciar livros'],
-  ['/admin/classes', 'Minhas turmas'],
+  ['/admin/classes', 'Precisam de atenção'],
   ['/admin/classes/7%C2%BA%20ANO', 'Média da turma'],
   ['/admin/reports', 'Relatório escolar'],
   ['/workspace', 'Pendências de correção'],

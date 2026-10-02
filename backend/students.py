@@ -1,8 +1,37 @@
 """Histórico completo de um aluno para professores e coordenação."""
-from fastapi import APIRouter, Depends, HTTPException
+from datetime import date, datetime, timezone
+from typing import Optional
 
-from backend.permissions import ensure_student_scope
-from backend.reading import streaks
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
+
+from backend.activities import published_query
+from backend.permissions import class_query, ensure_student_scope
+from backend.reading import streaks, today
+
+QUIET_DAYS = 7
+
+
+class Nudge(BaseModel):
+    mensagem: str = Field(min_length=3, max_length=200)
+    destino: Optional[str] = Field(default='/workspace', pattern=r'^/(workspace|library|activities)$')
+
+
+def attention_row(student, last_day, overdue, retries, nudged):
+    """Monta a linha de um aluno que precisa de atenção, ou None se ele está em dia."""
+    quiet = (today() - date.fromisoformat(last_day)).days if last_day else None
+    if not overdue and not retries and quiet is not None and quiet < QUIET_DAYS:
+        return None
+    return {
+        'id': student['id'], 'nome': student['nome'], 'turma': student.get('turma'),
+        'dias_sem_ler': quiet, 'ultima_leitura': last_day,
+        'atrasadas': overdue, 'refazer': retries, 'lembrado_hoje': nudged,
+    }
+
+
+def severity(row):
+    quiet = row['dias_sem_ler']
+    return (len(row['atrasadas']) + len(row['refazer']), 999 if quiet is None else quiet)
 
 
 def create_students_router(db, staff):
@@ -70,5 +99,47 @@ def create_students_router(db, staff):
             'quizzes': sorted(quiz_rows, key=lambda q: q['enviado_em'] or '', reverse=True),
             'certificados': certificates,
         }
+
+    @router.get('/admin/students/attention')
+    async def attention(turma: Optional[str] = None, user=Depends(staff)):
+        students = await db.users.find(class_query(user, turma), {'_id': 0, 'id': 1, 'nome': 1, 'turma': 1}).to_list(10000)
+        if not students:
+            return []
+        ids = [s['id'] for s in students]
+        last = {r['_id']: r['last'] async for r in db.reading_days.aggregate([
+            {'$match': {'user_id': {'$in': ids}}}, {'$group': {'_id': '$user_id', 'last': {'$max': '$dia'}}}])}
+        turmas = {s.get('turma') for s in students}
+        activities = await db.activities.find({'turma': {'$in': ['TODAS', *turmas]}, **published_query()},
+                                              {'_id': 0, 'id': 1, 'titulo': 1, 'turma': 1, 'prazo': 1}).to_list(10000)
+        submissions = {}
+        for sub in await db.activity_submissions.find({'user_id': {'$in': ids}}, {'_id': 0, 'user_id': 1, 'activity_id': 1, 'reenvio': 1}).to_list(100000):
+            submissions[(sub['user_id'], sub['activity_id'])] = sub
+        day = today().isoformat()
+        nudged = {n['user_id'] for n in await db.student_nudges.find({'user_id': {'$in': ids}, 'dia': day}, {'_id': 0, 'user_id': 1}).to_list(10000)}
+        rows = []
+        for student in students:
+            mine = [a for a in activities if a['turma'] in ('TODAS', student.get('turma'))]
+            overdue = [{'id': a['id'], 'titulo': a['titulo'], 'prazo': a['prazo']} for a in mine
+                       if a.get('prazo') and a['prazo'] < day and (student['id'], a['id']) not in submissions]
+            retries = [{'id': a['id'], 'titulo': a['titulo']} for a in mine
+                       if (submissions.get((student['id'], a['id'])) or {}).get('reenvio')]
+            row = attention_row(student, last.get(student['id']), overdue, retries, student['id'] in nudged)
+            if row:
+                rows.append(row)
+        return sorted(rows, key=severity, reverse=True)
+
+    @router.post('/admin/students/{student_id}/nudge', status_code=201)
+    async def nudge(student_id: str, data: Nudge, user=Depends(staff)):
+        await ensure_student_scope(db, user, student_id)
+        if not await db.users.find_one({'id': student_id, 'role': 'student'}):
+            raise HTTPException(404, 'Aluno não encontrado.')
+        day = today().isoformat()
+        doc = {'_id': f'{student_id}:{day}', 'id': f'{student_id}-{day}', 'user_id': student_id, 'dia': day,
+               'mensagem': data.mensagem.strip(), 'link': data.destino or '/workspace',
+               'autor_id': user['id'], 'autor_nome': user['nome'], 'created_at': datetime.now(timezone.utc).isoformat()}
+        result = await db.student_nudges.update_one({'_id': doc['_id']}, {'$setOnInsert': doc}, upsert=True)
+        if not result.upserted_id:
+            raise HTTPException(409, 'Este aluno já recebeu um lembrete hoje.')
+        return {'ok': True}
 
     return router

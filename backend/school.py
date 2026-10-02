@@ -51,6 +51,8 @@ async def notifications(db,user):
                 days=(datetime.fromisoformat(a['prazo']).date()-datetime.now(timezone(timedelta(hours=-3))).date()).days
                 if 0<=days<=3:notices.append({'id':'deadline:'+a['id']+':'+a['prazo'],'titulo':'Prazo próximo: '+a['titulo'],'link':'/activities/'+a['id'],'data':now()})
             if sub and sub.get('corrigido_em'):notices.append({'id':'grade:'+sub['id']+':'+sub['corrigido_em'],'titulo':'Atividade corrigida: '+a['titulo'],'link':'/activities/'+a['id'],'data':sub['corrigido_em']})
+        for n in await db.student_nudges.find({'user_id':user['id']},{'_id':0}).sort('created_at',-1).to_list(30):
+            notices.append({'id':'nudge:'+n['id'],'titulo':'Lembrete de '+n['autor_nome'].split(' ')[0]+': '+n['mensagem'],'link':n.get('link') or '/workspace','data':n['created_at']})
         for collection,path,label in [('summaries','/summaries','Resumo'),('text_productions','/text-productions','Produção textual')]:
             for x in await db[collection].find({'user_id':user['id'],'corrigido_em':{'$ne':None}},{'_id':0}).to_list(1000):
                 notices.append({'id':collection+':'+x['id']+':'+x['corrigido_em'],'titulo':label+' corrigido: confira seu feedback','link':path,'data':x['corrigido_em']})

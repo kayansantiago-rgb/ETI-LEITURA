@@ -21,6 +21,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import PageIntro from '@/components/PageIntro';
 import CorrectionDrawer from '@/components/CorrectionDrawer';
 import StudentHistory from '@/components/StudentHistory';
+import AttentionPanel from '@/components/AttentionPanel';
 import SubjectBadge from '@/components/SubjectBadge';
 import { Button } from '@/components/ui/button';
 import { TURMAS } from '@/constants/turmas';
@@ -214,7 +215,10 @@ export default function Classes() {
           <span className="cx-spinner mx-auto mb-3" /> Carregando suas turmas…
         </div>
       ) : !turma ? (
-        <Overview allowed={allowed} report={data.report} activities={data.activities} />
+        <>
+          {allowed.length > 0 && <AttentionPanel onOpen={setStudent} />}
+          <Overview allowed={allowed} report={data.report} activities={data.activities} />
+        </>
       ) : (
         <>
           <section className="ws-kpis">
@@ -257,6 +261,8 @@ export default function Classes() {
               <p>Livros lidos até o fim</p>
             </article>
           </section>
+
+          <AttentionPanel turma={turma} onOpen={setStudent} />
 
           <div className="ws-card ws-toolbar">
             <div className="ws-segment" role="tablist" aria-label="Conteúdo da turma">

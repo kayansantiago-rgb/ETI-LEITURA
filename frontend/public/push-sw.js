@@ -1,4 +1,7 @@
-/* Push only: no caching of authenticated pages, answers, grades or API requests. */
+/* Push e aplicativo instalável. Nada de páginas autenticadas, respostas, notas ou API fica em cache:
+   só a página estática "sem internet", mostrada quando a navegação falha por falta de conexão. */
+const OFFLINE_CACHE='eti-offline-v1';
+const OFFLINE_FILES=['/offline.html','/icons/eti-192.png'];
 function bindingStore(value, write=false) {
   return new Promise((resolve,reject)=>{
     const request=indexedDB.open('eti-push',1);
@@ -12,8 +15,18 @@ function bindingStore(value, write=false) {
     };
   });
 }
-self.addEventListener('install',()=>self.skipWaiting());
-self.addEventListener('activate',event=>event.waitUntil(self.clients.claim()));
+self.addEventListener('install',event=>{
+  self.skipWaiting();
+  event.waitUntil(caches.open(OFFLINE_CACHE).then(cache=>cache.addAll(OFFLINE_FILES)).catch(()=>{}));
+});
+self.addEventListener('fetch',event=>{
+  if(event.request.mode!=='navigate')return;
+  event.respondWith(fetch(event.request).catch(async()=>(await caches.match('/offline.html'))||Response.error()));
+});
+self.addEventListener('activate',event=>event.waitUntil((async()=>{
+  for(const key of await caches.keys())if(key.startsWith('eti-offline-')&&key!==OFFLINE_CACHE)await caches.delete(key);
+  await self.clients.claim();
+})()));
 self.addEventListener('message',event=>{
   if(event.data?.type!=='ETI_PUSH_BINDING')return;
   event.waitUntil((async()=>{

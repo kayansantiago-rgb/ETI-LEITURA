@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Owl } from '@/components/LoginScene';
+import ReadAloud from '@/components/ReadAloud';
 import { getUser } from '@/lib/auth';
 import api from '@/lib/api';
 
@@ -109,6 +110,7 @@ export default function Reader() {
   const [settings, setSettings] = useState(false);
   const [quiz, setQuiz] = useState(null);
   const [finished, setFinished] = useState(false);
+  const [pdf, setPdf] = useState(null);
   const [paper, setPaper] = useState(() => {
     try {
       return localStorage.getItem('eti-reader-paper') || 'original';
@@ -249,6 +251,7 @@ export default function Reader() {
               {progress}% lido
             </span>
           )}
+          <ReadAloud pdf={pdf} page={page} count={count} onNext={() => go(page + 1)} />
           <button
             type="button"
             className={`rd-icon ${settings ? 'is-active' : ''}`}
@@ -328,7 +331,9 @@ export default function Reader() {
                     <span className="cx-spinner" /> Abrindo as portas desta história…
                   </div>
                 }
-                onLoadSuccess={({ numPages }) => {
+                onLoadSuccess={doc => {
+                  const { numPages } = doc;
+                  setPdf(doc);
                   setCount(numPages);
                   setPage(v => Math.min(numPages, Math.max(1, v)));
                   setError('');

@@ -1,9 +1,11 @@
 import asyncio
+from datetime import timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 import httpx
 from fastapi import FastAPI
-from backend.students import create_students_router
+from backend.reading import today
+from backend.students import attention_row, create_students_router, severity
 
 
 class Cursor:
@@ -63,3 +65,55 @@ def test_history_summarizes_student():
 def test_teacher_cannot_open_student_outside_classes():
     assert get(make_db(teacher_scope=False), 'teacher').status_code == 404
     assert get(make_db(), 'teacher').status_code == 200
+
+
+
+def days_ago(n):
+    return (today() - timedelta(days=n)).isoformat()
+
+
+def test_attention_flags_quiet_readers_and_late_work_only():
+    student = {'id': 's', 'nome': 'Ana'}
+    assert attention_row(student, days_ago(2), [], [], False) is None
+    assert attention_row(student, days_ago(8), [], [], False)['dias_sem_ler'] == 8
+    assert attention_row(student, None, [], [], False)['dias_sem_ler'] is None
+    late = attention_row(student, days_ago(1), [{'id': 'a', 'titulo': 'X', 'prazo': days_ago(3)}], [], True)
+    assert late['atrasadas'] and late['lembrado_hoje']
+
+
+def test_attention_orders_most_urgent_first():
+    rows = [
+        {'atrasadas': [], 'refazer': [], 'dias_sem_ler': 9},
+        {'atrasadas': [1, 2], 'refazer': [], 'dias_sem_ler': 1},
+        {'atrasadas': [], 'refazer': [], 'dias_sem_ler': None},
+    ]
+    ordered = sorted(rows, key=severity, reverse=True)
+    assert ordered[0]['atrasadas'] == [1, 2] and ordered[1]['dias_sem_ler'] is None
+
+
+def nudge_app(existing):
+    student = {'id': 's', 'nome': 'Ana', 'turma': '7º ANO', 'role': 'student'}
+    db = SimpleNamespace(
+        users=SimpleNamespace(find_one=AsyncMock(return_value=student)),
+        student_nudges=SimpleNamespace(update_one=AsyncMock(return_value=SimpleNamespace(upserted_id=None if existing else 'x'))),
+    )
+    app = FastAPI()
+    app.include_router(create_students_router(db, lambda: {'id': 't', 'nome': 'Prof. Rui', 'role': 'teacher', 'turmas': ['7º ANO']}))
+    return app, db
+
+
+def post_nudge(app, body):
+    async def go():
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url='http://t') as client:
+            return await client.post('/admin/students/s/nudge', json=body)
+    return asyncio.run(go())
+
+
+def test_nudge_once_per_day():
+    app, db = nudge_app(existing=False)
+    assert post_nudge(app, {'mensagem': 'Bora ler hoje?'}).status_code == 201
+    saved = db.student_nudges.update_one.await_args.args[1]['$setOnInsert']
+    assert saved['autor_nome'] == 'Prof. Rui' and saved['link'] == '/workspace'
+    app, _ = nudge_app(existing=True)
+    assert post_nudge(app, {'mensagem': 'Bora ler hoje?'}).status_code == 409
+    assert post_nudge(nudge_app(False)[0], {'mensagem': 'oi', 'destino': 'https://x'}).status_code == 422

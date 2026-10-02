@@ -3,6 +3,7 @@ import { Camera, Mail, GraduationCap, Save, Loader2, Flame, BookOpen, Award, Med
 import DashboardLayout from '@/components/DashboardLayout';
 import PageIntro from '@/components/PageIntro';
 import PushSettings from '@/components/PushSettings';
+import InstallApp from '@/components/InstallApp';
 import CertificateShelf from '@/components/CertificateShelf';
 import { MedalGrid, useReadingStats } from '@/components/ReadingJourney';
 import { Button } from '@/components/ui/button';
@@ -239,6 +240,7 @@ export default function Profile() {
               </form>
 
               <div className="pf-side">
+                <InstallApp variant="row" />
                 <PushSettings />
                 <div className="ws-card pf-card pf-safe">
                   <ShieldCheck size={20} />
