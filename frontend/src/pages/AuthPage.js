@@ -9,6 +9,7 @@ import { TURMAS } from '@/constants/turmas';
 import api from '@/lib/api';
 import { setAuth } from '@/lib/auth';
 import { toast } from 'sonner';
+import { showWelcome } from '@/components/WelcomeToast';
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -32,7 +33,7 @@ const AuthPage = () => {
       const payload = isLogin ? { email: formData.email, password: formData.password } : formData;
       const response = await api.post(endpoint, payload);
       setAuth(response.data.access_token, response.data.user);
-      toast.success(isLogin ? 'Login realizado com sucesso!' : 'Conta criada com sucesso!');
+      showWelcome(response.data.user, !isLogin);
       navigate('/dashboard');
     } catch (error) {
       const message = error.response?.data?.detail || 'Erro ao processar solicitação';

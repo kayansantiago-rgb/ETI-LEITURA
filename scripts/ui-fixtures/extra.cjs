@@ -56,6 +56,7 @@ module.exports = function extra(p, isAdmin, method, body) {
     Object.assign(r, { nota: body.nota, feedback: body.feedback, corrigido_em: new Date().toISOString() });
     return r;
   }
+  if (method === 'POST' && p === '/api/auth/login') return { access_token: 'mock-admin', user: { id: 't1', nome: 'Ana Souza', role: 'teacher', email: body.email, turmas: ['7º ANO', '8º ANO'] } };
   if (method !== 'GET') return undefined;
   if (p === '/api/activities/a1' || p === '/api/admin/activities/a1') return activityFull;
   if (p === '/api/admin/activities/a1/responses') return responses;

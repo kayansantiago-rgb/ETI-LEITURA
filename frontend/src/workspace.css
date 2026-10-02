@@ -2865,3 +2865,28 @@ html.reduce-motion .eti-logo *, .reduce-motion .eti-logo * { animation: none !im
 @media (max-width: 640px) { .pf-id { padding-top: 0; } }
 .pf-avatar-btn { color: hsl(var(--background)); }
 .nf-actions { margin-top: 14px; }
+
+/* ===== Boas-vindas após o login ===== */
+.wt { position: relative; overflow: hidden; width: min(380px, calc(100vw - 32px)); display: flex; align-items: center; gap: 12px; padding: 12px 12px 14px; border-radius: 20px; color: hsl(var(--foreground)); background: hsl(var(--card)); border: 1px solid hsl(var(--border)); box-shadow: 0 24px 60px -24px hsl(250 50% 20% / .55); font-family: inherit; }
+.wt-owl { flex: none; width: 56px; height: 56px; display: grid; place-items: end center; overflow: hidden; border-radius: 16px; background: var(--eti-gradient); }
+.wt-owl svg { margin-bottom: -4px; animation: rd-owl-hop 1.6s cubic-bezier(.3, 1.4, .5, 1) 2; transform-origin: 50% 100%; }
+.wt-copy { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.wt-copy strong { font-size: .95rem; font-weight: 800; letter-spacing: -.01em; }
+.wt-copy span { font-size: .8rem; line-height: 1.4; color: hsl(var(--muted-foreground)); }
+.wt-close { flex: none; align-self: flex-start; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 9px !important; color: hsl(var(--muted-foreground)); }
+.wt-close:hover { background: hsl(var(--muted)); }
+.wt-bar { position: absolute; left: 0; bottom: 0; height: 3px; width: 100%; background: var(--eti-gradient); transform-origin: left; animation: wt-bar linear forwards; }
+@keyframes wt-bar { to { transform: scaleX(0); } }
+@media (prefers-reduced-motion: reduce) { .wt-owl svg, .wt-bar { animation: none; } }
+
+/* ===== Painéis no centro da tela (em vez de presos na lateral) ===== */
+.ws-overlay, .cx-overlay { justify-content: center; align-items: center; padding: 16px; }
+.ws-sheet, .cx-drawer, .a11y-panel { height: auto; max-height: calc(100dvh - 32px); border-radius: 26px; overflow: hidden; box-shadow: 0 40px 100px -30px hsl(250 40% 8% / .7); animation: ws-pop .28s cubic-bezier(.2, .8, .2, 1); }
+.cx-drawer { height: calc(100dvh - 32px); }
+.ws-sheet-body, .a11y-body { min-height: 0; }
+.a11y-panel { width: min(520px, 100%); }
+@media (max-width: 640px) {
+  .ws-overlay, .cx-overlay { padding: 8px; }
+  .ws-sheet, .cx-drawer, .a11y-panel { max-height: calc(100dvh - 16px); border-radius: 22px; }
+  .cx-drawer { height: calc(100dvh - 16px); }
+}
