@@ -49,7 +49,7 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="lg">
+    <div className={`lg ${isLogin ? "" : "is-register"}`}>
       <span className="lg-bg-orb is-a" aria-hidden="true" />
       <span className="lg-bg-orb is-b" aria-hidden="true" />
       <header className="lg-header">

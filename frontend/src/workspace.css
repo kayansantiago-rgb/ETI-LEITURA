@@ -2994,3 +2994,14 @@ html.reduce-motion .eti-logo *, .reduce-motion .eti-logo * { animation: none !im
 .tp-modal { width: min(600px, 100%); }
 @media (max-width: 900px) { .tp-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 520px) { .tp-classes { grid-template-columns: 1fr; } }
+
+/* Criar conta: a página cresce e rola em vez de cortar o formulário */
+@media (min-width: 1001px) {
+  .lg.is-register { height: auto; min-height: 100dvh; }
+  .lg.is-register .lg-grid { padding-bottom: 28px; }
+}
+@media (min-width: 1001px) and (max-height: 820px) {
+  .lg.is-register .lg-grid { align-items: start; padding-top: 34px; }
+  .lg.is-register .lg-desc { display: none; }
+  .lg.is-register .lg-card h2 { margin-bottom: 10px; }
+}
