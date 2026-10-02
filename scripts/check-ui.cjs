@@ -44,7 +44,8 @@ const TEACHER_PAGES = [
   ['/videos', 'Vídeos e materiais'],
   ['/admin/mural', 'Sarau de poesia'],
   ['/admin/calendar', 'Roda de leitura'],
-  ['/profile', 'Dados da conta']
+  ['/profile', 'Dados da conta'],
+  ['/admin/teachers', 'Carlos Mendes']
 ];
 
 const server = http.createServer((req, res) => {

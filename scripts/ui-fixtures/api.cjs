@@ -67,7 +67,11 @@ function route(p, q, isAdmin) {
   if (p === '/api/gradebook') return { notas: [{ id: 'g1', disciplina: 'Língua Portuguesa', bimestre: 3, nota: 8.5, feedback: 'Excelente evolução na interpretação!', data: day(-2) }], medias: [] };
   if (p === '/api/push/config') return { configured: true, public_key: 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U' };
   if (p === '/api/push/status') return { enabled: false, subscribed: false };
-  if (p === '/api/admin/teachers') return [{ id: 't1', nome: 'Ana Souza', email: 'ana@example.com', turmas: ['7º ANO'] }];
+  if (p === '/api/admin/teachers') return [
+    { id: 't1', nome: 'Ana Souza', email: 'ana@example.com', turmas: ['7º ANO', '8º ANO'], active: true },
+    { id: 't2', nome: 'Carlos Mendes', email: 'carlos@example.com', turmas: ['9º ANO', '1º SÉRIE A', '1º SÉRIE B'], active: true },
+    { id: 't3', nome: 'Juliana Prado', email: 'juliana@example.com', turmas: ['2º SÉRIE A'], active: false }
+  ];
   if (p === '/api/health') return { status: 'ok' };
   return [];
 }
