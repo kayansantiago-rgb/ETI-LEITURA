@@ -34,7 +34,7 @@ def main():
             email=f'{marker}-teacher{i}@example.com'.lower()
             t=call('POST','/admin/teachers',admin,{'nome':marker+' Professor '+str(i),'email':email,'password':'Professor2026!','turmas':[turma]},201);ids.append(t['id'])
             teachers.append(call('POST','/auth/login',data={'email':email,'password':'Professor2026!'}))
-            s=call('POST','/auth/register',data={'nome':('='+marker if i==0 else marker)+' Aluno '+str(i),'email':f'{marker}-student{i}@example.com'.lower(),'password':'AlunoTeste2026!','turma':turma});ids.append(s['user']['id']);students.append(s)
+            s=call('POST','/auth/register',data={'nome':('='+marker if i==0 else marker)+' Aluno '+str(i),'email':f'{marker}-student{i}@example.com'.lower(),'password':'AlunoTeste2026!','turma':turma,'aceite_termos':True});ids.append(s['user']['id']);students.append(s)
         ta,tb=teachers;sa,sb=students
         assert ta['user']['turmas']==['7º ANO']
         call('GET','/admin/teachers',ta,expected=403);call('GET','/admin/reports',sa,expected=403)

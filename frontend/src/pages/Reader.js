@@ -30,6 +30,17 @@ import api from '@/lib/api';
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
 
+// O PDF é baixado inteiro (sem pedaços) para o aparelho poder guardá-lo e abrir sem internet.
+const PDF_OPTIONS = { disableRange: true, disableStream: true };
+const offlineKey = id => `eti-offline-book:${id}`;
+const savedBook = id => {
+  try {
+    return JSON.parse(localStorage.getItem(offlineKey(id)))?.book || null;
+  } catch {
+    return null;
+  }
+};
+
 function FinishCard({ book, quiz, onClose }) {
   const navigate = useNavigate();
   return (
@@ -159,7 +170,12 @@ export default function Reader() {
   useEffect(() => {
     let alive = true;
     Promise.all([
-      api.get(`/books/${id}`),
+      api.get(`/books/${id}`).catch(err => {
+        // Sem internet: usa os dados guardados da última vez que o livro foi aberto.
+        const local = savedBook(id);
+        if (local) return { data: local, offline: true };
+        throw err;
+      }),
       api.get(`/books/${id}/position`).catch(() => ({ data: { page: 1 } })),
       api.get(`/books/${id}/progress`).catch(() => ({ data: { percentage: 0 } })),
       student ? api.get(`/books/${id}/quiz`).catch(() => ({ data: null })) : Promise.resolve({ data: null })
@@ -176,9 +192,15 @@ export default function Reader() {
         celebrated.current = (pr.data?.percentage || 0) >= 100;
         setQuiz(q.data);
         setBook(b.data);
+        if (!b.offline) {
+          try {
+            const { titulo, autor, capa_url, arquivo_url } = b.data;
+            localStorage.setItem(offlineKey(id), JSON.stringify({ book: { id, titulo, autor, capa_url, arquivo_url }, at: Date.now() }));
+          } catch {}
+        }
       })
       .catch(() => {
-        if (alive) setError('Não foi possível carregar o livro.');
+        if (alive) setError(navigator.onLine ? 'Não foi possível carregar o livro.' : 'Você está sem internet e este livro ainda não foi aberto neste aparelho.');
       });
     return () => {
       alive = false;
@@ -326,6 +348,7 @@ export default function Reader() {
             book && (
               <Document
                 file={file}
+                options={PDF_OPTIONS}
                 loading={
                   <div className="rd-message">
                     <span className="cx-spinner" /> Abrindo as portas desta história…

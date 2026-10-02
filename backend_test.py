@@ -68,7 +68,8 @@ class EtiLeituraAPITester:
             "email": f"test_{timestamp}@leitura.viva",
             "password": "TestPass123!",
             "nome": "Test User",
-            "turma": "3º Ano A"
+            "turma": "3º Ano A",
+            "aceite_termos": True
         }
         
         success, response = self.run_test(

@@ -10,6 +10,7 @@ import api from '@/lib/api';
 import { setAuth } from '@/lib/auth';
 import { toast } from 'sonner';
 import { showWelcome } from '@/components/WelcomeToast';
+import GoogleSignIn from '@/components/GoogleSignIn';
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -22,7 +23,8 @@ const AuthPage = () => {
     password: '',
     nome: '',
     turma: '',
-    avatar_url: ''
+    avatar_url: '',
+    aceite_termos: false
   });
 
   const handleSubmit = async e => {
@@ -41,6 +43,12 @@ const AuthPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const finish = (data, created) => {
+    setAuth(data.access_token, data.user);
+    showWelcome(data.user, created);
+    navigate('/dashboard');
   };
 
   const switchMode = login => {
@@ -190,6 +198,25 @@ const AuthPage = () => {
                 </span>
               </label>
 
+              {!isLogin && (
+                <label className="lg-terms">
+                  <input
+                    type="checkbox"
+                    required
+                    checked={formData.aceite_termos}
+                    onChange={e => setFormData(current => ({ ...current, aceite_termos: e.target.checked }))}
+                    data-testid="input-terms"
+                  />
+                  <span>
+                    Li e aceito os{' '}
+                    <a href="/privacidade" target="_blank" rel="noreferrer">
+                      termos de uso e a política de privacidade
+                    </a>
+                    .
+                  </span>
+                </label>
+              )}
+
               {isLogin && (
                 <Link to="/forgot-password" className="lg-forgot">
                   Esqueci minha senha
@@ -201,6 +228,8 @@ const AuthPage = () => {
                 {!loading && <ArrowRight size={18} aria-hidden="true" />}
               </button>
             </form>
+
+            <GoogleSignIn onDone={finish} />
 
             <button type="button" onClick={() => switchMode(!isLogin)} className="lg-switch" data-testid="toggle-auth-mode">
               {isLogin ? (

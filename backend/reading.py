@@ -61,14 +61,26 @@ def medals(total_pages, best, finished, certificates):
     return [{'id': key, 'titulo': title, 'descricao': text, 'atual': min(value, target), 'meta': target, 'conquistada': value >= target} for key, title, text, value, target in items]
 
 
+async def reading_profile(db, user_id):
+    days = await db.reading_days.find({'user_id': user_id}, {'_id': 0, 'dia': 1, 'paginas': 1}).to_list(5000)
+    finished = await db.reading_progress.count_documents({'user_id': user_id, 'percentage': {'$gte': 100}})
+    certificates = await db.certificates.count_documents({'user_id': user_id})
+    return days, finished, certificates
+
+
+async def earned_medals(db, user_id):
+    """Ids das medalhas que o aluno já conquistou."""
+    days, finished, certificates = await reading_profile(db, user_id)
+    by_day = {d['dia']: d.get('paginas', 0) for d in days}
+    _, best = streaks(by_day)
+    return {m['id'] for m in medals(sum(by_day.values()), best, finished, certificates) if m['conquistada']}
+
+
 def create_reading_router(db, current):
     router = APIRouter()
 
     async def profile(user_id):
-        days = await db.reading_days.find({'user_id': user_id}, {'_id': 0, 'dia': 1, 'paginas': 1}).to_list(5000)
-        finished = await db.reading_progress.count_documents({'user_id': user_id, 'percentage': {'$gte': 100}})
-        certificates = await db.certificates.count_documents({'user_id': user_id})
-        return days, finished, certificates
+        return await reading_profile(db, user_id)
 
     @router.get('/reading/stats')
     async def stats(user=Depends(current)):
@@ -104,7 +116,7 @@ def create_reading_router(db, current):
             turma = (user.get('turmas') or [None])[0]
         if not turma:
             raise HTTPException(400, 'Escolha uma turma.')
-        students = await db.users.find({'role': 'student', 'turma': turma}, {'_id': 0, 'id': 1, 'nome': 1}).to_list(2000)
+        students = await db.users.find({'role': 'student', 'turma': turma}, {'_id': 0, 'id': 1, 'nome': 1, 'moldura': 1, 'titulo': 1, 'avatar_url': 1}).to_list(2000)
         ids = [s['id'] for s in students]
         since = (today() - timedelta(days=29)).isoformat()
         days = {}
@@ -115,12 +127,17 @@ def create_reading_router(db, current):
             finished[row['_id']] = row['n']
         async for row in db.certificates.aggregate([{'$match': {'user_id': {'$in': ids}}}, {'$group': {'_id': '$user_id', 'n': {'$sum': 1}}}]):
             certs[row['_id']] = row['n']
+        from backend.account import REWARD_BY_ID
+        titles = {k: r['nome'] for k, r in REWARD_BY_ID.items()}
         rows = []
         for s in students:
             mine = days.get(s['id'], {})
             pages = sum(v for d, v in mine.items() if d >= since)
             row = {
                 'nome': s['nome'],
+                'moldura': s.get('moldura'),
+                'titulo': titles.get(s.get('titulo')),
+                'avatar_url': s.get('avatar_url'),
                 'livros': finished.get(s['id'], 0),
                 'certificados': certs.get(s['id'], 0),
                 'paginas_mes': pages,

@@ -37,3 +37,7 @@ services:
         sync: false
       - key: PUSH_ENABLED
         value: "true"
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_ALLOWED_DOMAINS
+        sync: false

@@ -1,6 +1,11 @@
-/* Push e aplicativo instalável. Nada de páginas autenticadas, respostas, notas ou API fica em cache:
-   só a página estática "sem internet", mostrada quando a navegação falha por falta de conexão. */
+/* Push, aplicativo instalável e leitura sem internet.
+   Guardamos apenas: a casca estática do site (HTML/JS/CSS públicos), a página "sem internet"
+   e os PDFs dos livros que o aluno abriu neste aparelho (apagados ao sair da conta).
+   Respostas, notas e demais chamadas da API nunca ficam em cache. */
 const OFFLINE_CACHE='eti-offline-v1';
+const SHELL_CACHE='eti-shell-v1';
+const BOOKS_CACHE='eti-books-v1';
+const MAX_BOOKS=15;
 const OFFLINE_FILES=['/offline.html','/icons/eti-192.png'];
 function bindingStore(value, write=false) {
   return new Promise((resolve,reject)=>{
@@ -19,12 +24,53 @@ self.addEventListener('install',event=>{
   self.skipWaiting();
   event.waitUntil(caches.open(OFFLINE_CACHE).then(cache=>cache.addAll(OFFLINE_FILES)).catch(()=>{}));
 });
+async function trimBooks(){
+  const cache=await caches.open(BOOKS_CACHE),keys=await cache.keys();
+  for(const request of keys.slice(0,Math.max(0,keys.length-MAX_BOOKS)))await cache.delete(request);
+}
+async function navigation(request){
+  try{
+    const response=await fetch(request);
+    if(response.ok&&(response.headers.get('content-type')||'').includes('text/html')){
+      const cache=await caches.open(SHELL_CACHE);await cache.put('/__shell',response.clone());
+    }
+    return response;
+  }catch{
+    return (await caches.match('/__shell'))||(await caches.match('/offline.html'))||Response.error();
+  }
+}
+async function staticAsset(request){
+  const cached=await caches.match(request);
+  if(cached)return cached;
+  const response=await fetch(request);
+  if(response.ok){const cache=await caches.open(SHELL_CACHE);await cache.put(request,response.clone());}
+  return response;
+}
+async function bookFile(request){
+  const cache=await caches.open(BOOKS_CACHE);
+  try{
+    const response=await fetch(request);
+    if(response.status===200){
+      await cache.delete(request);await cache.put(request,response.clone());trimBooks();
+    }
+    return response;
+  }catch(error){
+    const cached=await cache.match(request);
+    if(cached)return cached;
+    throw error;
+  }
+}
 self.addEventListener('fetch',event=>{
-  if(event.request.mode!=='navigate')return;
-  event.respondWith(fetch(event.request).catch(async()=>(await caches.match('/offline.html'))||Response.error()));
+  const request=event.request;
+  if(request.method!=='GET')return;
+  const url=new URL(request.url);
+  if(url.origin!==self.location.origin)return;
+  if(request.mode==='navigate'){event.respondWith(navigation(request));return;}
+  if(url.pathname.startsWith('/static/')){event.respondWith(staticAsset(request));return;}
+  if(url.pathname.startsWith('/api/uploads/')&&url.searchParams.get('inline')==='true'&&!request.headers.has('range')){event.respondWith(bookFile(request));}
 });
 self.addEventListener('activate',event=>event.waitUntil((async()=>{
-  for(const key of await caches.keys())if(key.startsWith('eti-offline-')&&key!==OFFLINE_CACHE)await caches.delete(key);
+  for(const key of await caches.keys())if(key.startsWith('eti-')&&![OFFLINE_CACHE,SHELL_CACHE,BOOKS_CACHE].includes(key))await caches.delete(key);
   await self.clients.claim();
 })()));
 self.addEventListener('message',event=>{

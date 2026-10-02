@@ -1,6 +1,10 @@
 import { reconcilePush } from '@/lib/push';
 import Accessibility from '@/components/Accessibility';
 import PushPrompt from '@/components/PushPrompt';
+import TermsGate from '@/components/TermsGate';
+import WelcomeTour from '@/components/WelcomeTour';
+import OfflineBanner from '@/components/OfflineBanner';
+import { frameClass } from '@/lib/rewards';
 import api from '@/lib/api';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useState, useEffect } from 'react';
@@ -60,7 +64,14 @@ const management = [
 
 export default function DashboardLayout({ children, focusMode = false }) {
   const [open, setOpen] = useState(false);
+  const [, refresh] = useState(0);
   const { user } = getAuth();
+
+  useEffect(() => {
+    const update = () => refresh(v => v + 1);
+    window.addEventListener('eti-user-updated', update);
+    return () => window.removeEventListener('eti-user-updated', update);
+  }, []);
 
   useEffect(() => {
     reconcilePush(user?.id).catch(() => {});
@@ -188,7 +199,7 @@ export default function DashboardLayout({ children, focusMode = false }) {
           Todas as áreas
         </button>}
         <div className="rail-bottom">
-          <span className="user-avatar">{user?.nome?.charAt(0)}</span>
+          <span className={`user-avatar ${frameClass(user)}`}>{user?.avatar_url ? <img src={user.avatar_url} alt="" /> : user?.nome?.charAt(0)}</span>
           <div className="flex-1 min-w-0">
             <strong>{user?.nome?.split(' ')[0]}</strong>
             <small>{isAdmin ? 'Ensinar e acompanhar' : user?.turma || 'Seu espaço de estudo'}</small>
@@ -219,7 +230,7 @@ export default function DashboardLayout({ children, focusMode = false }) {
           <Accessibility />
           <ThemeToggle />
           <Link to="/profile" className="studio-profile">
-            <span className="user-avatar">
+            <span className={`user-avatar ${frameClass(user)}`}>
               {user?.avatar_url ? <img src={user.avatar_url} alt="" /> : user?.nome?.charAt(0) || 'E'}
             </span>
             <span>{user?.nome?.split(' ')[0]}</span>
@@ -297,7 +308,7 @@ export default function DashboardLayout({ children, focusMode = false }) {
         </nav>
         <div className="sidebar-account">
           <Link to="/profile" className="account-link">
-            <span className="user-avatar">{user?.nome?.charAt(0)}</span>
+            <span className={`user-avatar ${frameClass(user)}`}>{user?.avatar_url ? <img src={user.avatar_url} alt="" /> : user?.nome?.charAt(0)}</span>
             <span>
               <strong>{user?.nome}</strong>
               <small className="block">{user?.role === 'admin' ? 'Administrador' : isAdmin ? 'Professor' : user?.turma}</small>
@@ -327,6 +338,8 @@ export default function DashboardLayout({ children, focusMode = false }) {
           {children}
         </main>
         {!focusMode && <PushPrompt />}
+        <OfflineBanner />
+        <TermsGate>{!focusMode && <WelcomeTour />}</TermsGate>
         <footer className="platform-footer">
           <span>ETI LEITURA</span>
           <span>Aprendizagem em movimento.</span>

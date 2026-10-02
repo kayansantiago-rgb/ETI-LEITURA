@@ -32,6 +32,7 @@ import AdminCalendar from '@/pages/AdminCalendar';
 import TextProductions from '@/pages/TextProductions';
 import Profile from '@/pages/Profile';
 import NotFound from '@/pages/NotFound';
+import Privacy from '@/pages/Privacy';
 import { isAuthenticated } from '@/lib/auth';
 import '@/App.css';
 import '@/studio.css';
@@ -54,7 +55,7 @@ function App() {
           <Route path="/notifications" element={<ProtectedRoute><Notifications/></ProtectedRoute>}/>
           <Route path="/admin/reports" element={<ProtectedRoute><Reports/></ProtectedRoute>}/>
           <Route path="/admin/teachers" element={<ProtectedRoute><Teachers/></ProtectedRoute>}/>
-          <Route path="/forgot-password" element={<PasswordRecovery/>}/>
+          <Route path="/forgot-password" element={<PasswordRecovery/>}/><Route path="/privacidade" element={<Privacy/>}/>
           <Route path="/reset-password" element={<PasswordRecovery/>}/>
           <Route path="/reader/:id" element={<ProtectedRoute><Suspense fallback={<p role="status" className="p-8">Preparando leitor…</p>}><Reader/></Suspense></ProtectedRoute>}/>
           <Route path="/activities" element={<ProtectedRoute><Activities/></ProtectedRoute>}/>

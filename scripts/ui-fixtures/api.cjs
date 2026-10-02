@@ -12,8 +12,8 @@ const activities = [
   { id: 'a2', titulo: 'Resenha crítica', disciplina: 'Redação', turma: '7º ANO', prazo: day(5), status: 'aberta', perguntas: [{}], professor_nome: 'Prof. Ana', entregas: 3, corrigidas: 3, devolvidas: 0 },
   { id: 'a3', titulo: 'Quiz de vocabulário', disciplina: 'Língua Portuguesa', turma: '7º ANO', prazo: day(-3), status: 'encerrada', perguntas: [{}, {}], minha_resposta: { nota: 9, feedback: 'Ótimo trabalho!' }, professor_nome: 'Prof. Ana' }
 ];
-const student = { id: 's1', nome: 'Mariana Silva', email: 'mariana@example.com', turma: '7º ANO', role: 'student' };
-const admin = { id: 't1', nome: 'Ana Souza', email: 'ana@example.com', role: 'admin', turmas: ['7º ANO', '8º ANO'] };
+const student = { id: 's1', nome: 'Mariana Silva', email: 'mariana@example.com', turma: '7º ANO', role: 'student', termos_versao: '2026-10', moldura: 'moldura-ouro', titulo: 'titulo-explorador', titulo_nome: 'Explorador de histórias' };
+const admin = { id: 't1', nome: 'Ana Souza', email: 'ana@example.com', role: 'admin', turmas: ['7º ANO', '8º ANO'], termos_versao: '2026-10' };
 const users = Array.from({ length: 8 }, (_, i) => ({ id: 'u' + i, nome: ['Mariana Silva', 'João Pedro', 'Luiza Costa', 'Rafael Lima', 'Beatriz Alves', 'Gabriel Rocha', 'Sofia Mendes', 'Lucas Prado'][i], email: `aluno${i}@example.com`, turma: i % 2 ? '8º ANO' : '7º ANO', role: 'student', created_at: '2026-08-01' }));
 const summaries = books.slice(0, 3).map((b, i) => ({ id: 'r' + i, book_id: b.id, book_titulo: b.titulo, titulo: 'Resumo de ' + b.titulo, conteudo: 'Neste livro, acompanhamos uma jornada sobre amizade, descoberta e crescimento...', user_id: 's1', user_nome: users[i].nome, turma: '7º ANO', status: ['pendente', 'corrigido', 'pendente'][i], nota: i === 1 ? 8.5 : null, created_at: day(-i - 1), updated_at: day(-i - 1), corrigido_em: day(-1) }));
 const productions = [0, 1].map(i => ({ id: 'p' + i, titulo: ['Minha cidade', 'Carta ao futuro'][i], genero: ['Crônica', 'Carta'][i], conteudo: 'Era uma manhã tranquila quando...', user_id: 's1', user_nome: users[i].nome, turma: '7º ANO', status: i ? 'corrigido' : 'pendente', nota: i ? 9 : null, created_at: day(-i - 2), updated_at: day(-i - 2), corrigido_em: day(-1) }));
@@ -45,7 +45,7 @@ const path = require('path');
 function route(p, q, isAdmin) {
   const hit = extra(p, isAdmin, 'GET');
   if (hit !== undefined) return hit;
-  if (p === '/api/auth/me') return isAdmin ? admin : student;
+  if (p === '/api/auth/me') return process.env.TERMS_PENDING ? { ...(isAdmin ? admin : student), termos_versao: null } : isAdmin ? admin : student;
   if (p === '/api/stats') return { total_books: books.length, my_summaries: 2, completed_books: 1, in_progress: 2 };
   if (p === '/api/admin/stats') return { total_books: books.length, total_users: 28, total_summaries: 12, total_productions: 7, pending_summaries: 3, pending_productions: 2 };
   if (p === '/api/books' || p === '/api/admin/books') return books;
@@ -67,6 +67,19 @@ function route(p, q, isAdmin) {
   if (p === '/api/gradebook') return { notas: [{ id: 'g1', disciplina: 'Língua Portuguesa', bimestre: 3, nota: 8.5, feedback: 'Excelente evolução na interpretação!', data: day(-2) }], medias: [] };
   if (p === '/api/push/config') return { configured: true, public_key: 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U' };
   if (p === '/api/push/status') return { enabled: false, subscribed: false };
+  if (p === '/api/auth/google/config') return { client_id: null, dominios: [] };
+  if (p === '/api/auth/me/deletion-request') return {};
+  if (p === '/api/auth/me/rewards') {
+    const earned = ['primeira-pagina', 'sequencia-3', 'sequencia-7', 'livro-1'];
+    const items = [
+      ['moldura-lavanda', 'moldura', 'Lavanda', 'primeira-pagina'], ['moldura-fogo', 'moldura', 'Chama', 'sequencia-3'], ['moldura-oceano', 'moldura', 'Oceano', 'sequencia-7'],
+      ['moldura-ouro', 'moldura', 'Ouro', 'livro-1'], ['moldura-galaxia', 'moldura', 'Galáxia', 'livro-5'], ['moldura-arcoiris', 'moldura', 'Arco-íris', 'sequencia-30'],
+      ['titulo-explorador', 'titulo', 'Explorador de histórias', 'primeira-pagina'], ['titulo-constante', 'titulo', 'Leitor constante', 'sequencia-7'],
+      ['titulo-devorador', 'titulo', 'Devorador de livros', 'livro-5'], ['titulo-maratonista', 'titulo', 'Maratonista das páginas', 'paginas-500'],
+      ['titulo-sabio', 'titulo', 'Mestre da compreensão', 'certificado-3'], ['titulo-imparavel', 'titulo', 'Leitor imparável', 'sequencia-30']
+    ];
+    return { moldura: 'moldura-ouro', titulo: 'titulo-explorador', itens: items.map(([id, tipo, nome, medalha]) => ({ id, tipo, nome, medalha, desbloqueada: earned.includes(medalha) })) };
+  }
   if (p === '/api/admin/students/attention') {
     const rows = [
       { id: 'u1', nome: 'João Pedro Alves', turma: '8º ANO', dias_sem_ler: 12, ultima_leitura: day(-12), atrasadas: [{ id: 'a3', titulo: 'Quiz de vocabulário', prazo: day(-3) }], refazer: [], lembrado_hoje: false },

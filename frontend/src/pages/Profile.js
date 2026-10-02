@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Camera, Mail, GraduationCap, Save, Loader2, Flame, BookOpen, Award, Medal, Trash2, ShieldCheck } from 'lucide-react';
+import { Camera, Mail, GraduationCap, Save, Loader2, Flame, BookOpen, Award, Medal, Trash2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import PageIntro from '@/components/PageIntro';
 import PushSettings from '@/components/PushSettings';
 import InstallApp from '@/components/InstallApp';
+import PrivacyCard from '@/components/PrivacyCard';
+import RewardsPicker from '@/components/RewardsPicker';
 import CertificateShelf from '@/components/CertificateShelf';
 import { MedalGrid, useReadingStats } from '@/components/ReadingJourney';
 import { Button } from '@/components/ui/button';
@@ -27,7 +29,7 @@ const remember = patch => {
   if (token && current) setAuth(token, { ...current, ...patch });
 };
 
-function Avatar({ url, name, onChange }) {
+function Avatar({ url, name, frame, onChange }) {
   const input = useRef(null);
   const [busy, setBusy] = useState(false);
   const pick = async e => {
@@ -51,7 +53,7 @@ function Avatar({ url, name, onChange }) {
   };
   return (
     <div className="pf-avatar">
-      <span className="pf-avatar-img">{url ? <img src={url} alt="" /> : initials(name)}</span>
+      <span className={`pf-avatar-img ${frame ? `av-frame ${frame}` : ''}`}>{url ? <img src={url} alt="" /> : initials(name)}</span>
       <button type="button" className="pf-avatar-btn" onClick={() => input.current?.click()} disabled={busy} aria-label="Trocar foto de perfil" title="Trocar foto">
         {busy ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} />}
       </button>
@@ -165,9 +167,10 @@ export default function Profile() {
                 <i />
               </div>
               <div className="pf-hero-body">
-                <Avatar url={user.avatar_url} name={user.nome} onChange={changeAvatar} />
+                <Avatar url={user.avatar_url} name={user.nome} frame={user.moldura} onChange={changeAvatar} />
                 <div className="pf-id">
                   <h2>{user.nome}</h2>
+                  {user.titulo_nome && <span className="pf-title">✦ {user.titulo_nome}</span>}
                   <p>
                     <span className="ws-chip">{ROLES[user.role] || 'Usuário'}</span>
                     {user.turma && (
@@ -242,16 +245,11 @@ export default function Profile() {
               <div className="pf-side">
                 <InstallApp variant="row" />
                 <PushSettings />
-                <div className="ws-card pf-card pf-safe">
-                  <ShieldCheck size={20} />
-                  <div>
-                    <h3>Conta protegida</h3>
-                    <p>Esqueceu a senha? A coordenação da escola pode gerar um código de recuperação para você.</p>
-                  </div>
-                </div>
+                <PrivacyCard />
               </div>
             </div>
 
+            {student && stats && <RewardsPicker user={user} medals={stats.medalhas} onChange={patch => setUser(u => ({ ...u, ...patch }))} />}
             {student && stats && <ProfileMedals stats={stats} />}
             {student && <CertificateShelf />}
           </>

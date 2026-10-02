@@ -57,6 +57,9 @@ async def notifications(db,user):
             for x in await db[collection].find({'user_id':user['id'],'corrigido_em':{'$ne':None}},{'_id':0}).to_list(1000):
                 notices.append({'id':collection+':'+x['id']+':'+x['corrigido_em'],'titulo':label+' corrigido: confira seu feedback','link':path,'data':x['corrigido_em']})
     else:
+        if user['role']=='admin':
+            for r in await db.deletion_requests.find({},{'_id':0}).to_list(500):
+                notices.append({'id':'deletion:'+r['id']+':'+r['created_at'],'titulo':'Pedido de exclusão de dados: '+r['nome'],'link':'/admin/classes/'+(r.get('turma') or ''),'data':r['created_at']})
         ids=await scoped_ids(db,user)
         for collection,label,path in [('summaries','Resumo','/admin/summaries'),('text_productions','Produção textual','/admin/text-productions')]:
             for work in await db[collection].find({'user_id':{'$in':ids},'nota':None},{'_id':0}).sort('created_at',-1).to_list(1000):

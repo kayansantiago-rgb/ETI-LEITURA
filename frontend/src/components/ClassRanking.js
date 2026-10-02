@@ -61,8 +61,9 @@ export default function ClassRanking({ turma, limit, compact = false }) {
             <div className="rk-podium">
               {[podium[1], podium[0], podium[2]].map((r, i) => (
                 <div key={r.nome} className={`rk-step is-${[2, 1, 3][i]} ${r.voce ? 'is-you' : ''}`}>
-                  <span className="rk-avatar">{initials(r.nome)}</span>
+                  <span className={`rk-avatar ${r.moldura ? `av-frame ${r.moldura}` : ''}`}>{r.avatar_url ? <img src={r.avatar_url} alt="" /> : initials(r.nome)}</span>
                   <strong>{r.nome.split(' ').slice(0, 2).join(' ')}</strong>
+                  {r.titulo && <em className="rk-title">{r.titulo}</em>}
                   <small>{r.pontos} pts</small>
                   <span className="rk-block">{r.posicao}º</span>
                 </div>
@@ -73,12 +74,13 @@ export default function ClassRanking({ turma, limit, compact = false }) {
             {list.map(r => (
               <li key={r.nome} className={r.voce ? 'is-you' : ''}>
                 <span className={`rk-pos ${r.posicao <= 3 ? `is-top-${r.posicao}` : ''}`}>{r.posicao}º</span>
-                <span className="rk-avatar is-sm">{initials(r.nome)}</span>
+                <span className={`rk-avatar is-sm ${r.moldura ? `av-frame ${r.moldura}` : ''}`}>{r.avatar_url ? <img src={r.avatar_url} alt="" /> : initials(r.nome)}</span>
                 <span className="rk-name">
                   <strong>
                     {r.nome}
                     {r.voce && <em>Você</em>}
                   </strong>
+                  {r.titulo && <span className="rk-title">✦ {r.titulo}</span>}
                   {!compact && (
                     <small>
                       <span>

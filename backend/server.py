@@ -65,6 +65,7 @@ class UserRegister(BaseModel):
     nome: str
     turma: Optional[str] = None
     avatar_url: Optional[str] = None
+    aceite_termos: bool = False
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -80,6 +81,10 @@ class User(BaseModel):
     role: str = "student"
     turmas: List[str] = Field(default_factory=list)
     created_at: str
+    termos_versao: Optional[str] = None
+    moldura: Optional[str] = None
+    titulo: Optional[str] = None
+    titulo_nome: Optional[str] = None
 
 class ProfileUpdate(BaseModel):
     nome: Optional[str] = None
@@ -245,6 +250,16 @@ def create_access_token(data: dict) -> str:
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+def public_user(doc: dict) -> "User":
+    """Dados do usuário que podem ir para o navegador (sem senha nem campos internos)."""
+    from backend.account import REWARD_BY_ID
+    titulo = REWARD_BY_ID.get(doc.get("titulo") or "")
+    return User.model_validate({**doc, "role": doc.get("role", "student"), "turmas": doc.get("turmas", []),
+                                "titulo_nome": titulo["nome"] if titulo else None})
+
+def issue_token(user: dict) -> str:
+    return create_access_token(data={"sub": user["id"], "ver": user.get("token_version", 0)})
+
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
     try:
         token = credentials.credentials
@@ -270,45 +285,28 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 
 @api_router.post("/auth/register", response_model=Token)
 async def register(user_data: UserRegister):
-    # Check if user exists
-    existing_user = await db.users.find_one({"email": user_data.email})
-    if existing_user:
+    if await db.users.find_one({"email": user_data.email}):
         raise HTTPException(status_code=400, detail="Email já cadastrado")
-
-    # Validate turma for students
     if not user_data.turma:
         raise HTTPException(status_code=400, detail="Turma é obrigatória para estudantes")
-
-    # Create user
-    user_id = str(uuid.uuid4())
-    hashed_password = get_password_hash(user_data.password)
+    if not user_data.aceite_termos:
+        raise HTTPException(status_code=400, detail="Aceite os termos de uso e a política de privacidade para criar a conta.")
+    from backend.account import TERMS_VERSION
+    now = datetime.now(timezone.utc).isoformat()
     user_doc = {
-        "id": user_id,
+        "id": str(uuid.uuid4()),
         "email": user_data.email,
-        "password_hash": hashed_password,
+        "password_hash": get_password_hash(user_data.password),
         "nome": user_data.nome,
         "turma": user_data.turma,
         "avatar_url": user_data.avatar_url,
         "role": "student",
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": now,
+        "termos_versao": TERMS_VERSION,
+        "termos_aceitos_em": now,
     }
-
-    await db.users.insert_one(user_doc)
-
-    # Create token
-    access_token = create_access_token(data={"sub": user_id})
-
-    user_response = User(
-        id=user_id,
-        email=user_data.email,
-        nome=user_data.nome,
-        turma=user_data.turma,
-        avatar_url=user_data.avatar_url,
-        role=user_doc["role"],
-        created_at=user_doc["created_at"]
-    )
-
-    return Token(access_token=access_token, token_type="bearer", user=user_response)
+    await db.users.insert_one(user_doc.copy())
+    return Token(access_token=issue_token(user_doc), token_type="bearer", user=public_user(user_doc))
 
 @api_router.post("/auth/login", response_model=Token)
 async def login(login_data: UserLogin):
@@ -316,33 +314,11 @@ async def login(login_data: UserLogin):
     if not user or not user.get("active", True) or not verify_password(login_data.password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Email ou senha incorretos")
 
-    access_token = create_access_token(data={"sub": user["id"], "ver": user.get("token_version", 0)})
-
-    user_response = User(
-        id=user["id"],
-        email=user["email"],
-        nome=user["nome"],
-        turma=user.get("turma"),
-        avatar_url=user.get("avatar_url"),
-        role=user.get("role", "student"),
-        turmas=user.get("turmas", []),
-        created_at=user["created_at"]
-    )
-
-    return Token(access_token=access_token, token_type="bearer", user=user_response)
+    return Token(access_token=issue_token(user), token_type="bearer", user=public_user(user))
 
 @api_router.get("/auth/me", response_model=User)
 async def get_me(current_user: dict = Depends(get_current_user)):
-    return User(
-        id=current_user["id"],
-        email=current_user["email"],
-        nome=current_user["nome"],
-        turma=current_user.get("turma"),
-        avatar_url=current_user.get("avatar_url"),
-        role=current_user.get("role", "student"),
-        turmas=current_user.get("turmas", []),
-        created_at=current_user["created_at"]
-    )
+    return public_user(current_user)
 
 @api_router.put("/auth/profile", response_model=User)
 async def update_profile(profile_data: ProfileUpdate, current_user: dict = Depends(get_current_user)):
@@ -359,16 +335,7 @@ async def update_profile(profile_data: ProfileUpdate, current_user: dict = Depen
         )
 
     updated_user = await db.users.find_one({"id": current_user["id"]}, {"_id": 0})
-    return User(
-        id=updated_user["id"],
-        email=updated_user["email"],
-        nome=updated_user["nome"],
-        turma=updated_user.get("turma"),
-        avatar_url=updated_user.get("avatar_url"),
-        role=updated_user.get("role", "student"),
-        turmas=updated_user.get("turmas", []),
-        created_at=updated_user["created_at"]
-    )
+    return public_user(updated_user)
 
 @api_router.post("/auth/upload-avatar")
 async def upload_avatar(
@@ -1125,7 +1092,7 @@ async def delete_user(user_id: str, admin_user: dict = Depends(require_staff)):
     await db.reader_positions.delete_many({"user_id": user_id})
     await db.notification_reads.delete_many({"user_id": user_id})
     await db.password_resets.delete_many({"user_id": user_id})
-    for collection in ("reading_days", "reading_goals", "quiz_attempts", "book_quiz_attempts", "certificates", "push_subscriptions", "grade_entries"):
+    for collection in ("reading_days", "reading_goals", "quiz_attempts", "book_quiz_attempts", "certificates", "push_subscriptions", "grade_entries", "deletion_requests", "student_nudges"):
         await db[collection].delete_many({"user_id": user_id})
 
     return None
@@ -1291,6 +1258,8 @@ from backend.book_quiz import create_book_quiz_router, ensure_indexes as ensure_
 api_router.include_router(create_book_quiz_router(db, get_current_user, require_staff))
 from backend.students import create_students_router
 api_router.include_router(create_students_router(db, require_staff))
+from backend.account import create_account_router
+api_router.include_router(create_account_router(db, get_current_user, require_admin, public_user, issue_token, get_password_hash, SECRET_KEY, ALL_CLASSES))
 from backend.reading import create_reading_router, ensure_indexes as ensure_reading_indexes
 api_router.include_router(create_reading_router(db, get_current_user))
 app.include_router(api_router)

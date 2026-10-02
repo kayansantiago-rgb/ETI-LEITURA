@@ -28,11 +28,21 @@ def test_public_registration_cannot_create_admin(monkeypatch):
     monkeypatch.setattr(server, 'get_password_hash', lambda value: 'test-hash')
     response = request('POST', '/api/auth/register', json={
         'email': 'student@example.com', 'password': 'student-password',
-        'nome': 'Aluno', 'turma': '7º ANO', 'role': 'admin',
+        'nome': 'Aluno', 'turma': '7º ANO', 'role': 'admin', 'aceite_termos': True,
     })
     assert response.status_code == 200
     assert response.json()['user']['role'] == 'student'
     assert users.insert_one.call_args.args[0]['role'] == 'student'
+
+
+def test_registration_requires_terms(monkeypatch):
+    users = SimpleNamespace(find_one=AsyncMock(return_value=None), insert_one=AsyncMock())
+    monkeypatch.setattr(server, 'db', SimpleNamespace(users=users))
+    response = request('POST', '/api/auth/register', json={
+        'email': 'student@example.com', 'password': 'student-password', 'nome': 'Aluno', 'turma': '7º ANO',
+    })
+    assert response.status_code == 400
+    users.insert_one.assert_not_called()
 
 
 def test_admin_payload_does_not_bypass_required_class(monkeypatch):

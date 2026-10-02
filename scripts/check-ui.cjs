@@ -11,8 +11,8 @@ const PORT = 4173;
 const BASE = `http://127.0.0.1:${PORT}`;
 const TYPES = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.json': 'application/json', '.mjs': 'application/javascript' };
 
-const STUDENT = { id: 's1', nome: 'Mariana Silva', email: 'mariana@example.com', turma: '7º ANO', role: 'student' };
-const TEACHER = { id: 't1', nome: 'Ana Souza', email: 'ana@example.com', role: 'admin', turmas: ['7º ANO', '8º ANO'] };
+const STUDENT = { id: 's1', nome: 'Mariana Silva', email: 'mariana@example.com', turma: '7º ANO', role: 'student', termos_versao: '2026-10' };
+const TEACHER = { id: 't1', nome: 'Ana Souza', email: 'ana@example.com', role: 'admin', turmas: ['7º ANO', '8º ANO'], termos_versao: '2026-10' };
 
 // Página → texto que precisa aparecer quando ela carrega.
 const STUDENT_PAGES = [
@@ -27,7 +27,8 @@ const STUDENT_PAGES = [
   ['/notifications', 'Avisos'],
   ['/ranking', 'Leitores'],
   ['/profile', 'Minhas conquistas'],
-  ['/videos', 'Frações no dia a dia']
+  ['/videos', 'Frações no dia a dia'],
+  ['/profile', 'Personalize seu perfil']
 ];
 const TEACHER_PAGES = [
   ['/admin/professor', 'Painel do Professor'],
@@ -45,10 +46,24 @@ const TEACHER_PAGES = [
   ['/admin/mural', 'Sarau de poesia'],
   ['/admin/calendar', 'Roda de leitura'],
   ['/profile', 'Dados da conta'],
-  ['/admin/teachers', 'Carlos Mendes']
+  ['/admin/teachers', 'Carlos Mendes'],
+  ['/admin/calendar', 'Prazo: Interpretação']
 ];
 
+let serverOffline = false;
 const server = http.createServer((req, res) => {
+  // O service worker do app busca alguns arquivos (PDFs) por conta própria; a API fictícia responde aqui também.
+  if (req.url.startsWith('/api/')) {
+    if (serverOffline) return req.socket.destroy();
+    const url = new URL(req.url, 'http://x');
+    const result = respond(req.method, url.pathname, url.searchParams, (req.headers.authorization || '').includes('mock-admin'));
+    if (result.file) {
+      res.writeHead(200, { 'Content-Type': 'application/pdf' });
+      return fs.createReadStream(result.file).pipe(res);
+    }
+    res.writeHead(result.status, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify(result.json));
+  }
   let file = path.join(ROOT, decodeURIComponent(req.url.split('?')[0]));
   if (!file.startsWith(ROOT)) {
     res.writeHead(403);
@@ -72,6 +87,8 @@ async function login(page, user) {
     localStorage.setItem('token', token);
     localStorage.setItem('eti-theme', 'light');
     localStorage.setItem('eti-push-prompt', String(Date.now()));
+    localStorage.setItem('eti-tour-v1:' + u.id, 'visto');
+    localStorage.setItem('eti-install-card', String(Date.now()));
   }, [user, user.role === 'student' ? 'mock-student' : 'mock-admin']);
 }
 
@@ -170,6 +187,25 @@ async function visit(page, url, text, label) {
   }
   await page.getByText('Baixar certificado (PDF)').waitFor();
 
+  // Fluxo: livro aberto uma vez continua disponível sem internet (service worker + dados guardados).
+  const offline = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const reader = await offline.newPage();
+  reader.on('pageerror', e => errors.push(`offline: ${e.message}`));
+  await login(reader, STUDENT);
+  await reader.goto(BASE + '/dashboard');
+  await reader.evaluate(() => navigator.serviceWorker.ready);
+  await reader.reload();
+  await reader.waitForFunction(() => navigator.serviceWorker.controller);
+  await reader.goto(BASE + '/reader/1');
+  await reader.waitForFunction(() => document.querySelector('.rd-page-info span')?.textContent.includes('6'));
+  serverOffline = true;
+  await offline.setOffline(true);
+  await reader.reload();
+  await reader.waitForFunction(() => document.querySelector('.rd-page-info span')?.textContent.includes('6'), null, { timeout: 15000 });
+  check(await reader.locator('.ob').isVisible(), 'offline: faixa "sem internet" não apareceu');
+  await offline.close();
+  serverOffline = false;
+
   await browser.close();
   server.close();
   failures.push(...errors);
@@ -177,7 +213,7 @@ async function visit(page, url, text, label) {
     console.error('FALHOU:\n- ' + failures.filter(Boolean).join('\n- '));
     process.exit(1);
   }
-  console.log(`OK: ${STUDENT_PAGES.length + TEACHER_PAGES.length} telas em computador e celular, correção com "Salvar e próximo", histórico do aluno, página 404 e leitura até o certificado. Dados fictícios.`);
+  console.log(`OK: ${STUDENT_PAGES.length + TEACHER_PAGES.length} telas em computador e celular, correção com "Salvar e próximo", histórico do aluno, página 404, leitura até o certificado e leitura sem internet. Dados fictícios.`);
 })().catch(e => {
   console.error(e);
   server.close();

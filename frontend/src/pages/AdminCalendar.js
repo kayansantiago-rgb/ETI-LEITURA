@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, Trash2, Pencil, ChevronLeft, ChevronRight, X, CalendarDays } from 'lucide-react';
+import { Plus, Trash2, Pencil, ChevronLeft, ChevronRight, X, CalendarDays, ClipboardList, ArrowUpRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -113,9 +114,19 @@ function EventItem({ event, onEdit, onDelete, showDate }) {
         <span className="ca-event-bar" />
       )}
       <div className="ca-event-copy">
-        <strong>{event.titulo}</strong>
+        <strong>
+          {event.prazo && <ClipboardList size={13} className="ca-due-icon" />}
+          {event.titulo}
+        </strong>
         {event.descricao && <p>{event.descricao}</p>}
       </div>
+      {event.prazo ? (
+        <span className="ca-event-actions">
+          <Link to={`/admin/activities/${event.activityId}`} className="ws-icon-btn" aria-label={`Abrir ${event.titulo}`} title="Abrir atividade">
+            <ArrowUpRight size={15} />
+          </Link>
+        </span>
+      ) : (
       <span className="ca-event-actions">
         <button type="button" className="ws-icon-btn" onClick={() => onEdit(event)} aria-label={`Editar ${event.titulo}`} title="Editar">
           <Pencil size={14} />
@@ -124,6 +135,7 @@ function EventItem({ event, onEdit, onDelete, showDate }) {
           <Trash2 size={14} />
         </button>
       </span>
+      )}
     </li>
   );
 }
@@ -133,6 +145,29 @@ export default function AdminCalendar() {
   const [events, setEvents] = useState(null);
   const [selected, setSelected] = useState(() => new Date());
   const [form, setForm] = useState(null);
+  const [deadlines, setDeadlines] = useState([]);
+
+  // Prazos das atividades entram sozinhos na agenda (somente leitura).
+  useEffect(() => {
+    api
+      .get('/activities')
+      .then(r =>
+        setDeadlines(
+          (r.data || [])
+            .filter(a => a.prazo && !a.agendada)
+            .map(a => ({
+              id: 'prazo-' + a.id,
+              activityId: a.id,
+              titulo: 'Prazo: ' + a.titulo,
+              descricao: a.turma === 'TODAS' ? 'Todas as turmas' : a.turma,
+              data: a.prazo.slice(0, 10),
+              cor: '#ef4444',
+              prazo: true
+            }))
+        )
+      )
+      .catch(() => {});
+  }, []);
 
   const load = async (m = month) => {
     try {
@@ -157,7 +192,8 @@ export default function AdminCalendar() {
     }
   };
 
-  const list = events || [];
+  const monthKey = format(month, 'yyyy-MM');
+  const list = [...(events || []), ...deadlines.filter(d => d.data.startsWith(monthKey))].sort((a, b) => a.data.localeCompare(b.data) || (a.prazo ? 1 : 0) - (b.prazo ? 1 : 0));
   const days = eachDayOfInterval({ start: month, end: endOfMonth(month) });
   const padding = Array(month.getDay()).fill(null);
   const byDay = d => list.filter(e => e.data === key(d));
@@ -231,6 +267,14 @@ export default function AdminCalendar() {
                 );
               })}
             </div>
+            <p className="ca-legend">
+              <span>
+                <i style={{ '--c': '#8b5cf6' }} /> Eventos da escola
+              </span>
+              <span>
+                <i style={{ '--c': '#ef4444' }} /> Prazos de atividades (automático)
+              </span>
+            </p>
           </section>
 
           <aside className="ca-side">
