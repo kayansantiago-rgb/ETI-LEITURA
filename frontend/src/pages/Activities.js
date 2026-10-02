@@ -1,4 +1,5 @@
 import { confirmAction } from '@/components/ConfirmHost';
+import OwlEmpty from '@/components/OwlEmpty';
 import { publicationLabel } from '@/lib/publication';
 import ActivityLibrary from '@/components/ActivityLibrary';
 import ActivityForm from '@/components/ActivityForm';
@@ -371,15 +372,15 @@ export default function Activities() {
           </button>
         </div>
       ) : !visible.length ? (
-        <div className="ws-card ws-empty">
-          <BookOpen size={30} />
-          <h3>{items.length ? 'Nenhuma atividade nesta seleção' : admin ? 'Sua primeira atividade começa aqui' : 'Novas atividades estão a caminho'}</h3>
-          <p>{items.length ? 'Ajuste a busca ou os filtros.' : admin ? 'Prepare perguntas para uma turma e acompanhe cada resposta.' : 'As atividades dos seus professores aparecem aqui.'}</p>
-          {admin && !items.length && (
-            <Button className="qz-btn-primary mt-4" onClick={() => setCreating(true)}>
-              <Plus size={16} /> Criar atividade
-            </Button>
-          )}
+        <div className="ws-card">
+          <OwlEmpty
+            compact
+            mood={items.length ? 'search' : 'calm'}
+            title={items.length ? 'Nenhuma atividade nesta seleção' : admin ? 'Sua primeira atividade começa aqui' : 'Novas atividades estão a caminho'}
+            text={items.length ? 'Ajuste a busca ou os filtros.' : admin ? 'Prepare perguntas para uma turma e acompanhe cada resposta.' : 'As atividades dos seus professores aparecem aqui.'}
+            action={admin && !items.length ? 'Criar atividade' : null}
+            onAction={() => setCreating(true)}
+          />
         </div>
       ) : (
         <div className="at-grid">

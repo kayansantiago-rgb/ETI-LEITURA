@@ -1,212 +1,94 @@
+import { useEffect, useRef, useState } from 'react';
+import { Camera, Mail, GraduationCap, Save, Loader2, Flame, BookOpen, Award, Medal, Trash2, ShieldCheck } from 'lucide-react';
+import DashboardLayout from '@/components/DashboardLayout';
 import PageIntro from '@/components/PageIntro';
+import PushSettings from '@/components/PushSettings';
 import CertificateShelf from '@/components/CertificateShelf';
 import { MedalGrid, useReadingStats } from '@/components/ReadingJourney';
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { User, Mail, GraduationCap, Save } from 'lucide-react';
-import DashboardLayout from '@/components/DashboardLayout';
-import AvatarUpload from '@/components/AvatarUpload';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import api from '@/lib/api';
 import { getUser, setAuth } from '@/lib/auth';
 import { toast } from 'sonner';
 
-const Profile = () => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState({
-    nome: '',
-    avatar_url: ''
-  });
+const ROLES = { student: 'Aluno', teacher: 'Professor', admin: 'Coordenação' };
+const initials = name =>
+  (name || 'E')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(n => n[0])
+    .join('')
+    .toUpperCase();
 
-  useEffect(() => {
-    loadUser();
-  }, []);
-
-  const loadUser = async () => {
-    try {
-      const response = await api.get('/auth/me');
-      setUser(response.data);
-      setFormData({
-        nome: response.data.nome,
-        avatar_url: response.data.avatar_url || ''
-      });
-    } catch (error) {
-      toast.error('Erro ao carregar perfil');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSaving(true);
-
-    try {
-      const response = await api.put('/auth/profile', {
-        nome: formData.nome,
-        avatar_url: formData.avatar_url
-      });
-
-      // Update local storage
-      const currentUser = getUser();
-      const token = localStorage.getItem('token');
-      setAuth(token, { ...currentUser, ...response.data });
-      
-      setUser(response.data);
-      toast.success('Perfil atualizado com sucesso!');
-    } catch (error) {
-      toast.error('Erro ao atualizar perfil');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleAvatarChange = (newAvatarUrl) => {
-    setFormData(prev => ({ ...prev, avatar_url: newAvatarUrl }));
-    // Also update user state to show the new avatar immediately
-    setUser(prev => prev ? { ...prev, avatar_url: newAvatarUrl } : prev);
-    
-    // Update local storage
-    const currentUser = getUser();
-    const token = localStorage.getItem('token');
-    if (currentUser && token) {
-      setAuth(token, { ...currentUser, avatar_url: newAvatarUrl });
-    }
-  };
-
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  return (
-    <DashboardLayout>
-      <div className="max-w-3xl mx-auto pf" data-testid="profile-page">
-        <PageIntro section="MINHA CONTA / IDENTIDADE" title="Meu Perfil" description="Seu espaço, do seu jeito. Mantenha seus dados atualizados."/>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white border border-stone-100 rounded-xl shadow-sm p-8"
-        >
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Avatar Upload */}
-            <div className="flex justify-center pb-6 border-b">
-              <AvatarUpload
-                currentAvatar={formData.avatar_url}
-                onAvatarChange={handleAvatarChange}
-              />
-            </div>
-
-            {/* Name */}
-            <div>
-              <Label htmlFor="nome">Nome completo</Label>
-              <div className="relative mt-1">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="nome"
-                  type="text"
-                  value={formData.nome}
-                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                  className="pl-10"
-                  required
-                  data-testid="input-nome"
-                />
-              </div>
-            </div>
-
-            {/* Email (read-only) */}
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <div className="relative mt-1">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  value={user?.email || ''}
-                  className="pl-10 bg-muted"
-                  disabled
-                />
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                O email não pode ser alterado
-              </p>
-            </div>
-
-            {/* Turma (read-only) */}
-            {user?.turma && (
-              <div>
-                <Label htmlFor="turma">Turma</Label>
-                <div className="relative mt-1">
-                  <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="turma"
-                    type="text"
-                    value={user.turma}
-                    className="pl-10 bg-muted"
-                    disabled
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  A turma não pode ser alterada
-                </p>
-              </div>
-            )}
-
-            {/* Save Button */}
-            <div className="pt-4">
-              <Button
-                type="submit"
-                className="w-full rounded-lg"
-                disabled={saving}
-                data-testid="save-profile-button"
-              >
-                {saving ? (
-                  'Salvando...'
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    Salvar alterações
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
-        </motion.div>
-        {getUser()?.role === 'student' && (
-          <>
-            <ProfileMedals />
-            <CertificateShelf />
-          </>
-        )}
-      </div>
-    </DashboardLayout>
-  );
+const remember = patch => {
+  const token = localStorage.getItem('token');
+  const current = getUser();
+  if (token && current) setAuth(token, { ...current, ...patch });
 };
 
+function Avatar({ url, name, onChange }) {
+  const input = useRef(null);
+  const [busy, setBusy] = useState(false);
+  const pick = async e => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) return toast.error('Use uma imagem JPG, PNG, GIF ou WebP.');
+    if (file.size > 5 * 1024 * 1024) return toast.error('Imagem muito grande. Máximo 5 MB.');
+    setBusy(true);
+    try {
+      const body = new FormData();
+      body.append('file', file);
+      const r = await api.post('/auth/upload-avatar', body);
+      onChange(r.data.avatar_url);
+      toast.success('Foto atualizada!');
+    } catch (err) {
+      toast.error(typeof err.response?.data?.detail === 'string' ? err.response.data.detail : 'Não foi possível enviar a foto.');
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="pf-avatar">
+      <span className="pf-avatar-img">{url ? <img src={url} alt="" /> : initials(name)}</span>
+      <button type="button" className="pf-avatar-btn" onClick={() => input.current?.click()} disabled={busy} aria-label="Trocar foto de perfil" title="Trocar foto">
+        {busy ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} />}
+      </button>
+      <input ref={input} type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={pick} />
+    </div>
+  );
+}
 
-function ProfileMedals() {
-  const [stats] = useReadingStats();
+function StudentStats({ stats }) {
+  return (
+    <div className="pf-stats">
+      <span>
+        <Flame size={16} /> <b>{stats.sequencia}</b> dias seguidos
+      </span>
+      <span>
+        <BookOpen size={16} /> <b>{stats.paginas_total}</b> páginas
+      </span>
+      <span>
+        <Award size={16} /> <b>{stats.certificados}</b> certificados
+      </span>
+      <span>
+        <Medal size={16} /> <b>{stats.medalhas.filter(m => m.conquistada).length}</b> medalhas
+      </span>
+    </div>
+  );
+}
+
+function ProfileMedals({ stats }) {
   useEffect(() => {
     // O link "Ver todas" da página inicial leva direto às medalhas.
-    if (stats && window.location.hash === '#conquistas') document.getElementById('conquistas')?.scrollIntoView({ behavior: 'smooth' });
-  }, [stats]);
-  if (!stats) return null;
+    if (window.location.hash === '#conquistas') document.getElementById('conquistas')?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
   return (
     <section className="pf-medals" id="conquistas" aria-label="Minhas conquistas">
       <header>
         <h2>Minhas conquistas</h2>
         <span>
-          {stats.medalhas.filter(m => m.conquistada).length} de {stats.medalhas.length} medalhas · {stats.paginas_total} páginas lidas · melhor sequência de {stats.melhor_sequencia} dias
+          {stats.medalhas.filter(m => m.conquistada).length} de {stats.medalhas.length} medalhas · melhor sequência de {stats.melhor_sequencia} dias
         </span>
       </header>
       <MedalGrid medals={stats.medalhas} />
@@ -214,4 +96,165 @@ function ProfileMedals() {
   );
 }
 
-export default Profile;
+export default function Profile() {
+  const [user, setUser] = useState(null);
+  const [nome, setNome] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [stats] = useReadingStats();
+
+  useEffect(() => {
+    api
+      .get('/auth/me')
+      .then(r => {
+        setUser(r.data);
+        setNome(r.data.nome);
+      })
+      .catch(() => toast.error('Não foi possível carregar o perfil.'));
+  }, []);
+
+  const saveProfile = async (patch, message) => {
+    const r = await api.put('/auth/profile', { nome: user.nome, avatar_url: user.avatar_url || '', ...patch });
+    remember(r.data);
+    setUser(r.data);
+    if (message) toast.success(message);
+  };
+
+  const submit = async e => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await saveProfile({ nome: nome.trim() }, 'Perfil atualizado!');
+    } catch {
+      toast.error('Não foi possível salvar.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const changeAvatar = url => {
+    setUser(u => ({ ...u, avatar_url: url }));
+    remember({ avatar_url: url });
+  };
+
+  const removeAvatar = async () => {
+    try {
+      await saveProfile({ avatar_url: '' }, 'Foto removida.');
+    } catch {
+      toast.error('Não foi possível remover a foto.');
+    }
+  };
+
+  const student = user?.role === 'student';
+
+  return (
+    <DashboardLayout>
+      <div className="pf" data-testid="profile-page">
+        <PageIntro section="MINHA CONTA / IDENTIDADE" title="Meu perfil" description="Seu espaço, do seu jeito. Mantenha seus dados atualizados." />
+
+        {!user ? (
+          <div className="ws-card ws-empty" role="status">
+            Carregando perfil…
+          </div>
+        ) : (
+          <>
+            <section className="pf-hero">
+              <div className="pf-cover" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+              </div>
+              <div className="pf-hero-body">
+                <Avatar url={user.avatar_url} name={user.nome} onChange={changeAvatar} />
+                <div className="pf-id">
+                  <h2>{user.nome}</h2>
+                  <p>
+                    <span className="ws-chip">{ROLES[user.role] || 'Usuário'}</span>
+                    {user.turma && (
+                      <span>
+                        <GraduationCap size={14} /> {user.turma}
+                      </span>
+                    )}
+                    {!student && user.turmas?.length > 0 && (
+                      <span>
+                        <GraduationCap size={14} /> {user.turmas.length} turma(s)
+                      </span>
+                    )}
+                    <span>
+                      <Mail size={14} /> {user.email}
+                    </span>
+                  </p>
+                </div>
+              </div>
+              {student && stats && <StudentStats stats={stats} />}
+            </section>
+
+            <div className="pf-grid">
+              <form className="ws-card pf-card" onSubmit={submit}>
+                <h3>Dados da conta</h3>
+                <label className="qz-field">
+                  <span>Nome completo</span>
+                  <input id="nome" required maxLength={120} value={nome} onChange={e => setNome(e.target.value)} data-testid="input-nome" />
+                </label>
+                <label className="qz-field">
+                  <span>E-mail</span>
+                  <input id="email" type="email" value={user.email || ''} disabled />
+                  <small className="af-hint">O e-mail é usado para entrar e não pode ser alterado.</small>
+                </label>
+                {user.turma && (
+                  <label className="qz-field">
+                    <span>Turma</span>
+                    <input id="turma" value={user.turma} disabled />
+                    <small className="af-hint">Para trocar de turma, fale com a coordenação.</small>
+                  </label>
+                )}
+                {!student && user.turmas?.length > 0 && (
+                  <div className="qz-field">
+                    <span>Turmas que você acompanha</span>
+                    <div className="pf-classes">
+                      {user.turmas.map(t => (
+                        <span key={t} className="ws-chip">
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div className="pf-actions">
+                  {user.avatar_url && (
+                    <button type="button" className="pf-link" onClick={removeAvatar}>
+                      <Trash2 size={14} /> Remover foto
+                    </button>
+                  )}
+                  <span className="flex-1" />
+                  <Button type="submit" className="qz-btn-primary" disabled={saving || !nome.trim() || nome.trim() === user.nome} data-testid="save-profile-button">
+                    {saving ? (
+                      'Salvando…'
+                    ) : (
+                      <>
+                        <Save size={16} /> Salvar alterações
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+
+              <div className="pf-side">
+                <PushSettings />
+                <div className="ws-card pf-card pf-safe">
+                  <ShieldCheck size={20} />
+                  <div>
+                    <h3>Conta protegida</h3>
+                    <p>Esqueceu a senha? A coordenação da escola pode gerar um código de recuperação para você.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {student && stats && <ProfileMedals stats={stats} />}
+            {student && <CertificateShelf />}
+          </>
+        )}
+      </div>
+    </DashboardLayout>
+  );
+}

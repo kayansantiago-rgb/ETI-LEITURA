@@ -17,7 +17,11 @@ const admin = { id: 't1', nome: 'Ana Souza', email: 'ana@example.com', role: 'ad
 const users = Array.from({ length: 8 }, (_, i) => ({ id: 'u' + i, nome: ['Mariana Silva', 'João Pedro', 'Luiza Costa', 'Rafael Lima', 'Beatriz Alves', 'Gabriel Rocha', 'Sofia Mendes', 'Lucas Prado'][i], email: `aluno${i}@example.com`, turma: i % 2 ? '8º ANO' : '7º ANO', role: 'student', created_at: '2026-08-01' }));
 const summaries = books.slice(0, 3).map((b, i) => ({ id: 'r' + i, book_id: b.id, book_titulo: b.titulo, titulo: 'Resumo de ' + b.titulo, conteudo: 'Neste livro, acompanhamos uma jornada sobre amizade, descoberta e crescimento...', user_id: 's1', user_nome: users[i].nome, turma: '7º ANO', status: ['pendente', 'corrigido', 'pendente'][i], nota: i === 1 ? 8.5 : null, created_at: day(-i - 1), updated_at: day(-i - 1), corrigido_em: day(-1) }));
 const productions = [0, 1].map(i => ({ id: 'p' + i, titulo: ['Minha cidade', 'Carta ao futuro'][i], genero: ['Crônica', 'Carta'][i], conteudo: 'Era uma manhã tranquila quando...', user_id: 's1', user_nome: users[i].nome, turma: '7º ANO', status: i ? 'corrigido' : 'pendente', nota: i ? 9 : null, created_at: day(-i - 2), updated_at: day(-i - 2), corrigido_em: day(-1) }));
-const mural = [{ id: 'm1', titulo: 'Feira literária', conteudo: 'Na próxima sexta teremos a feira literária da escola. Tragam seus livros favoritos!', autor_nome: 'Coordenação', created_at: day(-1) }, { id: 'm2', titulo: 'Novos livros no acervo', conteudo: 'Chegaram seis novos títulos para o ensino fundamental.', autor_nome: 'Biblioteca', created_at: day(-4) }];
+const mural = [
+  { id: 'm1', tipo: 'foto', titulo: 'Feira literária', descricao: 'Turmas do fundamental apresentaram seus livros favoritos com cartazes e leituras em voz alta.', url_media: '/eti-logo.svg', autor_id: 'adm', autor_nome: 'Coordenação', created_at: day(-1) },
+  { id: 'm2', tipo: 'video', titulo: 'Sarau de poesia do 8º ano', descricao: 'Confira as apresentações do sarau.', url_media: 'https://www.youtube.com/watch?v=abcdefghijk', autor_id: 't1', autor_nome: 'Ana Souza', created_at: day(-4) },
+  { id: 'm3', tipo: 'foto', titulo: 'Novos livros no acervo', descricao: 'Chegaram seis novos títulos para o ensino fundamental.', url_media: '/eti-logo.svg', autor_id: 't1', autor_nome: 'Biblioteca', created_at: day(-8) }
+];
 const h = n => new Date(Date.now() - n * 36e5).toISOString();
 const notifications = [
   { id: 'grade:s1:1', titulo: 'Atividade corrigida: Interpretação do capítulo 3', link: '/activities/a1', data: h(1), lida: false },
@@ -29,7 +33,11 @@ const notifications = [
   { id: 'activity:a4', titulo: 'Nova atividade: Diário de leitura', link: '/activities/a4', data: h(200), lida: true }
 ];
 const quizzes = [{ id: 'q1', titulo: 'Quiz: O Pequeno Príncipe', turma: '7º ANO', status: 'publicado', perguntas: [{}, {}, {}, {}], tempo_por_pergunta: 30, created_at: day(-1) }];
-const materials = [{ id: 'v1', titulo: 'Como fazer um resumo', disciplina: 'Língua Portuguesa', turma: '7º ANO', tipo: 'video', url: 'https://example.com', created_at: day(-2) }];
+const materials = [
+  { id: 'v1', titulo: 'Como fazer um resumo', disciplina: 'Língua Portuguesa', turma: '7º ANO', descricao: 'Assista ao vídeo e anote as três etapas de um bom resumo antes da próxima aula.', video_url: '', video_id: null, transcricao: '', anexos: [{ nome: 'roteiro-resumo.pdf', url: '/api/uploads/roteiro.pdf' }], professor_id: 't1', professor_nome: 'Ana Souza', created_at: day(-2) },
+  { id: 'v2', titulo: 'Frações no dia a dia', disciplina: 'Matemática', turma: 'TODAS', descricao: 'Revisão rápida de frações com exemplos de receitas e medidas.', video_url: 'https://www.youtube.com/watch?v=xyz', video_id: 'xyz', transcricao: 'Neste vídeo vamos rever frações…', anexos: [], professor_id: 't1', professor_nome: 'Ana Souza', created_at: day(-5) },
+  { id: 'v3', titulo: 'Linha do tempo do Brasil Colônia', disciplina: 'História', turma: '8º ANO', descricao: '', video_url: '', video_id: null, transcricao: '', anexos: [{ nome: 'linha-do-tempo.pdf', url: '/api/uploads/linha.pdf' }], professor_id: 'adm', professor_nome: 'Coordenação', created_at: day(-9) }
+];
 const extra = require('./extra.cjs');
 const bookMock = require('./books.cjs');
 const fs = require('fs');

@@ -26,7 +26,8 @@ const STUDENT_PAGES = [
   ['/workspace', 'Minhas pendências'],
   ['/notifications', 'Avisos'],
   ['/ranking', 'Leitores'],
-  ['/profile', 'Minhas conquistas']
+  ['/profile', 'Minhas conquistas'],
+  ['/videos', 'Frações no dia a dia']
 ];
 const TEACHER_PAGES = [
   ['/admin/professor', 'Painel do Professor'],
@@ -39,7 +40,11 @@ const TEACHER_PAGES = [
   ['/admin/reports', 'Relatório escolar'],
   ['/workspace', 'Pendências de correção'],
   ['/quizzes', 'Quizzes'],
-  ['/ranking', 'Ranking de leitores']
+  ['/ranking', 'Ranking de leitores'],
+  ['/videos', 'Vídeos e materiais'],
+  ['/admin/mural', 'Sarau de poesia'],
+  ['/admin/calendar', 'Roda de leitura'],
+  ['/profile', 'Dados da conta']
 ];
 
 const server = http.createServer((req, res) => {
@@ -134,6 +139,21 @@ async function visit(page, url, text, label) {
   await page.waitForFunction(name => document.querySelector('.cx-student h3')?.textContent !== name, first);
   await page.keyboard.press('Escape');
 
+  // Fluxo: histórico completo do aluno em Minhas turmas, com exclusão confirmada na caixa da plataforma.
+  await page.goto(BASE + '/admin/classes/7%C2%BA%20ANO');
+  await page.locator('.sh-trigger').first().click();
+  const history = page.getByRole('dialog', { name: /Histórico de/ });
+  await history.getByText('média geral').waitFor();
+  await history.getByRole('tab', { name: /Atividades/ }).click();
+  await history.getByText('Interpretação do capítulo 1').waitFor();
+  await history.getByRole('button', { name: 'Excluir aluno' }).click();
+  await page.getByRole('button', { name: 'Excluir aluno' }).last().click();
+  await history.waitFor({ state: 'detached' });
+
+  // Página inexistente mostra a coruja em vez de redirecionar.
+  await page.goto(BASE + '/pagina-que-nao-existe');
+  await page.getByText('Esta página saiu da estante').waitFor();
+
   // Fluxo: leitor até a última página libera o questionário e o certificado.
   await login(page, STUDENT);
   await page.goto(BASE + '/reader/1');
@@ -156,7 +176,7 @@ async function visit(page, url, text, label) {
     console.error('FALHOU:\n- ' + failures.filter(Boolean).join('\n- '));
     process.exit(1);
   }
-  console.log(`OK: ${STUDENT_PAGES.length + TEACHER_PAGES.length} telas em computador e celular, correção com "Salvar e próximo" e leitura até o certificado. Dados fictícios.`);
+  console.log(`OK: ${STUDENT_PAGES.length + TEACHER_PAGES.length} telas em computador e celular, correção com "Salvar e próximo", histórico do aluno, página 404 e leitura até o certificado. Dados fictícios.`);
 })().catch(e => {
   console.error(e);
   server.close();

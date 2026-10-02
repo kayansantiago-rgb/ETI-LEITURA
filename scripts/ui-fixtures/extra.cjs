@@ -64,6 +64,26 @@ module.exports = function extra(p, isAdmin, method, body) {
   if (p === '/api/quizzes/q1') return isAdmin ? { ...quizFull, resultados: quizResults } : quizFull;
   if (p === '/api/quizzes/q1/ranking') return { participantes: quizResults.map((r, i) => ({ posicao: i + 1, nome: r.nome, acertos: r.acertos, total: 4, voce: i === 0 })), encerrado: false };
   if (p === '/api/gradebook') return isAdmin ? gradebook : { alunos: [gradebook.alunos[0]], notas: gradebook.notas.filter(g => g.user_id === 'u0') };
+  if (/^\/api\/admin\/students\/u\d+\/history$/.test(p)) {
+    const a = report.alunos.find(x => x.id === p.split('/')[4]);
+    return {
+      aluno: { id: a.id, nome: a.nome, turma: a.turma, email: `${a.id}@example.com`, created_at: '2026-02-10T12:00:00Z' },
+      resumo: { media: a.media, livros_concluidos: 2, certificados: 1, paginas_lidas: 412, sequencia: 4, melhor_sequencia: 9, atividades_entregues: a.atividades_entregues, atividades_disponiveis: 6 },
+      leituras: [
+        { book_id: 'b1', titulo: 'Dom Casmurro', autor: 'Machado de Assis', percentual: 100, atualizado_em: '2026-09-20T10:00:00Z' },
+        { book_id: 'b2', titulo: 'O Pequeno Príncipe', autor: 'Saint-Exupéry', percentual: 46, atualizado_em: '2026-09-28T10:00:00Z' }
+      ],
+      atividades: [
+        { activity_id: 'a1', titulo: 'Interpretação do capítulo 1', nota: 8.5, valor: 10, feedback: 'Ótima argumentação, cuide da pontuação.', devolvida: false, tentativa: 1, enviado_em: '2026-09-25T10:00:00Z' },
+        { activity_id: 'a2', titulo: 'Questionário de vocabulário', nota: null, valor: 10, feedback: null, devolvida: false, tentativa: 1, enviado_em: '2026-09-29T10:00:00Z' },
+        { activity_id: 'a3', titulo: 'Linha do tempo da narrativa', nota: null, valor: 5, feedback: 'Faltou o desfecho.', devolvida: true, tentativa: 2, enviado_em: '2026-09-18T10:00:00Z' }
+      ],
+      resumos: [{ id: 'r1', titulo: 'Dom Casmurro', nota: 9, feedback: '', enviado_em: '2026-09-21T10:00:00Z' }],
+      producoes: [{ id: 'p1', titulo: 'Carta ao autor', nota: 4.5, feedback: '', enviado_em: '2026-09-10T10:00:00Z' }],
+      quizzes: [{ titulo: 'Quiz de Machado', acertos: 3, total: 4, nota: 7.5, enviado_em: '2026-09-15T10:00:00Z' }],
+      certificados: [{ book_titulo: 'Dom Casmurro', percentual: 90, emitido_em: '2026-09-20T12:00:00Z', codigo: 'A1B2C3' }]
+    };
+  }
   if (p === '/api/admin/reports') return report;
   return undefined;
 };

@@ -1,4 +1,5 @@
 import { Bell, CheckCheck, ArrowUpRight, Inbox, TrendingUp, Users, BookOpen, AlertTriangle, Search, FileDown, FileSpreadsheet, ArrowUp, ArrowDown, ClipboardList, AlarmClock, RotateCcw, CheckCircle2, PlayCircle, Megaphone, Sparkles, PenLine, Check, Clock3, ChevronDown } from 'lucide-react';
+import OwlEmpty from '@/components/OwlEmpty';
 import CorrectionDrawer from '@/components/CorrectionDrawer';
 import '@/notifications.css';
 import PushSettings from '@/components/PushSettings';
@@ -107,11 +108,9 @@ export function Notifications() {
               {failed ? 'Não foi possível carregar. Atualize a página para tentar novamente.' : 'Carregando avisos…'}
             </div>
           ) : !visible.length ? (
-            <div className="ws-card ws-empty">
-              <Inbox size={34} />
-              <h3>Tudo em dia por aqui</h3>
-              <p>{onlyUnread ? 'Você leu todos os avisos.' : 'Os próximos avisos aparecerão neste espaço.'}</p>
-            </div>
+            <div className="ws-card">
+<OwlEmpty compact title="Tudo em dia por aqui" text={onlyUnread ? 'Você leu todos os avisos.' : 'Os próximos avisos aparecerão neste espaço.'} />
+</div>
           ) : (
             groups.map(([group, items]) => (
               <section key={group} className="nt-group">
@@ -205,10 +204,9 @@ function StudentWorkspace({ data }) {
         </article>
       </section>
       {!items.length && (
-        <div className="ws-card ws-empty">
-          <Inbox size={30} />
-          <h3>Nenhuma atividade por enquanto</h3>
-        </div>
+        <div className="ws-card">
+<OwlEmpty compact title="Nenhuma atividade por enquanto" />
+</div>
       )}
       {sections
         .filter(([, list]) => list.length)
@@ -279,11 +277,9 @@ function StaffWorkspace({ data, reload }) {
           <PenLine size={17} /> Fila de correção <span>{total}</span>
         </h2>
         {!total ? (
-          <div className="ws-card ws-empty">
-            <CheckCircle2 size={30} />
-            <h3>Tudo corrigido!</h3>
-            <p>Novas entregas aparecem aqui assim que chegarem.</p>
-          </div>
+          <div className="ws-card">
+<OwlEmpty compact mood="party" title="Tudo corrigido!" text="Novas entregas aparecem aqui assim que chegarem." />
+</div>
         ) : (
           <div className="pd-queue">
             {toGrade.map(a => (
@@ -321,9 +317,9 @@ function StaffWorkspace({ data, reload }) {
           <Users size={17} /> Acompanhamento de entregas
         </h2>
         {!activities.length ? (
-          <div className="ws-card ws-empty">
-            <h3>Nenhuma atividade publicada</h3>
-          </div>
+          <div className="ws-card">
+<OwlEmpty compact title="Nenhuma atividade publicada" />
+</div>
         ) : (
           <div className="ws-card pd-track">
             {activities.map(a => {

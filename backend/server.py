@@ -1097,10 +1097,13 @@ async def get_all_users(turma: Optional[str] = None, admin_user: dict = Depends(
     return users
 
 @api_router.delete("/admin/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_user(user_id: str, admin_user: dict = Depends(require_admin)):
+async def delete_user(user_id: str, admin_user: dict = Depends(require_staff)):
     # Prevent admin from deleting themselves
     if user_id == admin_user["id"]:
         raise HTTPException(status_code=400, detail="Você não pode excluir sua própria conta")
+    # Professores só excluem alunos das próprias turmas.
+    if admin_user.get("role") != "admin":
+        await ensure_student_scope(db, admin_user, user_id)
 
     # Check if user exists
     user = await db.users.find_one({"id": user_id})
@@ -1110,6 +1113,8 @@ async def delete_user(user_id: str, admin_user: dict = Depends(require_admin)):
     # Prevent deleting other admins
     if user.get("role") == "admin":
         raise HTTPException(status_code=403, detail="Não é possível excluir outro administrador")
+    if admin_user.get("role") != "admin" and user.get("role") != "student":
+        raise HTTPException(status_code=403, detail="Professores só podem excluir contas de alunos")
 
     # Delete user and all related data
     await db.users.delete_one({"id": user_id})
@@ -1120,6 +1125,8 @@ async def delete_user(user_id: str, admin_user: dict = Depends(require_admin)):
     await db.reader_positions.delete_many({"user_id": user_id})
     await db.notification_reads.delete_many({"user_id": user_id})
     await db.password_resets.delete_many({"user_id": user_id})
+    for collection in ("reading_days", "reading_goals", "quiz_attempts", "book_quiz_attempts", "certificates", "push_subscriptions", "grade_entries"):
+        await db[collection].delete_many({"user_id": user_id})
 
     return None
 
@@ -1282,6 +1289,8 @@ from backend.quizzes import create_quiz_router
 api_router.include_router(create_quiz_router(db, get_current_user, require_staff))
 from backend.book_quiz import create_book_quiz_router, ensure_indexes as ensure_book_quiz_indexes
 api_router.include_router(create_book_quiz_router(db, get_current_user, require_staff))
+from backend.students import create_students_router
+api_router.include_router(create_students_router(db, require_staff))
 from backend.reading import create_reading_router, ensure_indexes as ensure_reading_indexes
 api_router.include_router(create_reading_router(db, get_current_user))
 app.include_router(api_router)

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import OwlEmpty from '@/components/OwlEmpty';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import {
   Users,
@@ -19,6 +20,7 @@ import {
 import DashboardLayout from '@/components/DashboardLayout';
 import PageIntro from '@/components/PageIntro';
 import CorrectionDrawer from '@/components/CorrectionDrawer';
+import StudentHistory from '@/components/StudentHistory';
 import SubjectBadge from '@/components/SubjectBadge';
 import { Button } from '@/components/ui/button';
 import { TURMAS } from '@/constants/turmas';
@@ -55,11 +57,9 @@ function stats(students, activities) {
 function Overview({ allowed, report, activities }) {
   if (!allowed.length)
     return (
-      <div className="ws-card ws-empty">
-        <Users size={28} />
-        <h3>Nenhuma turma atribuída</h3>
-        <p>Peça ao administrador para vincular suas turmas.</p>
-      </div>
+      <div className="ws-card">
+<OwlEmpty compact title="Nenhuma turma atribuída" text="Peça ao administrador para vincular suas turmas." />
+</div>
     );
   return (
     <div className="cl-grid">
@@ -119,6 +119,7 @@ export default function Classes() {
   const [failed, setFailed] = useState(false);
   const [search, setSearch] = useState('');
   const [correcting, setCorrecting] = useState(null);
+  const [student, setStudent] = useState(null);
   const [downloading, setDownloading] = useState(false);
   const tab = ['atividades', 'materiais'].includes(params.get('aba')) ? params.get('aba') : 'alunos';
   const setTab = value =>
@@ -293,7 +294,7 @@ export default function Classes() {
                     {filteredStudents.map(a => (
                       <tr key={a.id}>
                         <td>
-                          <div className="ws-person">
+                          <button type="button" className="ws-person sh-trigger" onClick={() => setStudent(a.id)} title="Ver histórico completo">
                             <span className="ws-avatar">{initials(a.nome)}</span>
                             <div className="min-w-0">
                               <strong>{a.nome}</strong>
@@ -301,7 +302,7 @@ export default function Classes() {
                                 {a.atividades_entregues} de {a.atividades_disponiveis || 0} atividade(s)
                               </small>
                             </div>
-                          </div>
+                          </button>
                         </td>
                         <td>
                           {a.participacao == null ? (
@@ -327,11 +328,9 @@ export default function Classes() {
                 </table>
               </div>
             ) : (
-              <div className="ws-card ws-empty">
-                <Users size={26} />
-                <h3>{students.length ? 'Nenhum aluno encontrado' : 'Nenhum aluno nesta turma'}</h3>
-                <p>{students.length ? 'Tente outra busca.' : 'Os alunos aparecem aqui quando se cadastram com esta turma.'}</p>
-              </div>
+              <div className="ws-card">
+<OwlEmpty compact mood="search" title={students.length ? 'Nenhum aluno encontrado' : 'Nenhum aluno nesta turma'} text={students.length ? 'Tente outra busca.' : 'Os alunos aparecem aqui quando se cadastram com esta turma.'} />
+</div>
             ))}
 
           {tab === 'atividades' &&
@@ -377,11 +376,9 @@ export default function Classes() {
                 })}
               </div>
             ) : (
-              <div className="ws-card ws-empty">
-                <ClipboardList size={26} />
-                <h3>Nenhuma atividade</h3>
-                <p>Crie a primeira atividade para esta turma.</p>
-              </div>
+              <div className="ws-card">
+<OwlEmpty compact title="Nenhuma atividade" text="Crie a primeira atividade para esta turma." />
+</div>
             ))}
 
           {tab === 'materiais' &&
@@ -402,14 +399,13 @@ export default function Classes() {
                 ))}
               </div>
             ) : (
-              <div className="ws-card ws-empty">
-                <PlayCircle size={26} />
-                <h3>Nenhum material</h3>
-                <p>Compartilhe vídeos e PDFs em Vídeos e materiais.</p>
-              </div>
+              <div className="ws-card">
+<OwlEmpty compact title="Nenhum material" text="Compartilhe vídeos e PDFs em Vídeos e materiais." />
+</div>
             ))}
         </>
       )}
+      {student && <StudentHistory studentId={student} onClose={() => setStudent(null)} onDeleted={load} />}
       {correcting && <CorrectionDrawer activityId={correcting} onClose={() => setCorrecting(null)} onChanged={load} />}
     </DashboardLayout>
   );

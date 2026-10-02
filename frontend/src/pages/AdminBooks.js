@@ -1,4 +1,5 @@
 import { confirmAction } from '@/components/ConfirmHost';
+import OwlEmpty from '@/components/OwlEmpty';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
@@ -317,11 +318,9 @@ export default function AdminBooks() {
             </div>
 
             {!visible.length ? (
-              <div className="ws-card ws-empty">
-                <BookOpen size={28} />
-                <h3>{all.length ? 'Nenhum livro nesta seleção' : 'Seu acervo começa aqui'}</h3>
-                <p>{all.length ? 'Ajuste a busca ou os filtros.' : 'Envie o primeiro PDF para montar a biblioteca da escola.'}</p>
-              </div>
+              <div className="ws-card">
+<OwlEmpty compact mood="search" title={all.length ? 'Nenhum livro nesta seleção' : 'Seu acervo começa aqui'} text={all.length ? 'Ajuste a busca ou os filtros.' : 'Envie o primeiro PDF para montar a biblioteca da escola.'} />
+</div>
             ) : (
               <div className="ws-card ws-table-wrap">
                 <table className="ws-table ab-table">

@@ -1,4 +1,5 @@
 import { confirmAction } from '@/components/ConfirmHost';
+import OwlEmpty from '@/components/OwlEmpty';
 import QuizRanking from '@/components/QuizRanking';
 import TimedQuiz, { QuizOptions } from '@/components/TimedQuiz';
 import {
@@ -786,11 +787,9 @@ export default function Quizzes() {
                 Carregando quizzes…
               </div>
             ) : !visible.length ? (
-              <div className="ws-card ws-empty">
-                <HelpCircle size={30} />
-                <h3>{staff ? (items.length ? 'Nenhum quiz neste filtro' : 'Crie seu primeiro quiz') : 'Nenhum desafio por enquanto'}</h3>
-                <p>{staff ? 'Monte perguntas de múltipla escolha e publique para a turma.' : 'Os quizzes publicados pelos professores aparecem aqui.'}</p>
-              </div>
+              <div className="ws-card">
+<OwlEmpty compact mood="search" title={staff ? (items.length ? 'Nenhum quiz neste filtro' : 'Crie seu primeiro quiz') : 'Nenhum desafio por enquanto'} text={staff ? 'Monte perguntas de múltipla escolha e publique para a turma.' : 'Os quizzes publicados pelos professores aparecem aqui.'} />
+</div>
             ) : (
               <div className="qz-grid">
                 {visible.map(q => (

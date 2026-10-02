@@ -19,11 +19,11 @@ import {
   Check,
   CloudOff,
   Trophy,
-  PartyPopper,
   Award,
   X
 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
+import { Owl } from '@/components/LoginScene';
 import { getUser } from '@/lib/auth';
 import api from '@/lib/api';
 
@@ -37,9 +37,13 @@ function FinishCard({ book, quiz, onClose }) {
         <button type="button" className="rd-finish-close" onClick={onClose} aria-label="Continuar no livro">
           <X size={18} />
         </button>
-        <span className="rd-finish-icon">
-          <PartyPopper size={34} />
-        </span>
+        <div className="rd-finish-owl" aria-hidden="true">
+          <span className="rd-finish-bubble">Parabéns!</span>
+          <Owl size={92} />
+          {[...Array(10)].map((_, i) => (
+            <i key={i} style={{ '--i': i }} />
+          ))}
+        </div>
         <p className="ws-eyebrow">Leitura concluída</p>
         <h2>Você terminou “{book.titulo}”!</h2>
         {quiz?.aprovado ? (

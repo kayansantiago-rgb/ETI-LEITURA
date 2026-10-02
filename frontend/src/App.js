@@ -30,6 +30,7 @@ import AdminMural from '@/pages/AdminMural';
 import AdminCalendar from '@/pages/AdminCalendar';
 import TextProductions from '@/pages/TextProductions';
 import Profile from '@/pages/Profile';
+import NotFound from '@/pages/NotFound';
 import { isAuthenticated } from '@/lib/auth';
 import '@/App.css';
 import '@/studio.css';
@@ -179,7 +180,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
       <Toaster position="top-right" richColors />
