@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { PageSkeleton } from '@/components/Skeleton';
 import { Clock3, CheckCircle2, TrendingUp, Users } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import PageIntro from '@/components/PageIntro';
@@ -53,9 +54,7 @@ export default function TextCorrectionPage({ kind, path, section, title, descrip
             </button>
           </div>
         ) : !items ? (
-          <div className="ws-card ws-empty" role="status">
-            <span className="cx-spinner mx-auto mb-3" /> Carregando textos…
-          </div>
+          <PageSkeleton cards={3} rows={4} label="Carregando textos…" />
         ) : (
           <>
             <section className="ws-kpis tc-kpis">

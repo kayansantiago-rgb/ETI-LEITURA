@@ -15,6 +15,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import StudentDiscovery from '@/components/StudentDiscovery';
 import ReadingJourney from '@/components/ReadingJourney';
 import InstallApp from '@/components/InstallApp';
+import TeacherHome from '@/components/TeacherHome';
 import HomeLoader from '@/components/HomeLoader';
 import ClassRanking from '@/components/ClassRanking';
 import StatusBadge, { activityState } from '@/components/StatusBadge';
@@ -135,7 +136,7 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    load();
+    if (!staff) load();
   }, [staff]);
 
 
@@ -158,6 +159,15 @@ export default function Dashboard() {
 
   // Livros adicionados recentemente (últimos 3 cadastrados)
   const recentBooks = [...books].reverse().slice(0, 3);
+
+  if (staff)
+    return (
+      <DashboardLayout>
+        <div data-testid="dashboard-page">
+          <TeacherHome />
+        </div>
+      </DashboardLayout>
+    );
 
   return (
     <DashboardLayout>
@@ -182,7 +192,7 @@ export default function Dashboard() {
               stats={data?.stats || {}}
             />
 
-            {!staff && <ReadingJourney />}
+            <ReadingJourney />
 
             <InstallApp />
 
@@ -251,7 +261,7 @@ export default function Dashboard() {
               </section>
             </div>
 
-            {!staff && <ClassRanking limit={5} compact />}
+            <ClassRanking limit={5} compact />
 
           </>
         )}

@@ -1,4 +1,5 @@
 import { confirmAction } from '@/components/ConfirmHost';
+import { PageSkeleton } from '@/components/Skeleton';
 import PageIntro from '@/components/PageIntro';
 import EmptyCollection from '@/components/EmptyCollection';
 import {getUser} from '@/lib/auth';
@@ -60,9 +61,7 @@ const AdminUsers = () => {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
+        <PageSkeleton cards={0} rows={6} label="Carregando alunos…" />
       </DashboardLayout>
     );
   }

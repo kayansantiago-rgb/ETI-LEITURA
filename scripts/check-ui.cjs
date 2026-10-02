@@ -28,10 +28,17 @@ const STUDENT_PAGES = [
   ['/ranking', 'Leitores'],
   ['/profile', 'Minhas conquistas'],
   ['/videos', 'Frações no dia a dia'],
-  ['/profile', 'Personalize seu perfil']
+  ['/profile', 'Personalize seu perfil'],
+  ['/summaries', 'sua média'],
+  ['/text-productions', 'Novo texto'],
+  ['/editor/1', 'Ideias para começar'],
+  ['/forgot-password', 'Esqueceu a senha?'],
+  ['/certificado/A1B2C3D4E5', 'Leitura confirmada']
 ];
 const TEACHER_PAGES = [
-  ['/admin/professor', 'Painel do Professor'],
+  ['/dashboard', 'Para corrigir agora'],
+  ['/admin/professor', 'Acompanhar'],
+  ['/admin/activities/a1', 'Respostas dos alunos'],
   ['/admin/activities', 'Atividades'],
   ['/admin/summaries', 'Resumos dos alunos'],
   ['/admin/text-productions', 'Produções textuais'],

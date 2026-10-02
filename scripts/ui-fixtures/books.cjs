@@ -36,6 +36,9 @@ module.exports = function books(p, method, body, isAdmin) {
     if (pct >= 70) state.cert[m[1]] = { codigo: 'A1B2C3D4E5', percentual: pct, emitido_em: new Date().toISOString() };
     return { acertos: hits, total: 3, percentual: pct, aprovado: pct >= 70, minimo: 70, certificado: state.cert[m[1]] || null };
   }
+  if (/^\/api\/certificates\/verify\/\w+$/.test(p)) {
+    return p.endsWith('A1B2C3D4E5') ? { valido: true, aluno: 'Mariana S.', turma: '7º ANO', livro: 'O Pequeno Príncipe', autor: 'Antoine de Saint-Exupéry', percentual: 100, emitido_em: new Date().toISOString(), codigo: 'A1B2C3D4E5' } : [404, { detail: 'Certificado não encontrado.' }];
+  }
   if (p === '/api/admin/books/overview') return { 1: { perguntas: 3, leitores: 18, concluidos: 6, certificados: 4 }, 3: { perguntas: 5, leitores: 9, concluidos: 5, certificados: 3 }, 2: { leitores: 4 } };
   if (p === '/api/workspace') {
     const d = n => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);

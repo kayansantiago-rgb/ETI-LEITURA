@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { PageSkeleton } from '@/components/Skeleton';
 import OwlEmpty from '@/components/OwlEmpty';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import {
@@ -211,9 +212,7 @@ export default function Classes() {
           </button>
         </div>
       ) : !data ? (
-        <div className="ws-card ws-empty" role="status">
-          <span className="cx-spinner mx-auto mb-3" /> Carregando suas turmas…
-        </div>
+        <PageSkeleton cards={3} rows={0} label="Carregando suas turmas…" />
       ) : !turma ? (
         <>
           {allowed.length > 0 && <AttentionPanel onOpen={setStudent} />}

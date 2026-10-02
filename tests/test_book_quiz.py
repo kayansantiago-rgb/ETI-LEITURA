@@ -81,3 +81,24 @@ def test_only_staff_edits_and_answers_are_validated(book_api):
     user['role'] = 'teacher'
     assert req('PUT', '/admin/books/b/quiz', json=payload).status_code == 200
     assert req('POST', '/books/b/quiz/answers', json={'respostas': [1] * 10}).status_code == 403
+
+
+def test_public_certificate_check_hides_full_name():
+    import asyncio as _asyncio
+    from types import SimpleNamespace as _NS
+    from unittest.mock import AsyncMock as _Mock
+    import httpx as _httpx
+    from fastapi import FastAPI as _App
+    from backend.book_quiz import create_book_quiz_router
+    cert = {'codigo': 'ABC123', 'user_nome': 'Mariana Silva Albuquerque', 'user_turma': '7º ANO', 'book_titulo': 'Dom Casmurro', 'book_autor': 'Machado', 'percentual': 90, 'emitido_em': '2026-10-02'}
+    db = _NS(certificates=_NS(find_one=_Mock(side_effect=lambda q, *a: cert if q['codigo'] == 'ABC123' else None)))
+    app = _App()
+    app.include_router(create_book_quiz_router(db, lambda: None, lambda: None))
+
+    async def go(code):
+        async with _httpx.AsyncClient(transport=_httpx.ASGITransport(app=app), base_url='http://t') as c:
+            return await c.get('/certificates/verify/' + code)
+    ok = _asyncio.run(go('abc123'))
+    assert ok.status_code == 200 and ok.json()['aluno'] == 'Mariana A.' and 'user_id' not in ok.json()
+    assert _asyncio.run(go('NAOEXISTE')).status_code == 404
+    assert _asyncio.run(go('x%20y')).status_code == 404

@@ -8,9 +8,10 @@ import ActivityForm from '@/components/ActivityForm';
 import useDraft, { readDraft, clearDraft } from '@/hooks/useDraft';
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, Award, BookOpen, Calendar, ChevronDown, ChevronUp, Paperclip, RotateCcw, Clock3, MessageSquareText, User } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Award, BookOpen, Calendar, ChevronDown, ChevronUp, Paperclip, RotateCcw, Clock3, MessageSquareText, User, Pencil, Lock, LockOpen, Copy, BookmarkPlus, Trash2, Inbox } from 'lucide-react';
+import OwlEmpty from '@/components/OwlEmpty';
+import { PageSkeleton } from '@/components/Skeleton';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Button } from '@/components/ui/button';
 import { getUser } from '@/lib/auth';
 import api from '@/lib/api';
 import { toast } from 'sonner';
@@ -121,6 +122,171 @@ function StudentActivity({ id, activity, answers, setAnswers, canAnswer, busy, o
   );
 }
 
+// Visão do professor: dados da atividade, ações, números das entregas e correção.
+function TeacherActivity({ activity, responses, setResponses, canManage, busy, editing, setEditing, duplicate, setDuplicate, showQuestions, setShowQuestions, onStatus, onSaveModel, onRemove, reload }) {
+  const max = activity.valor_nota ?? 10;
+  const graded = responses.filter(r => r.nota != null);
+  const pending = responses.filter(r => r.nota == null && !r.reenvio).length;
+  const avg = graded.length ? graded.reduce((s, r) => s + r.nota, 0) / graded.length : null;
+  const state = activity.agendada ? ['Agendada', 'is-sent'] : activity.encerrada ? ['Encerrada', 'is-closed'] : ['Aberta', 'is-open'];
+  const fmt = v => Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+
+  if (editing || duplicate)
+    return (
+      <ActivityForm
+        {...(editing ? { initial: activity } : { draft: activityDraft(activity) })}
+        onCancel={() => (editing ? setEditing(false) : setDuplicate(false))}
+        onSaved={() => {
+          if (editing) {
+            setEditing(false);
+            reload();
+          } else {
+            setDuplicate(false);
+            toast.success('A cópia está na lista de atividades.');
+          }
+        }}
+      />
+    );
+
+  return (
+    <div className="ad adm">
+      <header className="ad-hero">
+        <div className="ad-tags">
+          <span className="ws-chip">{activity.turma === 'TODAS' ? 'Todas as turmas' : activity.turma}</span>
+          {activity.disciplina && <span className="ws-chip is-soft">{activity.disciplina}</span>}
+          <span className={`ad-state ${state[1]}`}>{state[0]}</span>
+        </div>
+        <h1>{activity.titulo}</h1>
+        <div className="ad-meta">
+          <span>
+            <User size={14} /> {activity.professor_nome}
+          </span>
+          <span>
+            <Award size={14} /> Vale {max.toLocaleString('pt-BR')} pontos
+          </span>
+          <span>
+            <Calendar size={14} /> {activity.prazo ? `Prazo ${deadline(activity.prazo)}, 23h59` : 'Sem prazo'}
+          </span>
+          {activity.agendada && activity.publicar_em && (
+            <span>
+              <Clock3 size={14} /> {publicationLabel(activity.publicar_em)}
+            </span>
+          )}
+        </div>
+        {activity.descricao && <p className="ad-desc">{activity.descricao}</p>}
+        {(activity.book_id || !!activity.anexos?.length) && (
+          <div className="ad-links">
+            {activity.book_id && (
+              <Link to={`/book/${activity.book_id}`}>
+                <BookOpen size={14} /> Livro da atividade
+              </Link>
+            )}
+            {activity.anexos?.map((a, i) => (
+              <a key={i} href={a.url} target="_blank" rel="noreferrer">
+                <Paperclip size={14} /> {a.nome}
+              </a>
+            ))}
+          </div>
+        )}
+        <div className="adm-actions">
+          {canManage && !responses.length && (
+            <button type="button" onClick={() => setEditing(true)}>
+              <Pencil size={14} /> Editar
+            </button>
+          )}
+          {canManage && (
+            <button type="button" onClick={onStatus} disabled={busy}>
+              {activity.status === 'aberta' ? <Lock size={14} /> : <LockOpen size={14} />} {activity.status === 'aberta' ? 'Encerrar' : 'Reabrir'}
+            </button>
+          )}
+          <button type="button" onClick={() => setDuplicate(true)}>
+            <Copy size={14} /> Duplicar para outra turma
+          </button>
+          <button type="button" onClick={onSaveModel} disabled={busy}>
+            <BookmarkPlus size={14} /> Salvar como modelo
+          </button>
+          {canManage && !responses.length && (
+            <button type="button" className="is-danger" onClick={onRemove} disabled={busy}>
+              <Trash2 size={14} /> Excluir
+            </button>
+          )}
+        </div>
+      </header>
+
+      <section className="adm-stats" aria-label="Resumo das entregas">
+        <div>
+          <Inbox size={17} />
+          <strong>{responses.length}</strong>
+          <span>entregas</span>
+        </div>
+        <div>
+          <CheckCircle2 size={17} />
+          <strong>{graded.length}</strong>
+          <span>corrigidas</span>
+        </div>
+        <div className={pending ? 'is-alert' : ''}>
+          <Clock3 size={17} />
+          <strong>{pending}</strong>
+          <span>para corrigir</span>
+        </div>
+        <div className="is-featured">
+          <Award size={17} />
+          <strong>{avg == null ? '—' : fmt(avg)}</strong>
+          <span>média (de {fmt(max)})</span>
+        </div>
+      </section>
+
+      <section className="ws-card adm-questions">
+        <button type="button" className="adm-questions-head" onClick={() => setShowQuestions(!showQuestions)} aria-expanded={showQuestions}>
+          <span>
+            <MessageSquareText size={17} /> Perguntas da atividade <b>{activity.perguntas.length}</b>
+          </span>
+          {showQuestions ? <ChevronUp size={17} /> : <ChevronDown size={17} />}
+        </button>
+        {showQuestions && (
+          <ol>
+            {activity.perguntas.map((q, i) => (
+              <li key={q.id}>
+                <span className="qz-q-number">{i + 1}</span>
+                <div>
+                  <p>{q.enunciado}</p>
+                  {q.tipo === 'alternativa' && !!q.alternativas?.length && (
+                    <ul>
+                      {q.alternativas.map((alt, j) => (
+                        <li key={j}>
+                          <b>{String.fromCharCode(65 + j)}</b> {alt}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
+
+      <section className="adm-responses">
+        <div className="adm-responses-head">
+          <h2>
+            Respostas dos alunos <span>{responses.length}</span>
+          </h2>
+          <button type="button" onClick={reload}>
+            <RotateCcw size={14} /> Atualizar
+          </button>
+        </div>
+        {responses.length ? (
+          <CorrectionWorkspace activity={activity} responses={responses} onGraded={updated => setResponses(list => list.map(x => (x.id === updated.id ? updated : x)))} />
+        ) : (
+          <div className="ws-card">
+            <OwlEmpty compact title="Nenhuma resposta ainda" text="As respostas dos alunos aparecem aqui assim que forem enviadas." />
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
 export default function ActivityDetails() {
   const { id } = useParams();
   const admin = ['admin', 'teacher'].includes(getUser()?.role);
@@ -220,16 +386,15 @@ export default function ActivityDetails() {
       </Link>
 
       {deleted ? (
-        <div className="empty-state">Atividade excluída com sucesso.</div>
+        <div className="ws-card">
+          <OwlEmpty compact title="Atividade apagada" text="Ela e as entregas dos alunos foram removidas." action="Voltar às atividades" to={admin ? '/admin/activities' : '/activities'} />
+        </div>
       ) : error ? (
-        <div className="empty-state" role="alert">
-          Atividade indisponível ou sem permissão de acesso.{' '}
-          <button onClick={load} className="underline font-bold">
-            Tentar novamente
-          </button>
+        <div className="ws-card">
+          <OwlEmpty compact mood="search" title="Atividade indisponível" text="Ela pode ter sido removida ou você não tem acesso a esta turma." action="Tentar novamente" onAction={load} />
         </div>
       ) : !activity ? (
-        <p className="empty-state" role="status">Carregando atividade…</p>
+        <PageSkeleton cards={0} rows={4} label="Carregando atividade…" />
       ) : !admin ? (
         <StudentActivity
           id={id}
@@ -242,185 +407,23 @@ export default function ActivityDetails() {
           draftStatus={draftStatus}
         />
       ) : (
-        <div className="space-y-6">
-          {duplicate && (
-            <ActivityForm
-              draft={activityDraft(activity)}
-              onCancel={() => setDuplicate(false)}
-              onSaved={() => {
-                setDuplicate(false);
-                toast.success('A cópia está na lista de atividades.');
-              }}
-            />
-          )}
-
-          {editing && (
-            <ActivityForm
-              initial={activity}
-              onCancel={() => setEditing(false)}
-              onSaved={() => {
-                setEditing(false);
-                load();
-              }}
-            />
-          )}
-
-          {/* Cabeçalho Minimalista da Atividade */}
-          <header className="panel p-6 space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="activity-badge font-bold">
-                  {activity.turma === 'TODAS' ? 'Todas as turmas' : activity.turma}
-                </span>
-                <span className="activity-score-badge">
-                  <Award size={13} /> Valor: {(activity.valor_nota || 10).toFixed(1)} pts
-                </span>
-                <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${activity.status === 'aberta' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-muted text-muted-foreground'}`}>
-                  {activity.agendada ? 'Agendada' : activity.encerrada ? 'Encerrada' : 'Aberta'}
-                </span>
-              </div>
-
-              <div className="text-xs text-muted-foreground flex items-center gap-1">
-                <Calendar size={13} /> Prazo: {deadline(activity.prazo)} {activity.prazo ? 'às 23h59' : ''}
-              </div>
-            </div>
-
-            <div>
-              <h1 className="text-2xl font-extrabold tracking-tight">{activity.titulo}</h1>
-              <p className="text-xs text-muted-foreground mt-1">Por: {activity.professor_nome}</p>
-            </div>
-
-            {activity.descricao && (
-              <p className="text-sm text-foreground/85 whitespace-pre-wrap leading-relaxed pt-2">
-                {activity.descricao}
-              </p>
-            )}
-
-            {activity.book_id && (
-              <div className="pt-2">
-                <Link to={`/book/${activity.book_id}`} className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline">
-                  <BookOpen size={14} /> Abrir livro relacionado ↗
-                </Link>
-              </div>
-            )}
-
-            {!!activity.anexos?.length && (
-              <div className="pt-3 border-t">
-                <span className="text-xs font-bold text-muted-foreground block mb-2">Materiais de apoio:</span>
-                <div className="flex flex-wrap gap-2">
-                  {activity.anexos.map((a, i) => (
-                    <a key={i} href={a.url} target="_blank" rel="noreferrer" className="text-xs font-semibold text-primary underline bg-accent/10 px-3 py-1.5 rounded-lg">
-                      {a.nome} ↗
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Ações do Professor em Barra Limpa */}
-            {admin && (
-              <div className="flex flex-wrap gap-2 pt-4 border-t">
-                {canManage && !responses.length && (
-                  <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
-                    Editar
-                  </Button>
-                )}
-                {canManage && (
-                  <Button size="sm" variant="outline" onClick={status} disabled={busy}>
-                    {activity.status === 'aberta' ? 'Encerrar' : 'Reabrir'}
-                  </Button>
-                )}
-                <Button size="sm" variant="outline" onClick={() => setDuplicate(true)}>
-                  Duplicar turma
-                </Button>
-                <Button size="sm" variant="outline" disabled={busy} onClick={saveModel}>
-                  Salvar modelo
-                </Button>
-                {canManage && !responses.length && (
-                  <Button size="sm" variant="ghost" className="text-destructive text-xs" onClick={remove} disabled={busy}>
-                    Excluir
-                  </Button>
-                )}
-              </div>
-            )}
-          </header>
-
-          {/* Perguntas Recolhíveis (Collapsible) */}
-          <div className="panel p-4">
-            <button
-              className="w-full flex items-center justify-between text-sm font-bold text-foreground"
-              onClick={() => setShowQuestions(!showQuestions)}
-            >
-              <span>Perguntas da atividade ({activity.perguntas.length})</span>
-              {showQuestions ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-            </button>
-            {showQuestions && (
-              <ol className="list-decimal pl-5 space-y-3 text-sm mt-4 pt-3 border-t">
-                {activity.perguntas.map(q => (
-                  <li key={q.id} className="whitespace-pre-wrap leading-relaxed">
-                    {q.enunciado}
-                  </li>
-                ))}
-              </ol>
-            )}
-          </div>
-
-          {/* Workspace de Correção do Professor vs Resposta do Aluno */}
-          {admin ? (
-            <section className="space-y-4">
-              <div className="section-heading-row">
-                <h2 className="text-lg font-bold">Respostas dos alunos ({responses.length})</h2>
-                <button onClick={load} className="text-xs font-semibold text-primary hover:underline">
-                  Atualizar
-                </button>
-              </div>
-
-              {responses.length ? (
-                <CorrectionWorkspace
-                  activity={activity}
-                  responses={responses}
-                  onGraded={updated => setResponses(list => list.map(x => (x.id === updated.id ? updated : x)))}
-                />
-              ) : (
-                <div className="empty-state">As respostas dos alunos aparecerão aqui assim que forem enviadas.</div>
-              )}
-            </section>
-          ) : (
-            <>
-              {activity.minha_resposta && (
-                <div className="panel p-6 space-y-4">
-                  <p className="flex gap-2 items-center text-primary font-bold">
-                    <CheckCircle2 size={18} /> Tentativa {activity.minha_resposta.tentativa || 1} enviada
-                  </p>
-                  {activity.minha_resposta.nota != null ? (
-                    <div className="bg-accent/10 p-4 rounded-xl border border-accent/20">
-                      <p className="text-sm font-bold">
-                        Nota atribuída: <span className="text-primary text-base">{activity.minha_resposta.nota.toFixed(1)} / {(activity.valor_nota || 10).toFixed(1)}</span>
-                      </p>
-                      {activity.minha_resposta.feedback && (
-                        <p className="text-xs italic text-muted-foreground mt-2">
-                          "{activity.minha_resposta.feedback}"
-                        </p>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">Aguardando correção do professor.</p>
-                  )}
-                </div>
-              )}
-              <ActivitySteps
-                key={id}
-                activity={activity}
-                answers={answers}
-                setAnswers={setAnswers}
-                canAnswer={canAnswer}
-                busy={busy}
-                onSubmit={submit}
-                draftStatus={draftStatus}
-              />
-            </>
-          )}
-        </div>
+        <TeacherActivity
+          activity={activity}
+          responses={responses}
+          setResponses={setResponses}
+          canManage={canManage}
+          busy={busy}
+          editing={editing}
+          setEditing={setEditing}
+          duplicate={duplicate}
+          setDuplicate={setDuplicate}
+          showQuestions={showQuestions}
+          setShowQuestions={setShowQuestions}
+          onStatus={status}
+          onSaveModel={saveModel}
+          onRemove={remove}
+          reload={load}
+        />
       )}
     </DashboardLayout>
   );

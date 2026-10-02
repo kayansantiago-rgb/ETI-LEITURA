@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { PageSkeleton } from '@/components/Skeleton';
 import { createPortal } from 'react-dom';
 import { Plus, Trash2, Image as ImageIcon, Video, Upload, Loader2, Play, X, Images } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -303,18 +304,18 @@ export default function AdminMural() {
         </div>
 
         {!posts ? (
-          <div className="ws-card ws-empty" role={failed ? 'alert' : 'status'}>
-            {failed ? (
-              <>
+          failed ? (
+          <div className="ws-card ws-empty" role="alert">
+            <>
                 Não foi possível carregar o mural.{' '}
                 <button className="underline font-semibold" onClick={load}>
                   Tentar novamente
                 </button>
               </>
-            ) : (
-              'Carregando mural…'
-            )}
           </div>
+        ) : (
+          <PageSkeleton cards={3} rows={0} label="Carregando mural…" />
+        )
         ) : !visible.length ? (
           <div className="ws-card">
             <OwlEmpty

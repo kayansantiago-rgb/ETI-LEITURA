@@ -330,6 +330,7 @@ export default function DashboardLayout({ children, focusMode = false }) {
           <span>PLATAFORMA DE LEITURA</span>
           <span>{title}</span>
         </div>
+        <span className="route-bar" key={location.key} aria-hidden="true" />
         <main
           id="main-content"
           className={`platform-main ${['/dashboard', '/admin/professor'].includes(location.pathname) ? '' : 'inner-workspace'}`}

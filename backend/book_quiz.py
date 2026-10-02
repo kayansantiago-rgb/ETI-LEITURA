@@ -144,6 +144,19 @@ def create_book_quiz_router(db, current, staff):
             result.setdefault(quiz['book_id'], {})['perguntas'] = len(quiz.get('perguntas', []))
         return result
 
+    @router.get('/certificates/verify/{code}')
+    async def verify(code: str):
+        # Público (aberto pelo QR code do PDF): confirma o certificado sem expor dados além do necessário.
+        if not code.isalnum() or len(code) > 20:
+            raise HTTPException(404, 'Certificado não encontrado.')
+        cert = await db.certificates.find_one({'codigo': code.upper()}, {'_id': 0})
+        if not cert:
+            raise HTTPException(404, 'Certificado não encontrado.')
+        parts = cert['user_nome'].split()
+        name = parts[0] + (f' {parts[-1][0]}.' if len(parts) > 1 else '')
+        return {'valido': True, 'aluno': name, 'turma': cert.get('user_turma'), 'livro': cert['book_titulo'], 'autor': cert.get('book_autor'),
+                'percentual': cert['percentual'], 'emitido_em': cert['emitido_em'], 'codigo': cert['codigo']}
+
     @router.get('/certificates')
     async def my_certificates(user=Depends(current)):
         return await db.certificates.find({'user_id': user['id']}, {'_id': 0, 'user_id': 0}).sort('emitido_em', -1).to_list(500)
@@ -154,4 +167,5 @@ def create_book_quiz_router(db, current, staff):
 async def ensure_indexes(db):
     await db.book_quizzes.create_index('book_id', unique=True)
     await db.certificates.create_index([('user_id', 1), ('book_id', 1)], unique=True)
+    await db.certificates.create_index('codigo')
     await db.book_quiz_attempts.create_index([('user_id', 1), ('book_id', 1)])

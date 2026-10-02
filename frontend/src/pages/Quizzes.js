@@ -1,4 +1,5 @@
 import { confirmAction } from '@/components/ConfirmHost';
+import { PageSkeleton } from '@/components/Skeleton';
 import OwlEmpty from '@/components/OwlEmpty';
 import QuizRanking from '@/components/QuizRanking';
 import TimedQuiz, { QuizOptions } from '@/components/TimedQuiz';
@@ -783,9 +784,7 @@ export default function Quizzes() {
                 </button>
               </div>
             ) : !items ? (
-              <div className="ws-card ws-empty" role="status">
-                Carregando quizzes…
-              </div>
+              <PageSkeleton cards={3} rows={0} label="Carregando quizzes…" />
             ) : !visible.length ? (
               <div className="ws-card">
 <OwlEmpty compact mood="search" title={staff ? (items.length ? 'Nenhum quiz neste filtro' : 'Crie seu primeiro quiz') : 'Nenhum desafio por enquanto'} text={staff ? 'Monte perguntas de múltipla escolha e publique para a turma.' : 'Os quizzes publicados pelos professores aparecem aqui.'} />

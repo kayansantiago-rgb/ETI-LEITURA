@@ -1,4 +1,5 @@
 import { confirmAction } from '@/components/ConfirmHost';
+import { PageSkeleton } from '@/components/Skeleton';
 import OwlEmpty from '@/components/OwlEmpty';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -250,9 +251,7 @@ export default function AdminBooks() {
             </button>
           </div>
         ) : !books ? (
-          <div className="ws-card ws-empty" role="status">
-            <span className="cx-spinner mx-auto mb-3" /> Carregando acervo…
-          </div>
+          <PageSkeleton cards={3} rows={4} label="Carregando acervo…" />
         ) : (
           <>
             <section className="ws-kpis">

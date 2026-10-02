@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { PageSkeleton } from '@/components/Skeleton';
 import { createPortal } from 'react-dom';
 import { Play, Plus, FileText, Search, X, Pencil, Trash2, ExternalLink, Paperclip, Youtube, Captions } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -330,18 +331,18 @@ export function Videos() {
       </div>
 
       {!items ? (
-        <div className="ws-card ws-empty" role={failed ? 'alert' : 'status'}>
-          {failed ? (
+        failed ? (
+          <div className="ws-card ws-empty" role="alert">
             <>
               Não foi possível carregar.{' '}
               <button className="underline font-semibold" onClick={load}>
                 Tentar novamente
               </button>
             </>
-          ) : (
-            'Carregando materiais…'
-          )}
-        </div>
+          </div>
+        ) : (
+          <PageSkeleton cards={3} rows={0} label="Carregando materiais…" />
+        )
       ) : !visible.length ? (
         <div className="ws-card">
           <OwlEmpty

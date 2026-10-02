@@ -1,4 +1,5 @@
 import { confirmAction } from '@/components/ConfirmHost';
+import { PageSkeleton } from '@/components/Skeleton';
 import OwlEmpty from '@/components/OwlEmpty';
 import { publicationLabel } from '@/lib/publication';
 import ActivityLibrary from '@/components/ActivityLibrary';
@@ -361,9 +362,7 @@ export default function Activities() {
           }}
         />
       ) : loading ? (
-        <div className="ws-card ws-empty" role="status">
-          <span className="cx-spinner mx-auto mb-3" /> Carregando atividades…
-        </div>
+        <PageSkeleton cards={3} rows={0} label="Carregando atividades…" />
       ) : failed ? (
         <div className="ws-card ws-empty" role="alert">
           <h3>Não foi possível carregar as atividades</h3>

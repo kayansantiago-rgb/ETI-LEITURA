@@ -5,6 +5,7 @@ import PageIntro from '@/components/PageIntro';
 import PushSettings from '@/components/PushSettings';
 import InstallApp from '@/components/InstallApp';
 import PrivacyCard from '@/components/PrivacyCard';
+import { PageSkeleton } from '@/components/Skeleton';
 import RewardsPicker from '@/components/RewardsPicker';
 import CertificateShelf from '@/components/CertificateShelf';
 import { MedalGrid, useReadingStats } from '@/components/ReadingJourney';
@@ -155,9 +156,7 @@ export default function Profile() {
         <PageIntro section="MINHA CONTA / IDENTIDADE" title="Meu perfil" description="Seu espaço, do seu jeito. Mantenha seus dados atualizados." />
 
         {!user ? (
-          <div className="ws-card ws-empty" role="status">
-            Carregando perfil…
-          </div>
+          <PageSkeleton cards={1} rows={3} label="Carregando perfil…" />
         ) : (
           <>
             <section className="pf-hero">

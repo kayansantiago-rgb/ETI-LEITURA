@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { PageSkeleton } from '@/components/Skeleton';
 import { Link } from 'react-router-dom';
 import { Trophy, Flame, BookOpen, Award, ArrowRight } from 'lucide-react';
 import api from '@/lib/api';
@@ -29,9 +30,7 @@ export default function ClassRanking({ turma, limit, compact = false }) {
   if (failed) return <div className="ws-card ws-empty">Não foi possível carregar o ranking.</div>;
   if (!data)
     return (
-      <div className="ws-card ws-empty" role="status">
-        <span className="cx-spinner mx-auto mb-3" /> Carregando ranking…
-      </div>
+      <PageSkeleton cards={0} rows={5} label="Carregando ranking…" />
     );
 
   const rows = data.alunos;

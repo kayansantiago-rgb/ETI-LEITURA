@@ -1,15 +1,15 @@
 import { Bell, CheckCheck, ArrowUpRight, Inbox, TrendingUp, Users, BookOpen, AlertTriangle, Search, FileDown, FileSpreadsheet, ArrowUp, ArrowDown, ClipboardList, AlarmClock, RotateCcw, CheckCircle2, PlayCircle, Megaphone, Sparkles, PenLine, Check, Clock3, ChevronDown } from 'lucide-react';
+import { PageSkeleton } from '@/components/Skeleton';
 import OwlEmpty from '@/components/OwlEmpty';
 import CorrectionDrawer from '@/components/CorrectionDrawer';
 import '@/notifications.css';
 import PushSettings from '@/components/PushSettings';
 import PageIntro from '@/components/PageIntro';
 import { useEffect, useState } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { TURMAS } from '@/constants/turmas';
 import { getUser } from '@/lib/auth';
 import api from '@/lib/api';
@@ -21,7 +21,6 @@ function useLoad(path) {
  return [data,setData,failed];
 }
 function Page({title,description,children}) {return <DashboardLayout><PageIntro section={getUser()?.role==='student'?'SEU ESPAÇO / APRENDIZAGEM':'GESTÃO / ACOMPANHAMENTO'} title={title} description={description}/><div className="school-page-content">{children}</div></DashboardLayout>;}
-function Loading({failed}) {return <p role={failed?'alert':'status'} className="empty-state">{failed?'Não foi possível carregar. Atualize a página para tentar novamente.':'Carregando…'}</p>;}
 const NOTICE_TYPES = {
   activity: [ClipboardList, 'Atividades', 'violet'],
   deadline: [AlarmClock, 'Prazos', 'amber'],
@@ -104,9 +103,11 @@ export function Notifications() {
             )}
           </div>
           {!data ? (
-            <div className="ws-card ws-empty" role={failed ? 'alert' : 'status'}>
-              {failed ? 'Não foi possível carregar. Atualize a página para tentar novamente.' : 'Carregando avisos…'}
-            </div>
+            failed ? (
+            <div className="ws-card ws-empty" role="alert">Não foi possível carregar. Atualize a página para tentar novamente.</div>
+          ) : (
+            <PageSkeleton cards={0} rows={5} label="Carregando avisos…" />
+          )
           ) : !visible.length ? (
             <div className="ws-card">
 <OwlEmpty compact title="Tudo em dia por aqui" text={onlyUnread ? 'Você leu todos os avisos.' : 'Os próximos avisos aparecerão neste espaço.'} />
@@ -387,9 +388,11 @@ export function Workspace() {
         description={student ? 'Organize as próximas entregas e acompanhe suas correções.' : 'Corrija o que chegou e veja quem ainda falta entregar em cada atividade.'}
       />
       {!data ? (
-        <div className="ws-card ws-empty" role={failed ? 'alert' : 'status'}>
-          {failed ? 'Não foi possível carregar. Atualize a página para tentar novamente.' : 'Carregando pendências…'}
-        </div>
+        failed ? (
+            <div className="ws-card ws-empty" role="alert">Não foi possível carregar. Atualize a página para tentar novamente.</div>
+          ) : (
+            <PageSkeleton cards={0} rows={5} label="Carregando pendências…" />
+          )
       ) : student ? (
         <StudentWorkspace data={data} />
       ) : (
@@ -562,9 +565,11 @@ export function Reports() {
         </div>
       </PageIntro>
       {!data ? (
-        <div className="ws-card ws-empty" role={failed ? 'alert' : 'status'}>
-          {failed ? 'Não foi possível carregar. Atualize a página para tentar novamente.' : 'Carregando relatório…'}
-        </div>
+        failed ? (
+            <div className="ws-card ws-empty" role="alert">Não foi possível carregar. Atualize a página para tentar novamente.</div>
+          ) : (
+            <PageSkeleton cards={0} rows={5} label="Carregando relatório…" />
+          )
       ) : (
         <>
           <section className="ws-kpis">
@@ -713,10 +718,4 @@ export function RecoveryButton({userId}) {
  const [url,setUrl]=useState(''),[busy,setBusy]=useState(false);
  const generate=async()=>{setBusy(true);try{setUrl((await api.post(`/admin/users/${userId}/recovery`)).data.url);}catch{toast.error('Não foi possível gerar o link.');}finally{setBusy(false);}};
  return <div><Button type="button" variant="outline" size="sm" disabled={busy} onClick={generate}>Gerar link de nova senha</Button>{url&&<div className="mt-3 space-y-2"><p className="text-xs text-muted-foreground">Copie e entregue apenas ao titular da conta. Uso único, válido por 30 minutos.</p><Input aria-label="Link para redefinir senha" readOnly value={url} onFocus={e=>e.target.select()}/><Button size="sm" variant="ghost" onClick={()=>setUrl('')}>Ocultar link</Button></div>}</div>;
-}
-export function PasswordRecovery() {
- const [params]=useSearchParams(),token=params.get('token'),navigate=useNavigate();
- const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false);
- const submit=async e=>{e.preventDefault();setBusy(true);try{const r=await api.post(token?'/auth/reset-password':'/auth/forgot-password',token?{token,password}:{email});setMessage(r.data.message);if(token){toast.success('Senha atualizada.');navigate('/login');}}catch(e){setMessage(activityError(e,'Não foi possível concluir. Tente novamente.'));}finally{setBusy(false);}};
- return <main className="min-h-screen bg-background flex items-center justify-center p-5"><form onSubmit={submit} className="panel w-full max-w-md space-y-5"><p className="eyebrow">ETI LEITURA</p><h1 className="text-2xl">{token?'Escolha uma nova senha':'Recuperar acesso'}</h1><p className="text-sm text-muted-foreground">{token?'O link pode ser utilizado uma única vez.':'Informe seu e-mail. Se o envio de e-mails ainda não estiver configurado, solicite um link ao administrador da escola.'}</p><div><Label htmlFor="recovery-value">{token?'Nova senha (mínimo 10 caracteres)':'E-mail'}</Label><Input id="recovery-value" type={token?'password':'email'} minLength={token?10:undefined} maxLength={token?72:254} required value={token?password:email} onChange={e=>token?setPassword(e.target.value):setEmail(e.target.value)}/></div><Button type="submit" disabled={busy}>{busy?'Aguarde…':token?'Salvar nova senha':'Solicitar recuperação'}</Button>{message&&<p role="status" className="text-sm">{message}</p>}<Link className="block text-sm text-primary" to="/login">Voltar para entrar</Link></form></main>;
 }
