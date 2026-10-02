@@ -101,6 +101,9 @@ class Book(BaseModel):
     nivel_ensino: str = "AMBOS"
     created_at: str
     progress: Optional[int] = 0
+    turmas: List[str] = []
+    professor_id: Optional[str] = None
+    professor_nome: Optional[str] = None
 
 class BookCreate(BaseModel):
     titulo: str
@@ -109,6 +112,7 @@ class BookCreate(BaseModel):
     capa_url: str
     arquivo_url: Optional[str] = None
     nivel_ensino: str = "AMBOS"
+    turmas: List[str] = []
 
 class BookUpdate(BaseModel):
     titulo: Optional[str] = None
@@ -117,6 +121,7 @@ class BookUpdate(BaseModel):
     capa_url: Optional[str] = None
     arquivo_url: Optional[str] = None
     nivel_ensino: Optional[str] = None
+    turmas: Optional[List[str]] = None
 
 class Summary(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -186,6 +191,8 @@ class MuralPost(BaseModel):
     url_media: str
     descricao: Optional[str] = None
     created_at: str
+    autor_id: Optional[str] = None
+    autor_nome: Optional[str] = None
 
 class MuralPostCreate(BaseModel):
     tipo: str
@@ -218,7 +225,7 @@ def get_nivel_ensino_from_turma(turma: str) -> str:
     """Determina o nível de ensino baseado na turma"""
     turmas_fundamental = ["7º ANO", "8º ANO", "9º ANO"]
     turmas_medio = ["1º SÉRIE A", "1º SÉRIE B", "2º SÉRIE", "3º SÉRIE A", "3º SÉRIE B"]
-    
+
     if turma in turmas_fundamental:
         return "FUNDAMENTAL"
     elif turma in turmas_medio:
@@ -245,7 +252,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         user_id: str = payload.get("sub")
         if user_id is None:
             raise HTTPException(status_code=401, detail="Token inválido")
-        
+
         user = await db.users.find_one({"id": user_id}, {"_id": 0})
         if user is None:
             raise HTTPException(status_code=401, detail="Usuário não encontrado")
@@ -267,11 +274,11 @@ async def register(user_data: UserRegister):
     existing_user = await db.users.find_one({"email": user_data.email})
     if existing_user:
         raise HTTPException(status_code=400, detail="Email já cadastrado")
-    
+
     # Validate turma for students
     if not user_data.turma:
         raise HTTPException(status_code=400, detail="Turma é obrigatória para estudantes")
-    
+
     # Create user
     user_id = str(uuid.uuid4())
     hashed_password = get_password_hash(user_data.password)
@@ -285,12 +292,12 @@ async def register(user_data: UserRegister):
         "role": "student",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    
+
     await db.users.insert_one(user_doc)
-    
+
     # Create token
     access_token = create_access_token(data={"sub": user_id})
-    
+
     user_response = User(
         id=user_id,
         email=user_data.email,
@@ -300,7 +307,7 @@ async def register(user_data: UserRegister):
         role=user_doc["role"],
         created_at=user_doc["created_at"]
     )
-    
+
     return Token(access_token=access_token, token_type="bearer", user=user_response)
 
 @api_router.post("/auth/login", response_model=Token)
@@ -308,9 +315,9 @@ async def login(login_data: UserLogin):
     user = await db.users.find_one({"email": login_data.email})
     if not user or not user.get("active", True) or not verify_password(login_data.password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Email ou senha incorretos")
-    
+
     access_token = create_access_token(data={"sub": user["id"], "ver": user.get("token_version", 0)})
-    
+
     user_response = User(
         id=user["id"],
         email=user["email"],
@@ -321,7 +328,7 @@ async def login(login_data: UserLogin):
         turmas=user.get("turmas", []),
         created_at=user["created_at"]
     )
-    
+
     return Token(access_token=access_token, token_type="bearer", user=user_response)
 
 @api_router.get("/auth/me", response_model=User)
@@ -344,13 +351,13 @@ async def update_profile(profile_data: ProfileUpdate, current_user: dict = Depen
         update_fields["nome"] = profile_data.nome
     if profile_data.avatar_url is not None:
         update_fields["avatar_url"] = profile_data.avatar_url
-    
+
     if update_fields:
         await db.users.update_one(
             {"id": current_user["id"]},
             {"$set": update_fields}
         )
-    
+
     updated_user = await db.users.find_one({"id": current_user["id"]}, {"_id": 0})
     return User(
         id=updated_user["id"],
@@ -372,38 +379,68 @@ async def upload_avatar(
     allowed_types = ["image/jpeg", "image/png", "image/gif", "image/webp"]
     if file.content_type not in allowed_types:
         raise HTTPException(status_code=400, detail="Tipo de arquivo não permitido. Use JPG, PNG, GIF ou WebP.")
-    
+
     # Validate file size (max 5MB)
     contents = await file.read(50 * 1024 * 1024 + 1)
     if len(contents) > 5 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="Arquivo muito grande. Máximo 5MB.")
-    
+
     # Generate unique filename
     ext = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif', 'image/webp': 'webp'}[file.content_type]
     filename = f"{current_user['id']}_{uuid.uuid4().hex[:8]}.{ext}"
     file_path = UPLOADS_DIR / filename
-    
+
     # Save file
     await save_upload(file_path, contents, file.content_type)
-    
+
     # Generate URL (will be served by static files)
     avatar_url = f"/api/uploads/avatars/{filename}"
-    
+
     # Update user's avatar_url in database
     await db.users.update_one(
         {"id": current_user["id"]},
         {"$set": {"avatar_url": avatar_url}}
     )
-    
+
     return {"avatar_url": avatar_url, "message": "Avatar atualizado com sucesso!"}
 
 # ========== BOOKS ROUTES ==========
+
+ALL_CLASSES = ["7º ANO", "8º ANO", "9º ANO", "1º SÉRIE A", "1º SÉRIE B", "2º SÉRIE", "3º SÉRIE A", "3º SÉRIE B"]
+
+
+def book_visible_query(user: dict) -> dict:
+    """Livros sem turmas definidas são de todos; com turmas, só dessas turmas (e de quem cadastrou)."""
+    if user.get("role") == "admin":
+        return {}
+    open_to_all = [{"turmas": {"$exists": False}}, {"turmas": []}]
+    if user.get("role") == "teacher":
+        return {"$or": open_to_all + [{"turmas": {"$in": user.get("turmas", [])}}, {"professor_id": user["id"]}]}
+    return {"$or": open_to_all + [{"turmas": user.get("turma")}]}
+
+
+def clean_book_classes(turmas, user: dict) -> list:
+    chosen = sorted({t for t in (turmas or []) if t in ALL_CLASSES})
+    if user.get("role") == "teacher":
+        allowed = set(user.get("turmas", []))
+        if not chosen or not set(chosen) <= allowed:
+            raise HTTPException(status_code=400, detail="Escolha pelo menos uma das suas turmas para este livro.")
+    return chosen
+
+
+async def editable_book(book_id: str, user: dict) -> dict:
+    book = await db.books.find_one({"id": book_id})
+    if not book:
+        raise HTTPException(status_code=404, detail="Livro não encontrado")
+    if user.get("role") != "admin" and book.get("professor_id") != user["id"]:
+        raise HTTPException(status_code=403, detail="Só quem cadastrou o livro (ou a coordenação) pode alterá-lo.")
+    return book
 
 @api_router.get("/books", response_model=List[Book])
 async def get_books(current_user: dict = Depends(get_current_user)):
     # Determine user's nivel_ensino
     user_nivel = get_nivel_ensino_from_turma(current_user.get("turma", ""))
-    
+
     # Filter books by nivel_ensino
     if user_nivel == "AMBOS":
         # If somehow user has no valid turma, show all books
@@ -411,9 +448,10 @@ async def get_books(current_user: dict = Depends(get_current_user)):
     else:
         # Show books for user's nivel or books marked as AMBOS
         query = {"nivel_ensino": {"$in": [user_nivel, "AMBOS"]}}
-    
+    query = {"$and": [query, book_visible_query(current_user)]}
+
     books = await db.books.find(query, {"_id": 0}).to_list(1000)
-    
+
     # Get user's progress for each book
     for book in books:
         progress = await db.reading_progress.find_one(
@@ -421,12 +459,12 @@ async def get_books(current_user: dict = Depends(get_current_user)):
             {"_id": 0}
         )
         book["progress"] = progress["percentage"] if progress else 0
-    
+
     return books
 
 @api_router.get("/books/{book_id}", response_model=Book)
 async def get_book(book_id: str, current_user: dict = Depends(get_current_user)):
-    book = await db.books.find_one({"id": book_id}, {"_id": 0})
+    book = await db.books.find_one({"$and": [{"id": book_id}, book_visible_query(current_user)]}, {"_id": 0})
     if not book:
         raise HTTPException(status_code=404, detail="Livro não encontrado")
     return book
@@ -446,7 +484,7 @@ async def create_book(book_data: BookCreate, current_user: dict = Depends(get_cu
         "nivel_ensino": book_data.nivel_ensino,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    
+
     await db.books.insert_one(book_doc)
     return Book(**book_doc)
 
@@ -455,13 +493,13 @@ async def create_book(book_data: BookCreate, current_user: dict = Depends(get_cu
 @api_router.get("/summaries", response_model=List[Summary])
 async def get_my_summaries(current_user: dict = Depends(get_current_user)):
     summaries = await db.summaries.find({"user_id": current_user["id"]}, {"_id": 0}).to_list(1000)
-    
+
     # Enrich with book titles
     for summary in summaries:
         book = await db.books.find_one({"id": summary["book_id"]}, {"_id": 0})
         if book:
             summary["book_titulo"] = book["titulo"]
-    
+
     return summaries
 
 @api_router.get("/summaries/{summary_id}", response_model=Summary)
@@ -469,12 +507,12 @@ async def get_summary(summary_id: str, current_user: dict = Depends(get_current_
     summary = await db.summaries.find_one({"id": summary_id, "user_id": current_user["id"]}, {"_id": 0})
     if not summary:
         raise HTTPException(status_code=404, detail="Resumo não encontrado")
-    
+
     # Enrich with book title
     book = await db.books.find_one({"id": summary["book_id"]}, {"_id": 0})
     if book:
         summary["book_titulo"] = book["titulo"]
-    
+
     return summary
 
 @api_router.post("/summaries", response_model=Summary, status_code=status.HTTP_201_CREATED)
@@ -483,7 +521,7 @@ async def create_summary(summary_data: SummaryCreate, current_user: dict = Depen
     book = await db.books.find_one({"id": summary_data.book_id})
     if not book:
         raise HTTPException(status_code=404, detail="Livro não encontrado")
-    
+
     summary_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
     summary_doc = {
@@ -494,9 +532,9 @@ async def create_summary(summary_data: SummaryCreate, current_user: dict = Depen
         "created_at": now,
         "updated_at": now
     }
-    
+
     await db.summaries.insert_one(summary_doc)
-    
+
     return Summary(
         **summary_doc,
         book_titulo=book["titulo"],
@@ -512,7 +550,7 @@ async def update_summary(
     summary = await db.summaries.find_one({"id": summary_id, "user_id": current_user["id"]})
     if not summary:
         raise HTTPException(status_code=404, detail="Resumo não encontrado")
-    
+
     await db.summaries.update_one(
         {"id": summary_id},
         {"$set": {
@@ -520,14 +558,14 @@ async def update_summary(
             "updated_at": datetime.now(timezone.utc).isoformat()
         }}
     )
-    
+
     updated_summary = await db.summaries.find_one({"id": summary_id}, {"_id": 0})
-    
+
     # Enrich with book title
     book = await db.books.find_one({"id": updated_summary["book_id"]}, {"_id": 0})
     if book:
         updated_summary["book_titulo"] = book["titulo"]
-    
+
     return Summary(**updated_summary)
 
 @api_router.delete("/summaries/{summary_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -543,13 +581,13 @@ async def get_book_summary(book_id: str, current_user: dict = Depends(get_curren
         {"book_id": book_id, "user_id": current_user["id"]},
         {"_id": 0}
     )
-    
+
     if summary:
         book = await db.books.find_one({"id": book_id}, {"_id": 0})
         if book:
             summary["book_titulo"] = book["titulo"]
         return Summary(**summary)
-    
+
     raise HTTPException(status_code=404, detail="Resumo não encontrado")
 
 # ========== STATS ROUTE ==========
@@ -558,7 +596,7 @@ async def get_book_summary(book_id: str, current_user: dict = Depends(get_curren
 async def get_stats(current_user: dict = Depends(get_current_user)):
     # Determine user's nivel_ensino
     user_nivel = get_nivel_ensino_from_turma(current_user.get("turma", ""))
-    
+
     # Count books available for this user's nivel
     if user_nivel == "AMBOS":
         total_books = await db.books.count_documents({})
@@ -566,9 +604,9 @@ async def get_stats(current_user: dict = Depends(get_current_user)):
         total_books = await db.books.count_documents({
             "nivel_ensino": {"$in": [user_nivel, "AMBOS"]}
         })
-    
+
     my_summaries = await db.summaries.count_documents({"user_id": current_user["id"]})
-    
+
     return {
         "total_books": total_books,
         "my_summaries": my_summaries
@@ -582,13 +620,13 @@ async def get_my_progress(current_user: dict = Depends(get_current_user)):
         {"user_id": current_user["id"]}, 
         {"_id": 0}
     ).to_list(1000)
-    
+
     # Enrich with book titles
     for progress in progress_list:
         book = await db.books.find_one({"id": progress["book_id"]}, {"_id": 0})
         if book:
             progress["book_titulo"] = book["titulo"]
-    
+
     return progress_list
 
 @api_router.get("/books/{book_id}/progress", response_model=ReadingProgress)
@@ -597,13 +635,13 @@ async def get_book_progress(book_id: str, current_user: dict = Depends(get_curre
         {"user_id": current_user["id"], "book_id": book_id},
         {"_id": 0}
     )
-    
+
     if not progress:
         # Return 0% progress if not found
         book = await db.books.find_one({"id": book_id}, {"_id": 0})
         if not book:
             raise HTTPException(status_code=404, detail="Livro não encontrado")
-        
+
         return ReadingProgress(
             id="",
             user_id=current_user["id"],
@@ -612,11 +650,11 @@ async def get_book_progress(book_id: str, current_user: dict = Depends(get_curre
             updated_at=datetime.now(timezone.utc).isoformat(),
             book_titulo=book.get("titulo")
         )
-    
+
     book = await db.books.find_one({"id": book_id}, {"_id": 0})
     if book:
         progress["book_titulo"] = book["titulo"]
-    
+
     return ReadingProgress(**progress)
 
 @api_router.put("/books/{book_id}/progress", response_model=ReadingProgress)
@@ -628,19 +666,19 @@ async def update_book_progress(
     # Validate percentage
     if progress_data.percentage < 0 or progress_data.percentage > 100:
         raise HTTPException(status_code=400, detail="Porcentagem deve estar entre 0 e 100")
-    
+
     # Check if book exists
     book = await db.books.find_one({"id": book_id})
     if not book:
         raise HTTPException(status_code=404, detail="Livro não encontrado")
-    
+
     # Check if progress exists
     existing = await db.reading_progress.find_one(
         {"user_id": current_user["id"], "book_id": book_id}
     )
-    
+
     now = datetime.now(timezone.utc).isoformat()
-    
+
     if existing:
         # Update existing progress
         await db.reading_progress.update_one(
@@ -662,7 +700,7 @@ async def update_book_progress(
             "updated_at": now
         }
         await db.reading_progress.insert_one(progress_doc)
-    
+
     return ReadingProgress(
         id=progress_id,
         user_id=current_user["id"],
@@ -707,9 +745,9 @@ async def create_production(
         "created_at": now,
         "updated_at": now
     }
-    
+
     await db.text_productions.insert_one(production_doc)
-    
+
     return TextProduction(
         **production_doc,
         user_nome=current_user["nome"]
@@ -726,23 +764,23 @@ async def update_production(
     )
     if not production:
         raise HTTPException(status_code=404, detail="Produção textual não encontrada")
-    
+
     update_fields = {"updated_at": datetime.now(timezone.utc).isoformat()}
     if production_data.titulo:
         update_fields["titulo"] = production_data.titulo
     if production_data.conteudo:
         update_fields["conteudo"] = production_data.conteudo
-    
+
     await db.text_productions.update_one(
         {"id": production_id},
         {"$set": update_fields}
     )
-    
+
     updated_production = await db.text_productions.find_one(
         {"id": production_id},
         {"_id": 0}
     )
-    
+
     return TextProduction(**updated_production)
 
 @api_router.delete("/text-productions/{production_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -780,7 +818,7 @@ async def get_all_summaries(turma: Optional[str] = None, admin_user: dict = Depe
         if user:
             summary["user_nome"] = user["nome"]
             summary["user_turma"] = user.get("turma")
-    
+
     return summaries
 
 @api_router.get("/admin/summaries/{summary_id}", response_model=Summary)
@@ -789,7 +827,7 @@ async def get_summary_as_admin(summary_id: str, admin_user: dict = Depends(requi
     if not summary:
         raise HTTPException(status_code=404, detail="Resumo não encontrado")
     await ensure_student_scope(db, admin_user, summary["user_id"])
-    
+
     # Enrich with book title and user name
     book = await db.books.find_one({"id": summary["book_id"]}, {"_id": 0})
     user = await db.users.find_one({"id": summary["user_id"]}, {"_id": 0})
@@ -798,7 +836,7 @@ async def get_summary_as_admin(summary_id: str, admin_user: dict = Depends(requi
     if user:
         summary["user_nome"] = user["nome"]
         summary["user_turma"] = user.get("turma")
-    
+
     return Summary(**summary)
 
 @api_router.put("/admin/summaries/{summary_id}/correction", response_model=Summary)
@@ -811,7 +849,7 @@ async def correct_summary(
     if not summary:
         raise HTTPException(status_code=404, detail="Resumo não encontrado")
     await ensure_student_scope(db, admin_user, summary["user_id"])
-    
+
     now = datetime.now(timezone.utc).isoformat()
     await db.summaries.update_one(
         {"id": summary_id},
@@ -822,9 +860,9 @@ async def correct_summary(
             "corrigido_em": now
         }}
     )
-    
+
     updated_summary = await db.summaries.find_one({"id": summary_id}, {"_id": 0})
-    
+
     # Enrich with book title and user name
     book = await db.books.find_one({"id": updated_summary["book_id"]}, {"_id": 0})
     user = await db.users.find_one({"id": updated_summary["user_id"]}, {"_id": 0})
@@ -833,7 +871,7 @@ async def correct_summary(
     if user:
         updated_summary["user_nome"] = user["nome"]
         updated_summary["user_turma"] = user.get("turma")
-    
+
     return Summary(**updated_summary)
 
 @api_router.delete("/admin/summaries/{summary_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -849,7 +887,7 @@ async def get_admin_stats(admin_user: dict = Depends(require_staff)):
     total_users = len(user_ids)
     total_books = await db.books.count_documents({})
     total_summaries = await db.summaries.count_documents({"user_id": {"$in": user_ids}})
-    
+
     return {
         "total_users": total_users,
         "total_books": total_books,
@@ -859,6 +897,7 @@ async def get_admin_stats(admin_user: dict = Depends(require_staff)):
 
 @api_router.post("/admin/books", response_model=Book)
 async def create_book_admin(book_data: BookCreate, admin_user: dict = Depends(require_staff)):
+    turmas = clean_book_classes(book_data.turmas, admin_user)
     book_id = str(uuid.uuid4())
     book_doc = {
         "id": book_id,
@@ -868,18 +907,19 @@ async def create_book_admin(book_data: BookCreate, admin_user: dict = Depends(re
         "capa_url": book_data.capa_url,
         "arquivo_url": book_data.arquivo_url,
         "nivel_ensino": book_data.nivel_ensino,
+        "turmas": turmas,
+        "professor_id": admin_user["id"],
+        "professor_nome": admin_user.get("nome"),
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    
+
     await db.books.insert_one(book_doc)
     return Book(**book_doc)
 
 @api_router.put("/admin/books/{book_id}", response_model=Book)
-async def update_book_admin(book_id: str, book_data: BookUpdate, admin_user: dict = Depends(require_admin)):
-    book = await db.books.find_one({"id": book_id})
-    if not book:
-        raise HTTPException(status_code=404, detail="Livro não encontrado")
-    
+async def update_book_admin(book_id: str, book_data: BookUpdate, admin_user: dict = Depends(require_staff)):
+    book = await editable_book(book_id, admin_user)
+
     # Build update dict with only provided fields
     update_fields = {}
     if book_data.titulo is not None:
@@ -896,19 +936,22 @@ async def update_book_admin(book_id: str, book_data: BookUpdate, admin_user: dic
         if book_data.nivel_ensino not in ["FUNDAMENTAL", "MÉDIO", "AMBOS"]:
             raise HTTPException(status_code=400, detail="Nível de ensino inválido")
         update_fields["nivel_ensino"] = book_data.nivel_ensino
-    
+    if book_data.turmas is not None:
+        update_fields["turmas"] = clean_book_classes(book_data.turmas, admin_user)
+
     if update_fields:
         await db.books.update_one({"id": book_id}, {"$set": update_fields})
-    
+
     updated_book = await db.books.find_one({"id": book_id}, {"_id": 0})
     return Book(**updated_book)
 
 @api_router.delete("/admin/books/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_book_admin(book_id: str, admin_user: dict = Depends(require_admin)):
+async def delete_book_admin(book_id: str, admin_user: dict = Depends(require_staff)):
+    await editable_book(book_id, admin_user)
     result = await db.books.delete_one({"id": book_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Livro não encontrado")
-    
+
     # Also delete related summaries and progress
     await db.summaries.delete_many({"book_id": book_id})
     await db.reading_progress.delete_many({"book_id": book_id})
@@ -916,7 +959,7 @@ async def delete_book_admin(book_id: str, admin_user: dict = Depends(require_adm
     # Certificados já emitidos são preservados: guardam título e autor do livro.
     await db.book_quizzes.delete_many({"book_id": book_id})
     await db.book_quiz_attempts.delete_many({"book_id": book_id})
-    
+
     return None
 
 @api_router.post("/admin/books/upload-cover")
@@ -928,23 +971,23 @@ async def upload_book_cover(
     allowed_types = ["image/jpeg", "image/png", "image/gif", "image/webp"]
     if file.content_type not in allowed_types:
         raise HTTPException(status_code=400, detail="Tipo de arquivo não permitido. Use JPG, PNG, GIF ou WebP.")
-    
+
     # Validate file size (max 5MB)
     contents = await file.read(50 * 1024 * 1024 + 1)
     if len(contents) > 5 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="Arquivo muito grande. Máximo 5MB.")
-    
+
     # Generate unique filename
     ext = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif', 'image/webp': 'webp'}[file.content_type]
     filename = f"cover_{uuid.uuid4().hex[:12]}.{ext}"
     file_path = BOOKS_COVERS_DIR / filename
-    
+
     # Save file
     await save_upload(file_path, contents, file.content_type)
-    
+
     # Generate URL
     cover_url = f"/api/uploads/books/covers/{filename}"
-    
+
     return {"url": cover_url, "message": "Capa enviada com sucesso!"}
 
 @api_router.post("/admin/books/upload-pdf")
@@ -955,22 +998,22 @@ async def upload_book_pdf(
     # Validate file type
     if file.content_type != "application/pdf":
         raise HTTPException(status_code=400, detail="Apenas arquivos PDF são permitidos.")
-    
+
     # Validate file size (max 50MB)
     contents = await file.read(50 * 1024 * 1024 + 1)
     if len(contents) > 50 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="Arquivo muito grande. Máximo 50MB.")
-    
+
     # Generate unique filename
     filename = f"book_{uuid.uuid4().hex[:12]}.pdf"
     file_path = BOOKS_PDF_DIR / filename
-    
+
     # Save file
     await save_upload(file_path, contents, file.content_type)
-    
+
     # Generate URL
     pdf_url = f"/api/uploads/books/pdfs/{filename}"
-    
+
     return {"url": pdf_url, "message": "PDF enviado com sucesso!"}
 
 @api_router.get("/admin/text-productions", response_model=List[TextProduction])
@@ -984,7 +1027,7 @@ async def get_all_productions(turma: Optional[str] = None, admin_user: dict = De
         if user:
             production["user_nome"] = user["nome"]
             production["user_turma"] = user.get("turma")
-    
+
     return productions
 
 @api_router.get("/admin/text-productions/{production_id}", response_model=TextProduction)
@@ -993,13 +1036,13 @@ async def get_production_as_admin(production_id: str, admin_user: dict = Depends
     if not production:
         raise HTTPException(status_code=404, detail="Produção textual não encontrada")
     await ensure_student_scope(db, admin_user, production["user_id"])
-    
+
     # Enrich with user name and turma
     user = await db.users.find_one({"id": production["user_id"]}, {"_id": 0})
     if user:
         production["user_nome"] = user["nome"]
         production["user_turma"] = user.get("turma")
-    
+
     return TextProduction(**production)
 
 @api_router.put("/admin/text-productions/{production_id}/correction", response_model=TextProduction)
@@ -1012,7 +1055,7 @@ async def correct_production(
     if not production:
         raise HTTPException(status_code=404, detail="Produção textual não encontrada")
     await ensure_student_scope(db, admin_user, production["user_id"])
-    
+
     now = datetime.now(timezone.utc).isoformat()
     await db.text_productions.update_one(
         {"id": production_id},
@@ -1023,15 +1066,15 @@ async def correct_production(
             "corrigido_em": now
         }}
     )
-    
+
     updated_production = await db.text_productions.find_one({"id": production_id}, {"_id": 0})
-    
+
     # Enrich with user name and turma
     user = await db.users.find_one({"id": updated_production["user_id"]}, {"_id": 0})
     if user:
         updated_production["user_nome"] = user["nome"]
         updated_production["user_turma"] = user.get("turma")
-    
+
     return TextProduction(**updated_production)
 
 @api_router.delete("/admin/text-productions/{production_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -1045,12 +1088,12 @@ async def delete_production_admin(production_id: str, admin_user: dict = Depends
 async def get_all_users(turma: Optional[str] = None, admin_user: dict = Depends(require_staff)):
     query = class_query(admin_user, turma)
     users = await db.users.find(query, {"_id": 0, "password_hash": 0}).to_list(1000)
-    
+
     # Add statistics for each user
     for user in users:
         user["total_summaries"] = await db.summaries.count_documents({"user_id": user["id"]})
         user["total_productions"] = await db.text_productions.count_documents({"user_id": user["id"]})
-    
+
     return users
 
 @api_router.delete("/admin/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -1058,16 +1101,16 @@ async def delete_user(user_id: str, admin_user: dict = Depends(require_admin)):
     # Prevent admin from deleting themselves
     if user_id == admin_user["id"]:
         raise HTTPException(status_code=400, detail="Você não pode excluir sua própria conta")
-    
+
     # Check if user exists
     user = await db.users.find_one({"id": user_id})
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
-    
+
     # Prevent deleting other admins
     if user.get("role") == "admin":
         raise HTTPException(status_code=403, detail="Não é possível excluir outro administrador")
-    
+
     # Delete user and all related data
     await db.users.delete_one({"id": user_id})
     await db.summaries.delete_many({"user_id": user_id})
@@ -1077,7 +1120,7 @@ async def delete_user(user_id: str, admin_user: dict = Depends(require_admin)):
     await db.reader_positions.delete_many({"user_id": user_id})
     await db.notification_reads.delete_many({"user_id": user_id})
     await db.password_resets.delete_many({"user_id": user_id})
-    
+
     return None
 
 # ========== MURAL ROUTES ==========
@@ -1088,10 +1131,10 @@ async def get_mural_posts(current_user: dict = Depends(get_current_user)):
     return posts
 
 @api_router.post("/admin/mural", response_model=MuralPost, status_code=status.HTTP_201_CREATED)
-async def create_mural_post(post_data: MuralPostCreate, admin_user: dict = Depends(require_admin)):
+async def create_mural_post(post_data: MuralPostCreate, admin_user: dict = Depends(require_staff)):
     if post_data.tipo not in ["foto", "video"]:
         raise HTTPException(status_code=400, detail="Tipo deve ser 'foto' ou 'video'")
-    
+
     post_id = str(uuid.uuid4())
     post_doc = {
         "id": post_id,
@@ -1099,15 +1142,18 @@ async def create_mural_post(post_data: MuralPostCreate, admin_user: dict = Depen
         "titulo": post_data.titulo,
         "url_media": post_data.url_media,
         "descricao": post_data.descricao,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "autor_id": admin_user["id"],
+        "autor_nome": admin_user.get("nome"),
     }
-    
+
     await db.mural.insert_one(post_doc)
     return MuralPost(**post_doc)
 
 @api_router.delete("/admin/mural/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_mural_post(post_id: str, admin_user: dict = Depends(require_admin)):
-    result = await db.mural.delete_one({"id": post_id})
+async def delete_mural_post(post_id: str, admin_user: dict = Depends(require_staff)):
+    query = {"id": post_id} if admin_user.get("role") == "admin" else {"id": post_id, "autor_id": admin_user["id"]}
+    result = await db.mural.delete_one(query)
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Post não encontrado")
     return None
@@ -1115,29 +1161,29 @@ async def delete_mural_post(post_id: str, admin_user: dict = Depends(require_adm
 @api_router.post("/admin/mural/upload")
 async def upload_mural_image(
     file: UploadFile = File(...),
-    admin_user: dict = Depends(require_admin)
+    admin_user: dict = Depends(require_staff)
 ):
     # Validate file type
     allowed_types = ["image/jpeg", "image/png", "image/gif", "image/webp"]
     if file.content_type not in allowed_types:
         raise HTTPException(status_code=400, detail="Tipo de arquivo não permitido. Use JPG, PNG, GIF ou WebP.")
-    
+
     # Validate file size (max 10MB for mural images)
     contents = await file.read(50 * 1024 * 1024 + 1)
     if len(contents) > 10 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="Arquivo muito grande. Máximo 10MB.")
-    
+
     # Generate unique filename
     ext = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif', 'image/webp': 'webp'}[file.content_type]
     filename = f"mural_{uuid.uuid4().hex[:12]}.{ext}"
     file_path = MURAL_UPLOADS_DIR / filename
-    
+
     # Save file
     await save_upload(file_path, contents, file.content_type)
-    
+
     # Generate URL (will be served by static files)
     image_url = f"/api/uploads/mural/{filename}"
-    
+
     return {"url": image_url, "message": "Imagem enviada com sucesso!"}
 
 # ========== CALENDAR ROUTES ==========
@@ -1149,7 +1195,7 @@ async def get_calendar_events(
     current_user: dict = Depends(get_current_user)
 ):
     query = {}
-    
+
     # Filter by month and year if provided
     if mes and ano:
         # Create date range for the month
@@ -1159,7 +1205,7 @@ async def get_calendar_events(
         else:
             end_date = f"{ano}-{mes + 1:02d}-01"
         query["data"] = {"$gte": start_date, "$lt": end_date}
-    
+
     events = await db.calendar_events.find(query, {"_id": 0}).sort("data", 1).to_list(100)
     return events
 
@@ -1170,7 +1216,7 @@ async def create_calendar_event(event_data: CalendarEventCreate, admin_user: dic
         datetime.strptime(event_data.data, "%Y-%m-%d")
     except ValueError:
         raise HTTPException(status_code=400, detail="Data inválida. Use o formato YYYY-MM-DD")
-    
+
     event_id = str(uuid.uuid4())
     event_doc = {
         "id": event_id,
@@ -1180,7 +1226,7 @@ async def create_calendar_event(event_data: CalendarEventCreate, admin_user: dic
         "cor": event_data.cor or "#10b981",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    
+
     await db.calendar_events.insert_one(event_doc)
     return CalendarEvent(**event_doc)
 
@@ -1193,13 +1239,13 @@ async def update_calendar_event(
     event = await db.calendar_events.find_one({"id": event_id})
     if not event:
         raise HTTPException(status_code=404, detail="Evento não encontrado")
-    
+
     # Validate date format
     try:
         datetime.strptime(event_data.data, "%Y-%m-%d")
     except ValueError:
         raise HTTPException(status_code=400, detail="Data inválida. Use o formato YYYY-MM-DD")
-    
+
     await db.calendar_events.update_one(
         {"id": event_id},
         {"$set": {
@@ -1209,7 +1255,7 @@ async def update_calendar_event(
             "cor": event_data.cor or "#10b981"
         }}
     )
-    
+
     updated_event = await db.calendar_events.find_one({"id": event_id}, {"_id": 0})
     return CalendarEvent(**updated_event)
 

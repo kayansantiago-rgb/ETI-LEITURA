@@ -94,14 +94,6 @@ export default function TeacherPanel() {
       path: '/admin/classes'
     },
     {
-      type: 'students',
-      icon: GraduationCap,
-      title: 'Alunos e Turmas',
-      description: 'Consulte os estudantes cadastrados e gerencie suas informações e turmas.',
-      linkText: 'Ver Alunos',
-      path: '/admin/users'
-    },
-    {
       type: 'mural',
       icon: ImageIcon,
       title: 'Gerenciar Mural',
@@ -187,7 +179,7 @@ export default function TeacherPanel() {
           </div>
         ) : (
           <section className="teacher-stats-trio" aria-label="Indicadores da escola">
-            <Link to="/admin/users" className="teacher-stat-trio-card">
+            <Link to="/admin/classes" className="teacher-stat-trio-card">
               <div className="stat-trio-info">
                 <span>ESTUDANTES ATIVOS</span>
                 <strong>{activeStudents}</strong>

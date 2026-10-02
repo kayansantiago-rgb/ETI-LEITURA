@@ -21,6 +21,7 @@ import {
 import DashboardLayout from '@/components/DashboardLayout';
 import PageIntro from '@/components/PageIntro';
 import BookQuizEditor from '@/components/BookQuizEditor';
+import ClassPicker from '@/components/ClassPicker';
 import { Button } from '@/components/ui/button';
 import { getUser } from '@/lib/auth';
 import api from '@/lib/api';
@@ -46,7 +47,8 @@ function EditSheet({ book, onClose, onSaved }) {
     descricao: book.descricao || '',
     nivel_ensino: book.nivel_ensino || 'AMBOS',
     capa_url: book.capa_url || '',
-    arquivo_url: book.arquivo_url || ''
+    arquivo_url: book.arquivo_url || '',
+    turmas: book.turmas || []
   });
   const [busy, setBusy] = useState('');
   const coverRef = useRef(null);
@@ -141,6 +143,7 @@ function EditSheet({ book, onClose, onSaved }) {
                   <option value="MÉDIO">Apenas ensino médio</option>
                 </select>
               </label>
+              <ClassPicker value={form.turmas} onChange={turmas => field('turmas', turmas)} />
               <label className="qz-field">
                 <span>Sinopse</span>
                 <textarea className="cx-feedback" maxLength={5000} value={form.descricao} onChange={e => field('descricao', e.target.value)} placeholder="Do que trata o livro?" />
@@ -175,7 +178,9 @@ function EditSheet({ book, onClose, onSaved }) {
 }
 
 export default function AdminBooks() {
-  const admin = getUser()?.role === 'admin';
+  const user = getUser();
+  const admin = user?.role === 'admin';
+  const canManage = book => admin || book.professor_id === user?.id;
   const [books, setBooks] = useState(null);
   const [stats, setStats] = useState({});
   const [failed, setFailed] = useState(false);
@@ -226,7 +231,7 @@ export default function AdminBooks() {
     <DashboardLayout>
       <div data-testid="admin-books-page">
         <PageIntro section="BIBLIOTECA / ACERVO" title="Gerenciar livros" description="Cadastre livros, mantenha capas e PDFs em dia e crie o questionário que libera o certificado de leitura.">
-          {admin && (
+          {(
             <Button asChild className="qz-btn-primary">
               <Link to="/admin/add-book">
                 <Plus size={16} /> Adicionar livro
@@ -322,7 +327,7 @@ export default function AdminBooks() {
                   <thead>
                     <tr>
                       <th>Livro</th>
-                      <th>Etapa</th>
+                      <th>Etapa / turmas</th>
                       <th>PDF</th>
                       <th>Questionário</th>
                       <th className="is-center">Leitores</th>
@@ -346,6 +351,7 @@ export default function AdminBooks() {
                           </td>
                           <td>
                             <span className="ws-chip">{LEVEL[book.nivel_ensino] || book.nivel_ensino || 'Todos'}</span>
+                            <small className="ab-sub">{book.turmas?.length ? book.turmas.join(', ') : 'Todas as turmas'}</small>
                           </td>
                           <td>
                             {book.arquivo_url ? (
@@ -373,7 +379,7 @@ export default function AdminBooks() {
                               <Link to={`/reader/${book.id}`} className="ws-icon-btn" title="Abrir no leitor" aria-label={`Abrir ${book.titulo} no leitor`}>
                                 <ExternalLink size={16} />
                               </Link>
-                              {admin && (
+                              {canManage(book) && (
                                 <>
                                   <button type="button" className="ws-icon-btn" title="Editar" aria-label={`Editar ${book.titulo}`} onClick={() => setEditing(book)} data-testid={`edit-book-${book.id}`}>
                                     <Pencil size={16} />

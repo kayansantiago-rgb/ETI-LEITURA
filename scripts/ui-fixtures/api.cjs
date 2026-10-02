@@ -8,8 +8,8 @@ const cover = (t, c) => 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="
 const books = titles.map(([titulo, autor, progress, nivel_ensino], i) => ({ id: String(i + 1), titulo, autor, progress, nivel_ensino, descricao: 'Uma história para descobrir novas perspectivas e compartilhar ideias.', capa_url: cover(titulo, colors[i]), created_at: '2026-09-0' + (i + 1), arquivo_url: '/api/uploads/livro.pdf' }));
 const today = new Date(); const day = n => new Date(today.getTime() + n * 864e5).toISOString().slice(0, 10);
 const activities = [
-  { id: 'a1', titulo: 'Interpretação: capítulo 3', disciplina: 'Língua Portuguesa', turma: '7º ANO', prazo: day(2), status: 'aberta', perguntas: [{}, {}, {}], professor_nome: 'Prof. Ana' },
-  { id: 'a2', titulo: 'Resenha crítica', disciplina: 'Redação', turma: '7º ANO', prazo: day(5), status: 'aberta', perguntas: [{}], professor_nome: 'Prof. Ana' },
+  { id: 'a1', titulo: 'Interpretação: capítulo 3', disciplina: 'Língua Portuguesa', turma: '7º ANO', prazo: day(2), status: 'aberta', perguntas: [{}, {}, {}], professor_nome: 'Prof. Ana', entregas: 7, corrigidas: 2, devolvidas: 1 },
+  { id: 'a2', titulo: 'Resenha crítica', disciplina: 'Redação', turma: '7º ANO', prazo: day(5), status: 'aberta', perguntas: [{}], professor_nome: 'Prof. Ana', entregas: 3, corrigidas: 3, devolvidas: 0 },
   { id: 'a3', titulo: 'Quiz de vocabulário', disciplina: 'Língua Portuguesa', turma: '7º ANO', prazo: day(-3), status: 'encerrada', perguntas: [{}, {}], minha_resposta: { nota: 9, feedback: 'Ótimo trabalho!' }, professor_nome: 'Prof. Ana' }
 ];
 const student = { id: 's1', nome: 'Mariana Silva', email: 'mariana@example.com', turma: '7º ANO', role: 'student' };

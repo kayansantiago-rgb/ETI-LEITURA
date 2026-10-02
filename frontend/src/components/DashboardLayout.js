@@ -54,7 +54,6 @@ const management = [
   [Plus, 'Adicionar livro', '/admin/add-book'],
   [FileText, 'Resumos dos alunos', '/admin/summaries'],
   [PenTool, 'Produções dos alunos', '/admin/text-productions'],
-  [Users, 'Alunos e turmas', '/admin/users'],
   [ImageIcon, 'Mural da escola', '/admin/mural'],
   [CalendarDays, 'Calendário', '/admin/calendar']
 ];
@@ -168,7 +167,7 @@ export default function DashboardLayout({ children, focusMode = false }) {
 
   const otherArea = !mobileLinks.some(([, , path]) => location.pathname === path || location.pathname.startsWith(path + '/'));
   const railPaths = isAdmin
-    ? ['/admin/professor', '/admin/classes', '/admin/activities', '/videos', '/library', '/admin/reports', '/admin/users']
+    ? ['/admin/professor', '/admin/classes', '/admin/activities', '/videos', '/library', '/admin/reports']
     : ['/dashboard', '/activities', '/quizzes', '/videos', '/library', '/ranking', '/text-productions', '/workspace'];
 
   const railItems = isAdmin ? staffLinks : railPaths.map(path => (isAdmin ? [teacher, ...management, [BookOpen, 'Biblioteca', '/library']] : learning).find(item => item[2] === path)).filter(Boolean);

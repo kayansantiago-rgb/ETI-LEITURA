@@ -4,7 +4,9 @@ import { Flame, Target, Pencil, Check, ArrowRight, BookOpen, Trophy, Footprints,
 import api from '@/lib/api';
 import { toast } from 'sonner';
 
-const WEEKDAY = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+const WEEKDAY = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+const WEEKDAY_NAME = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+const days = n => `${n} ${n === 1 ? 'dia' : 'dias'}`;
 export const MEDAL_ICONS = {
   'primeira-pagina': Footprints,
   'sequencia-3': Flame,
@@ -104,7 +106,7 @@ export default function ReadingJourney() {
             {stats.sequencia} {stats.sequencia === 1 ? 'dia' : 'dias'}
           </strong>
           <span>{stats.sequencia ? 'seguidos lendo' : 'Leia hoje para começar sua sequência'}</span>
-          <small>Melhor sequência: {stats.melhor_sequencia} dias</small>
+          <small>Melhor sequência: {days(stats.melhor_sequencia)}</small>
         </div>
       </div>
 
@@ -113,11 +115,11 @@ export default function ReadingJourney() {
           const day = new Date(d.dia + 'T12:00:00');
           const isToday = d.dia === stats.semana[stats.semana.length - 1].dia;
           return (
-            <div key={d.dia} className={`${d.paginas ? 'is-read' : ''} ${isToday ? 'is-today' : ''}`} title={`${d.paginas} página(s)`}>
+            <div key={d.dia} className={`${d.paginas ? 'is-read' : ''} ${isToday ? 'is-today' : ''}`} title={`${isToday ? 'Hoje' : WEEKDAY_NAME[day.getDay()]}: ${d.paginas} página(s)`}>
               <span className="rj-bar">
                 <span style={{ height: `${Math.max(d.paginas ? 12 : 0, (d.paginas / maxWeek) * 100)}%` }} />
               </span>
-              <small>{isToday ? 'hoje' : WEEKDAY[day.getDay()]}</small>
+              <small>{WEEKDAY[day.getDay()]}</small>
             </div>
           );
         })}
@@ -142,7 +144,7 @@ export default function ReadingJourney() {
             </form>
           ) : (
             <strong>
-              {stats.paginas_hoje}/{stats.meta_paginas} páginas
+              {stats.paginas_hoje} {stats.paginas_hoje === 1 ? 'página' : 'páginas'} hoje
               <button
                 type="button"
                 aria-label="Alterar meta diária"
@@ -155,7 +157,10 @@ export default function ReadingJourney() {
               </button>
             </strong>
           )}
-          <small>{done >= 1 ? 'Meta cumprida! 🎉' : 'Cada página avançada no leitor conta.'}</small>
+          <small>
+            Meta: {stats.meta_paginas} por dia
+            {done >= 1 ? ' · cumprida! 🎉' : ` · faltam ${stats.meta_paginas - stats.paginas_hoje}`}
+          </small>
         </div>
       </div>
 

@@ -125,7 +125,7 @@ async function visit(page, url, text, label) {
   });
   await login(page, TEACHER);
   await page.goto(BASE + '/admin/activities');
-  await page.getByText('Ver respostas e corrigir').first().click();
+  await page.locator('.at-actions button').first().click();
   await page.getByRole('dialog', { name: 'Correção de entregas' }).waitFor();
   const first = await page.locator('.cx-student h3').textContent();
   await page.getByRole('group', { name: 'Notas rápidas' }).getByRole('button', { name: '9', exact: true }).click();

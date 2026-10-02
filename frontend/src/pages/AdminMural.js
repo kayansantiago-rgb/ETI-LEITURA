@@ -1,3 +1,4 @@
+import { getUser } from '@/lib/auth';
 import PageIntro from '@/components/PageIntro';
 import EmptyCollection from '@/components/EmptyCollection';
 import { useState, useEffect, useRef } from 'react';
@@ -351,7 +352,7 @@ const AdminMural = () => {
                       )}
                       <span className="text-xs font-medium text-primary uppercase">{post.tipo}</span>
                     </div>
-                    <Button
+                    {(getUser()?.role === 'admin' || post.autor_id === getUser()?.id) && <Button
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
@@ -359,7 +360,7 @@ const AdminMural = () => {
                       data-testid={`delete-mural-${post.id}`}
                     >
                       <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </Button>}
                   </div>
                   <h3 className="font-semibold text-foreground mb-2">{post.titulo}</h3>
                   {post.descricao && (
