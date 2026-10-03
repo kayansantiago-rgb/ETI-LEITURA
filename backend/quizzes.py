@@ -1,7 +1,5 @@
 """Quizzes por turma, com correção no servidor e uma entrega por aluno."""
 from datetime import datetime, timezone, timedelta
-
-FEEDBACK_SECONDS = 2.5
 from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, model_validator
@@ -179,7 +177,26 @@ def create_quiz_router(db, current, staff):
             await db.quiz_sessions.insert_one(session.copy())
         except DuplicateKeyError:
             session = await db.quiz_sessions.find_one({'_id': key})
+            session = await open_question(quiz, session)
         return await timed_result(quiz, session, user)
+
+    async def open_question(quiz, session):
+        """Começa a contar o tempo da pergunta atual (depois que o aluno viu o resultado da anterior)."""
+        if session.get('limite') or session['indice'] >= len(quiz['perguntas']):
+            return session
+        limit = (datetime.now(timezone.utc) + timedelta(seconds=quiz['segundos'])).isoformat()
+        await db.quiz_sessions.update_one({'_id': session['_id'], 'indice': session['indice'], 'limite': None}, {'$set': {'limite': limit}})
+        return await db.quiz_sessions.find_one({'_id': session['_id']}) or {**session, 'limite': limit}
+
+    @router.post('/quizzes/{id}/continue')
+    async def continue_quiz(id: str, user=Depends(current)):
+        quiz = await find(id, user)
+        if user['role'] != 'student' or not quiz.get('segundos') or not quiz['aberto']:
+            raise HTTPException(409, 'Quiz indisponível.')
+        session = await db.quiz_sessions.find_one({'_id': f"{id}:{user['id']}"})
+        if not session:
+            raise HTTPException(409, 'Comece o quiz primeiro.')
+        return await timed_result(quiz, await open_question(quiz, session), user)
 
     @router.post('/quizzes/{id}/step')
     async def timed_step(id: str, data: TimedAnswer, user=Depends(current)):
@@ -190,6 +207,8 @@ def create_quiz_router(db, current, staff):
         session = await db.quiz_sessions.find_one({'_id': key})
         if not session or session['indice'] != data.indice or data.indice >= len(quiz['perguntas']):
             raise HTTPException(409, 'Atualize a pergunta para continuar.')
+        if not session.get('limite'):
+            raise HTTPException(409, 'Abra a próxima pergunta para responder.')
         if data.resposta >= len(quiz['perguntas'][data.indice]['opcoes']):
             raise HTTPException(422, 'Alternativa inválida.')
         expired = datetime.now(timezone.utc) >= datetime.fromisoformat(session['limite'])
@@ -197,7 +216,7 @@ def create_quiz_router(db, current, staff):
             raise HTTPException(409, 'A pergunta ainda está aberta.')
         answer = -1 if expired else data.resposta
         # A próxima pergunta só começa a contar depois da tela de acerto/erro.
-        next_session = {**session, 'indice': data.indice + 1, 'respostas': [*session['respostas'], answer], 'limite': (datetime.now(timezone.utc) + timedelta(seconds=quiz['segundos'] + FEEDBACK_SECONDS)).isoformat()}
+        next_session = {**session, 'indice': data.indice + 1, 'respostas': [*session['respostas'], answer], 'limite': None}
         result = await db.quiz_sessions.update_one({'_id': key, 'indice': data.indice}, {'$set': {k: v for k, v in next_session.items() if k != '_id'}})
         if not result.matched_count:
             raise HTTPException(409, 'Esta pergunta já foi respondida.')

@@ -14,7 +14,11 @@ const maskable = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80">${
 // Ícone da Apple: quadrado cheio (o iPhone arredonda sozinho).
 const apple = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80">${defs}<rect width="80" height="80" fill="url(#g)"/><g transform="translate(40 40) scale(.86) translate(-40 -40)">${inner}</g></svg>`;
 
+// Ícone pequeno da barra de notificações (Android): só a silhueta branca do livro, fundo transparente.
+const badge = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><g fill="#fff"><path d="M46 24 C 37 18, 24 18, 14 22 V 72 C 24 68, 37 68, 46 74 Z"/><path d="M50 24 C 59 18, 72 18, 82 22 V 72 C 72 68, 59 68, 50 74 Z"/><path d="M76 8 Q77.4 13.6 83 15 Q77.4 16.4 76 22 Q74.6 16.4 69 15 Q74.6 13.6 76 8 Z"/></g></svg>`;
+
 const jobs = [
+  ['icons/eti-badge.png', badge, 96],
   ['icons/eti-192.png', logo, 192],
   ['icons/eti-512.png', logo, 512],
   ['icons/eti-maskable-512.png', maskable, 512],

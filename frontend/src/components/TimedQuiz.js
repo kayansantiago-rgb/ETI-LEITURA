@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Timer, Play, Check, X, Flame, Star, ArrowRight, Trophy, Zap } from 'lucide-react';
+import { Timer, Play, Check, X, Flame, Star, ArrowRight, Zap, Trophy } from 'lucide-react';
 import { Owl } from '@/components/LoginScene';
 import api from '@/lib/api';
 
-const SHAPES = ['▲', '◆', '●', '■'];
-const FEEDBACK_MS = 2300;
+const runKey = id => `eti-quiz-run:${id}`;
 
-// Alternativas em blocos coloridos (quiz livre e temporizado). Com `feedback`, mostra a certa e a errada.
+// Alternativas (quiz livre e temporizado). Com `feedback`, mostra a certa em verde e a escolhida errada em vermelho.
 export function QuizOptions({ options, selected, disabled, onSelect, feedback }) {
   return (
     <div className={`qz-options ${feedback ? 'has-feedback' : ''}`}>
@@ -14,11 +13,8 @@ export function QuizOptions({ options, selected, disabled, onSelect, feedback })
         const state = !feedback ? '' : i === feedback.correta ? 'is-right' : i === feedback.resposta ? 'is-wrong' : 'is-faded';
         return (
           <button key={i} type="button" className={`qz-option tone-${i} ${state}`} disabled={disabled} aria-pressed={selected === i} onClick={() => onSelect(i)} style={{ '--i': i }}>
-            <b aria-hidden="true">{SHAPES[i] || String.fromCharCode(65 + i)}</b>
-            <span>
-              <small>{String.fromCharCode(65 + i)}</small>
-              {o}
-            </span>
+            <b aria-hidden="true">{String.fromCharCode(65 + i)}</b>
+            <span>{o}</span>
             {state === 'is-right' ? <Check size={22} className="qz-option-mark" /> : state === 'is-wrong' ? <X size={22} className="qz-option-mark" /> : selected === i && !feedback && <Check size={18} className="qz-option-check" />}
           </button>
         );
@@ -27,8 +23,8 @@ export function QuizOptions({ options, selected, disabled, onSelect, feedback })
   );
 }
 
-function Burst({ good }) {
-  const pieces = useRef(Array.from({ length: good ? 22 : 0 }, (_, i) => ({ angle: (i / 22) * 360, dist: 70 + Math.random() * 90, color: ['#22c55e', '#fde047', '#8b5cf6', '#ec4899', '#38bdf8'][i % 5] }))).current;
+function Burst() {
+  const pieces = useRef(Array.from({ length: 22 }, (_, i) => ({ angle: (i / 22) * 360, dist: 70 + Math.random() * 90, color: ['#22c55e', '#fde047', '#8b5cf6', '#ec4899', '#38bdf8'][i % 5] }))).current;
   return (
     <span className="tq-burst" aria-hidden="true">
       {pieces.map((p, i) => (
@@ -54,44 +50,6 @@ function TimerRing({ remaining, total }) {
   );
 }
 
-function Finish({ hits, total, history, onDone }) {
-  const pct = total ? Math.round((hits / total) * 100) : 0;
-  const [title, text] =
-    pct === 100 ? ['Gabaritou! 🏆', 'Todas certas. Você é fera!'] : pct >= 70 ? ['Mandou muito bem! 🎉', 'Ótimo desempenho neste desafio.'] : pct >= 40 ? ['Bom trabalho! 💪', 'Revise as que errou e tente o próximo.'] : ['Não desista! 📚', 'Cada desafio é um treino. Releia o conteúdo e volte mais forte.'];
-  return (
-    <div className="tq-finish">
-      {pct >= 70 && <Burst good />}
-      <div className="tq-finish-art" aria-hidden="true">
-        <span className="tq-finish-rays" />
-        <Owl size={96} />
-      </div>
-      <div className="tq-score" style={{ '--p': pct }}>
-        <span>
-          <strong>
-            {hits}
-            <small>/{total}</small>
-          </strong>
-          <em>acertos</em>
-        </span>
-      </div>
-      <h2>{title}</h2>
-      <p>{text}</p>
-      {history.some(Boolean) && (
-        <div className="tq-dots" aria-label="Resultado de cada pergunta">
-          {history.map((h, i) => (
-            <span key={i} className={h ? (h.acertou ? 'is-right' : 'is-wrong') : ''} title={`Pergunta ${i + 1}`}>
-              {h ? h.acertou ? <Check size={13} /> : <X size={13} /> : i + 1}
-            </span>
-          ))}
-        </div>
-      )}
-      <button type="button" className="tq-next" onClick={onDone}>
-        <Trophy size={18} /> Ver ranking da turma
-      </button>
-    </div>
-  );
-}
-
 export default function TimedQuiz({ quiz, onComplete }) {
   const total = quiz.perguntas.length;
   const [session, setSession] = useState(null);
@@ -99,68 +57,79 @@ export default function TimedQuiz({ quiz, onComplete }) {
   const [selected, setSelected] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [feedback, setFeedback] = useState(null); // { resultado, next, acertos }
+  const [feedback, setFeedback] = useState(null); // { result, next, history }
   const [history, setHistory] = useState(() => Array(total).fill(null));
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
-  const [finished, setFinished] = useState(false);
   const lock = useRef(false);
-  const advance = useRef(null);
 
   const show = value => {
     setSession(value);
     setSelected(null);
-    setRemaining(Math.min(quiz.segundos, Math.max(0, Math.ceil((Date.parse(value.limite) - Date.now()) / 1000))));
+    setRemaining(Math.max(0, Math.ceil((Date.parse(value.limite) - Date.now()) / 1000)));
   };
-  const goOn = next => {
-    clearTimeout(advance.current);
-    setFeedback(null);
-    if (next.concluido) setFinished(true);
-    else show(next);
+  // Guarda o desempenho desta partida para a tela de vitória (velocidade, sequência).
+  const finish = list => {
+    try {
+      sessionStorage.setItem(runKey(quiz.id), JSON.stringify(list));
+    } catch {}
+    onComplete();
   };
 
-  const start = async () => {
+  const request = async (path, body) => {
     setBusy(true);
     setError('');
     try {
-      const { data } = await api.post(`/quizzes/${quiz.id}/start`);
-      if (data.concluido) onComplete();
-      else show(data);
+      return (await api.post(`/quizzes/${quiz.id}/${path}`, body)).data;
     } catch {
-      setError('Não foi possível iniciar ou retomar. Tente novamente.');
+      setError('Não foi possível falar com o servidor. Retome para continuar de onde parou.');
+      return null;
     } finally {
       setBusy(false);
     }
+  };
+
+  const start = async () => {
+    const data = await request('start');
+    if (!data) return;
+    if (data.concluido) onComplete();
+    else if (!data.limite) {
+      const opened = await request('continue');
+      if (opened) show(opened);
+    } else show(data);
   };
 
   const send = async answer => {
     if (lock.current || !session) return;
     lock.current = true;
-    setBusy(true);
-    setError('');
-    try {
-      const { data } = await api.post(`/quizzes/${quiz.id}/step`, { indice: session.indice, resposta: answer });
-      const result = data.resultado;
-      if (!result) return goOn(data);
-      setHistory(h => h.map((x, i) => (i === result.indice ? result : x)));
-      setScore(data.acertos ?? 0);
-      setStreak(s => (result.acertou ? s + 1 : 0));
-      setFeedback({ result, next: data });
-      advance.current = setTimeout(() => goOn(data), FEEDBACK_MS);
-    } catch {
-      setError('Não foi possível confirmar a resposta. Retome para consultar a pergunta atual.');
-    } finally {
-      lock.current = false;
-      setBusy(false);
-    }
+    const used = Math.max(0, quiz.segundos - remaining);
+    const data = await request('step', { indice: session.indice, resposta: answer });
+    lock.current = false;
+    if (!data) return;
+    const result = data.resultado;
+    if (!result) return data.concluido ? finish(history) : show(data);
+    const updated = history.map((x, i) => (i === result.indice ? { ...result, tempo: used } : x));
+    setHistory(updated);
+    setScore(data.acertos ?? 0);
+    setStreak(s => (result.acertou ? s + 1 : 0));
+    setFeedback({ result, next: data, history: updated });
   };
 
-  useEffect(() => () => clearTimeout(advance.current), []);
+  // A pergunta fica na tela com o resultado até o aluno tocar em "Próxima".
+  const next = async () => {
+    if (!feedback || busy) return;
+    if (feedback.next.concluido) return finish(feedback.history);
+    const opened = await request('continue');
+    if (!opened) return;
+    setFeedback(null);
+    if (opened.concluido) finish(feedback.history);
+    else show(opened);
+  };
 
   useEffect(() => {
     if (!session || error || feedback) return;
     const tick = () => {
-      const seconds = Math.min(quiz.segundos, Math.max(0, Math.ceil((Date.parse(session.limite) - Date.now()) / 1000)));
+      const seconds = Math.max(0, Math.ceil((Date.parse(session.limite) - Date.now()) / 1000));
       setRemaining(seconds);
       if (!seconds) send(-1);
     };
@@ -172,7 +141,7 @@ export default function TimedQuiz({ quiz, onComplete }) {
 
   if (error)
     return (
-      <div className="tq-card tq-center" role="alert">
+      <div className="tq-intro" role="alert">
         <p>{error}</p>
         <button type="button" className="tq-next" disabled={busy} onClick={start}>
           Retomar quiz
@@ -180,16 +149,14 @@ export default function TimedQuiz({ quiz, onComplete }) {
       </div>
     );
 
-  if (finished) return <Finish hits={score} total={total} history={history} onDone={onComplete} />;
-
   if (!session)
     return (
       <div className="tq-intro">
         <div className="tq-intro-art" aria-hidden="true">
           <span className="tq-finish-rays" />
-          <Owl size={100} />
+          <Owl size={92} />
           <span className="tq-intro-clock">
-            <Timer size={24} />
+            <Timer size={22} />
           </span>
         </div>
         <h2>Prepare-se para o desafio!</h2>
@@ -201,10 +168,13 @@ export default function TimedQuiz({ quiz, onComplete }) {
             <Timer size={16} /> <b>{quiz.segundos}s</b> cada
           </span>
           <span>
-            <Flame size={16} /> Acerte em sequência!
+            <Flame size={16} /> Bônus por sequência
+          </span>
+          <span>
+            <Trophy size={16} /> Até 3 estrelas
           </span>
         </div>
-        <p>O tempo esgotado conta como erro e não dá para voltar às perguntas anteriores. Depois de cada resposta você vê se acertou.</p>
+        <p>Responda rápido para ganhar mais XP. O tempo esgotado conta como erro e não dá para voltar às perguntas anteriores.</p>
         <button type="button" className="tq-start" disabled={busy} onClick={start}>
           <Play size={20} fill="currentColor" /> Começar agora
         </button>
@@ -228,7 +198,7 @@ export default function TimedQuiz({ quiz, onComplete }) {
             Pergunta <b>{index + 1}</b>/{total}
           </span>
           <span className="tq-chip is-score">
-            <Star size={14} fill="currentColor" /> {score}
+            <Star size={14} fill="currentColor" /> {score} {score === 1 ? 'acerto' : 'acertos'}
           </span>
           {streak >= 2 && (
             <span className="tq-chip is-streak" key={streak}>
@@ -239,24 +209,23 @@ export default function TimedQuiz({ quiz, onComplete }) {
         </div>
       </div>
 
-      <h2 className="tq-question" key={index}>
+      <h2 className="tq-question" key={`q-${index}`}>
         {q.texto}
       </h2>
 
-      <QuizOptions key={index} options={q.opcoes} selected={result ? result.resposta : selected} disabled={busy || !!result || remaining === 0} onSelect={setSelected} feedback={result} />
+      <QuizOptions key={`o-${index}`} options={q.opcoes} selected={result ? result.resposta : selected} disabled={busy || !!result || remaining === 0} onSelect={setSelected} feedback={result} />
 
       {result ? (
         <div className={`tq-feedback ${result.acertou ? 'is-right' : 'is-wrong'}`} role="status">
-          {result.acertou && <Burst good />}
-          <span className="tq-feedback-icon">{result.acertou ? <Check size={28} strokeWidth={3} /> : <X size={28} strokeWidth={3} />}</span>
+          {result.acertou && <Burst />}
+          <span className="tq-feedback-icon">{result.acertou ? <Check size={26} strokeWidth={3} /> : <X size={26} strokeWidth={3} />}</span>
           <div>
-            <strong>{result.acertou ? (streak >= 3 ? `Imparável! ${streak} seguidas 🔥` : 'Acertou! +1 ponto') : result.esgotado ? 'O tempo acabou!' : 'Quase lá!'}</strong>
+            <strong>{result.acertou ? (streak >= 3 ? `Imparável! ${streak} seguidas 🔥` : 'Acertou! +100 XP') : result.esgotado ? 'O tempo acabou!' : 'Quase lá!'}</strong>
             <span>{result.acertou ? 'Mandou bem, continue assim.' : `A resposta certa era ${String.fromCharCode(65 + result.correta)}: ${q.opcoes[result.correta]}`}</span>
           </div>
-          <button type="button" className="tq-next" onClick={() => goOn(feedback.next)}>
-            {feedback.next.concluido ? 'Ver resultado' : 'Próxima'} <ArrowRight size={17} />
+          <button type="button" className="tq-next" disabled={busy} onClick={next} autoFocus>
+            {feedback.next.concluido ? 'Ver meu resultado' : 'Próxima'} <ArrowRight size={17} />
           </button>
-          <i className="tq-feedback-bar" style={{ animationDuration: `${FEEDBACK_MS}ms` }} />
         </div>
       ) : (
         <div className="tq-actions">

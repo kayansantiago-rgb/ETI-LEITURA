@@ -4,6 +4,7 @@ import { PageSkeleton } from '@/components/Skeleton';
 import OwlEmpty from '@/components/OwlEmpty';
 import QuizRanking from '@/components/QuizRanking';
 import TimedQuiz, { QuizOptions } from '@/components/TimedQuiz';
+import QuizVictory from '@/components/QuizVictory';
 import {
   Clock,
   HelpCircle,
@@ -518,19 +519,15 @@ function StudentResult({ quiz }) {
   const result = quiz.resultado;
   const max = quiz.nota_maxima ?? 10;
   const grade = result.nota ?? (result.acertos / result.total) * max;
-  const ratio = result.total ? result.acertos / result.total : 0;
+  // Desempenho da partida que acabou de terminar (tempo de cada resposta), quando houver.
+  let run = null;
+  try {
+    run = JSON.parse(sessionStorage.getItem(`eti-quiz-run:${quiz.id}`));
+  } catch {}
+  const history = quiz.perguntas.map((q, i) => ({ ...(run?.[i] || {}), acertou: result.respostas[i] === q.correta, esgotado: result.respostas[i] === -1 }));
   return (
     <div className="qz-result">
-      <section className="qz-result-hero">
-        <ScoreRing value={result.acertos} total={result.total} />
-        <div>
-          <p className="ws-eyebrow">Desafio concluído</p>
-          <h2>{ratio === 1 ? 'Perfeito! Você acertou tudo.' : ratio >= 0.7 ? 'Mandou muito bem!' : ratio >= 0.4 ? 'Bom trabalho, continue praticando!' : 'Cada desafio é um aprendizado.'}</h2>
-          <p className="qz-result-grade">
-            Nota <strong>{fmt(grade)}</strong> de {fmt(max)}
-          </p>
-        </div>
-      </section>
+      <QuizVictory quizId={quiz.id} hits={result.acertos} total={result.total} history={history} seconds={quiz.segundos || 0} grade={grade} max={fmt(max)} />
       <QuizRanking quizId={quiz.id} />
       <h3 className="qz-review-title">Revise suas respostas</h3>
       <ol className="qz-review">

@@ -117,3 +117,21 @@ def test_ranking_access_ties_and_privacy(quiz_api):
     assert req('GET','/quizzes/q/ranking').status_code==404
     user.update(role='teacher',id='other-teacher')
     assert req('GET','/quizzes/q/ranking').status_code==404
+
+
+def test_next_question_waits_for_student(quiz_api):
+    from datetime import datetime, timezone, timedelta
+    req,user,quiz,db=quiz_api
+    quiz.update(segundos=30,perguntas=[*quiz['perguntas'],{**quiz['perguntas'][0]}])
+    session={'_id':'q:s','indice':0,'respostas':[],'limite':(datetime.now(timezone.utc)+timedelta(seconds=30)).isoformat()}
+    db.quiz_sessions.find_one.return_value=session
+    answered=req('POST','/quizzes/q/step',json={'indice':0,'resposta':1}).json()
+    assert answered['limite'] is None and answered['resultado']['acertou']
+    # Enquanto o aluno vê o resultado, o tempo da próxima pergunta não corre e ela não pode ser respondida.
+    waiting={'_id':'q:s','indice':1,'respostas':[1],'limite':None}
+    db.quiz_sessions.find_one.return_value=waiting
+    assert req('POST','/quizzes/q/step',json={'indice':1,'resposta':1}).status_code==409
+    opened=req('POST','/quizzes/q/continue').json()
+    assert db.quiz_sessions.update_one.call_args.args[0]['limite'] is None
+    assert 'limite' in db.quiz_sessions.update_one.call_args.args[1]['$set']
+    assert opened['indice']==1
