@@ -149,21 +149,6 @@ export default function DashboardLayout({ children, focusMode = false }) {
             </section>
           ))}
         </nav>
-        <div className="rail-bottom">
-          <span className={`user-avatar ${frameClass(user)}`}>{user?.avatar_url ? <img src={user.avatar_url} alt="" /> : user?.nome?.charAt(0)}</span>
-          <div className="flex-1 min-w-0">
-            <strong>{user?.nome?.split(' ')[0]}</strong>
-            <small>{isAdmin ? 'Ensinar e acompanhar' : user?.turma || 'Seu espaço de estudo'}</small>
-          </div>
-          <button
-            className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-            title="Sair da conta"
-            aria-label="Sair da conta"
-            onClick={logout}
-          >
-            <LogOut size={18} />
-          </button>
-        </div>
       </aside>
       <header className="studio-header">
         <Link to="/dashboard" aria-label="ETI LEITURA — início">

@@ -35,8 +35,13 @@ const quizResults = names.map((n, i) => {
 const quizList = [
   { ...quizFull, perguntas: undefined },
   { id: 'q2', titulo: 'Vocabulário do capítulo 5', turma: '8º ANO', aberto: false, rascunho: true, nota_maxima: 5, segundos: 30, total: 6 },
-  { id: 'q3', titulo: 'Dom Casmurro: personagens', turma: '7º ANO', aberto: false, rascunho: false, nota_maxima: 10, segundos: 20, total: 8 }
+  { id: 'q3', titulo: 'Dom Casmurro: personagens', turma: '7º ANO', aberto: false, rascunho: false, nota_maxima: 10, segundos: 20, total: 8 },
+  { id: 'q4', titulo: 'Desafio relâmpago', turma: '7º ANO', aberto: true, rascunho: false, nota_maxima: 10, segundos: 20, total: 4 }
 ];
+// Quiz temporizado: sessão em memória, com acerto/erro a cada resposta.
+const timedQuiz = { ...quizFull, id: 'q4', titulo: 'Desafio relâmpago', segundos: 20 };
+const timed = { indice: 0, respostas: [] };
+const timedSession = () => ({ indice: timed.indice, respostas: timed.respostas, limite: new Date(Date.now() + 20000).toISOString() });
 const subjects = ['Língua Portuguesa', 'Matemática', 'História', 'Ciências'];
 const gradebook = {
   alunos: names.map((n, i) => ({ id: 'u' + i, nome: n, turma: i % 2 ? '8º ANO' : '7º ANO', email: `aluno${i}@example.com` })),
@@ -57,11 +62,27 @@ module.exports = function extra(p, isAdmin, method, body) {
     return r;
   }
   if (method === 'POST' && p === '/api/auth/login') return { access_token: 'mock-admin', user: { id: 't1', nome: 'Ana Souza', role: 'teacher', email: body.email, turmas: ['7º ANO', '8º ANO'] } };
+  if (method === 'POST' && p === '/api/quizzes/q4/start') {
+    timed.indice = 0;
+    timed.respostas = [];
+    return timedSession();
+  }
+  if (method === 'POST' && p === '/api/quizzes/q4/step') {
+    if (body.indice !== timed.indice || body.indice >= timedQuiz.perguntas.length) return [409, { detail: 'Esta pergunta já foi respondida.' }];
+    const q = timedQuiz.perguntas[body.indice];
+    timed.respostas.push(body.resposta);
+    timed.indice = body.indice + 1;
+    const acertos = timed.respostas.filter((r, i) => r === timedQuiz.perguntas[i].correta).length;
+    const resultado = { indice: body.indice, resposta: body.resposta, correta: q.correta, acertou: body.resposta === q.correta, esgotado: body.resposta === -1 };
+    const next = timed.indice >= timedQuiz.perguntas.length ? { concluido: true } : timedSession();
+    return { ...next, resultado, acertos, total: timedQuiz.perguntas.length };
+  }
   if (method !== 'GET') return undefined;
   if (p === '/api/activities/a1' || p === '/api/admin/activities/a1') return activityFull;
   if (p === '/api/admin/activities/a1/responses') return responses;
   if (/^\/api\/admin\/activities\/\w+\/responses$/.test(p)) return [];
   if (p === '/api/quizzes') return isAdmin ? quizList : quizList.filter(q => !q.rascunho);
+  if (p === '/api/quizzes/q4') return isAdmin ? timedQuiz : { ...timedQuiz, perguntas: timedQuiz.perguntas.map(({ correta, ...q }) => q) };
   if (p === '/api/quizzes/q1') return isAdmin ? { ...quizFull, resultados: quizResults } : quizFull;
   if (p === '/api/quizzes/q1/ranking') return { participantes: quizResults.map((r, i) => ({ posicao: i + 1, nome: r.nome, acertos: r.acertos, total: 4, voce: i === 0 })), encerrado: false };
   if (p === '/api/gradebook') return isAdmin ? gradebook : { alunos: [gradebook.alunos[0]], notas: gradebook.notas.filter(g => g.user_id === 'u0') };

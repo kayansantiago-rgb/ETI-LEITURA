@@ -1,5 +1,7 @@
 """Quizzes por turma, com correção no servidor e uma entrega por aluno."""
 from datetime import datetime, timezone, timedelta
+
+FEEDBACK_SECONDS = 2.5
 from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, model_validator
@@ -193,10 +195,16 @@ def create_quiz_router(db, current, staff):
         expired = datetime.now(timezone.utc) >= datetime.fromisoformat(session['limite'])
         if data.resposta == -1 and not expired:
             raise HTTPException(409, 'A pergunta ainda está aberta.')
-        next_session = {**session, 'indice': data.indice + 1, 'respostas': [*session['respostas'], -1 if expired else data.resposta], 'limite': (datetime.now(timezone.utc) + timedelta(seconds=quiz['segundos'])).isoformat()}
+        answer = -1 if expired else data.resposta
+        # A próxima pergunta só começa a contar depois da tela de acerto/erro.
+        next_session = {**session, 'indice': data.indice + 1, 'respostas': [*session['respostas'], answer], 'limite': (datetime.now(timezone.utc) + timedelta(seconds=quiz['segundos'] + FEEDBACK_SECONDS)).isoformat()}
         result = await db.quiz_sessions.update_one({'_id': key, 'indice': data.indice}, {'$set': {k: v for k, v in next_session.items() if k != '_id'}})
         if not result.matched_count:
             raise HTTPException(409, 'Esta pergunta já foi respondida.')
-        return await timed_result(quiz, next_session, user)
+        correct = quiz['perguntas'][data.indice]['correta']
+        # Não há volta para perguntas respondidas, então revelar a correta aqui é seguro.
+        feedback = {'indice': data.indice, 'resposta': answer, 'correta': correct, 'acertou': answer == correct, 'esgotado': expired}
+        hits = sum(a == q['correta'] for a, q in zip(next_session['respostas'], quiz['perguntas']))
+        return {**await timed_result(quiz, next_session, user), 'resultado': feedback, 'acertos': hits, 'total': len(quiz['perguntas'])}
 
     return router

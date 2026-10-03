@@ -87,11 +87,14 @@ def test_timer_expiry_and_resume(quiz_api):
     assert req('POST','/quizzes/q/start').json()['limite']==first['limite']
     assert req('POST','/quizzes/q/step',json={'indice':0,'resposta':-1}).status_code==409
     session['limite']=(datetime.now(timezone.utc)-timedelta(seconds=1)).isoformat()
-    assert req('POST','/quizzes/q/step',json={'indice':0,'resposta':1}).json()['concluido']
+    expired=req('POST','/quizzes/q/step',json={'indice':0,'resposta':1}).json()
+    assert expired['concluido'] and expired['resultado']['esgotado'] and not expired['resultado']['acertou']
+    assert expired['resultado']['correta']==1 and expired['acertos']==0
     assert db.quiz_attempts.insert_one.call_args.args[0]['acertos']==0
     assert db.quiz_attempts.insert_one.call_args.args[0]['respostas']==[-1]
     session['limite']=(datetime.now(timezone.utc)+timedelta(seconds=30)).isoformat()
-    assert req('POST','/quizzes/q/step',json={'indice':0,'resposta':1}).status_code==200
+    right=req('POST','/quizzes/q/step',json={'indice':0,'resposta':1})
+    assert right.status_code==200 and right.json()['resultado']['acertou'] and right.json()['acertos']==1
     assert db.quiz_attempts.insert_one.call_args.args[0]['nota']==20
     db.quiz_sessions.update_one.return_value=SimpleNamespace(matched_count=0)
     assert req('POST','/quizzes/q/step',json={'indice':0,'resposta':1}).status_code==409
