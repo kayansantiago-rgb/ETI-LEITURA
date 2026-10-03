@@ -3554,17 +3554,25 @@ html.reduce-motion .eti-logo *, .reduce-motion .eti-logo * { animation: none !im
 /* ===== Barra inferior do celular ===== */
 .atlas-shell .mobile-dock .mobile-dock-item.active .mobile-dock-icon { background: var(--eti-gradient); color: #fff; box-shadow: var(--eti-shadow-glow); }
 
-/* ===== Avisos rápidos (toasts) ===== */
-[data-sonner-toast][data-styled="true"].eti-toast { --t: #7c3aed; display: flex; align-items: center; gap: 12px; padding: 12px 40px 12px 12px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--t) 28%, hsl(var(--border))); background: linear-gradient(90deg, color-mix(in srgb, var(--t) 9%, hsl(var(--card))), hsl(var(--card)) 60%); color: hsl(var(--foreground)); box-shadow: 0 18px 40px -22px hsl(250 50% 20% / .5); font-family: inherit; }
-[data-sonner-toast][data-styled="true"].eti-toast[data-type="success"] { --t: #16a34a; }
-[data-sonner-toast][data-styled="true"].eti-toast[data-type="error"] { --t: #dc2626; }
-[data-sonner-toast][data-styled="true"].eti-toast[data-type="warning"] { --t: #d97706; }
-[data-sonner-toast][data-styled="true"].eti-toast[data-type="info"] { --t: #6366f1; }
-[data-sonner-toast][data-styled="true"].eti-toast .eti-toast-icon { flex: none; width: 34px; height: 34px; margin: 0 !important; display: grid; place-items: center; border-radius: 50%; color: var(--t); background: color-mix(in srgb, var(--t) 14%, transparent); }
-[data-sonner-toast][data-styled="true"].eti-toast .eti-toast-icon svg { margin: 0 !important; }
-[data-sonner-toast][data-styled="true"].eti-toast .eti-toast-title { font-size: .86rem; font-weight: 700; line-height: 1.4; }
+/* ===== Avisos rápidos (toasts) no visual da plataforma ===== */
+[data-sonner-toast][data-styled="true"].eti-toast { --g: var(--eti-gradient); --t: hsl(var(--primary)); position: relative; overflow: hidden; display: flex; align-items: center; gap: 12px; padding: 12px 42px 15px 12px; border-radius: 20px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); color: hsl(var(--foreground)); box-shadow: 0 24px 60px -24px hsl(250 50% 20% / .55); font-family: inherit; }
+[data-sonner-toast][data-styled="true"].eti-toast[data-type="error"] { --g: linear-gradient(135deg, #e11d48, #f97316); --t: #e11d48; }
+[data-sonner-toast][data-styled="true"].eti-toast[data-type="warning"] { --g: linear-gradient(135deg, #f59e0b, #f97316); --t: #d97706; }
+/* Ícone num bloco com o degradê da marca */
+[data-sonner-toast][data-styled="true"].eti-toast .eti-toast-icon { flex: none; width: 46px; height: 46px; margin: 0 !important; display: grid; place-items: center; border-radius: 15px; color: #fff; background: var(--g); box-shadow: 0 10px 22px -10px var(--t); }
+[data-sonner-toast][data-styled="true"].eti-toast .eti-toast-icon svg { width: 20px; height: 20px; margin: 0 !important; }
+/* Rótulo pequeno acima da mensagem, como nos títulos das páginas */
+[data-sonner-toast][data-styled="true"].eti-toast .eti-toast-title::before { content: 'ETI Leitura'; display: block; margin-bottom: 1px; font-size: .62rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--t); }
+[data-sonner-toast][data-styled="true"].eti-toast[data-type="success"] .eti-toast-title::before { content: 'Tudo certo'; }
+[data-sonner-toast][data-styled="true"].eti-toast[data-type="error"] .eti-toast-title::before { content: 'Ops!'; }
+[data-sonner-toast][data-styled="true"].eti-toast[data-type="warning"] .eti-toast-title::before { content: 'Atenção'; }
+[data-sonner-toast][data-styled="true"].eti-toast[data-type="info"] .eti-toast-title::before { content: 'Aviso'; }
+[data-sonner-toast][data-styled="true"].eti-toast .eti-toast-title { font-size: .9rem; font-weight: 800; letter-spacing: -.01em; line-height: 1.35; }
 [data-sonner-toast][data-styled="true"].eti-toast .eti-toast-desc { font-size: .78rem; color: hsl(var(--muted-foreground)); }
-[data-sonner-toast][data-styled="true"].eti-toast .eti-toast-close { left: auto !important; right: 8px; top: 50%; transform: translateY(-50%); width: 26px; height: 26px; border: 0; border-radius: 8px; background: transparent; color: hsl(var(--muted-foreground)); }
+/* Barra de tempo no rodapé, no degradê da marca */
+[data-sonner-toast][data-styled="true"].eti-toast::after { content: ''; position: absolute; left: 0; bottom: 0; width: 100%; height: 3px; background: var(--g); transform-origin: left; animation: wt-bar 4s linear forwards; }
+[data-sonner-toast][data-styled="true"].eti-toast[data-type="loading"]::after { animation: none; opacity: .4; }
+[data-sonner-toast][data-styled="true"].eti-toast .eti-toast-close { left: auto !important; right: 10px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border: 0; border-radius: 9px; background: transparent; color: hsl(var(--muted-foreground)); }
 [data-sonner-toast][data-styled="true"].eti-toast .eti-toast-close:hover { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
 
 /* ===== Impressão (Ctrl+P) ===== */
