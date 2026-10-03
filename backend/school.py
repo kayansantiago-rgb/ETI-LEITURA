@@ -74,7 +74,7 @@ async def notifications(db,user):
     return sorted(notices,key=lambda x:x['data'],reverse=True)[:100]
 
 async def report_data(db,user,turma=None):
-    students=await db.users.find(class_query(user,turma),{'_id':0,'id':1,'nome':1,'turma':1}).sort('nome',1).to_list(10000)
+    students=await db.users.find(class_query(user,turma),{'_id':0,'id':1,'nome':1,'turma':1,'avatar_url':1,'moldura':1}).sort('nome',1).to_list(10000)
     rows=[];months={}
     scales={a['id']:a.get('valor_nota') for a in await db.activities.find({},{'_id':0,'id':1,'valor_nota':1}).to_list(10000)}
     for u in students:

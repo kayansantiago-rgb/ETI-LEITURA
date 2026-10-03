@@ -1,4 +1,5 @@
 import { confirmAction } from '@/components/ConfirmHost';
+import ErrorState from '@/components/ErrorState';
 import { PageSkeleton } from '@/components/Skeleton';
 import OwlEmpty from '@/components/OwlEmpty';
 import { useEffect, useRef, useState } from 'react';
@@ -244,12 +245,7 @@ export default function AdminBooks() {
         </PageIntro>
 
         {failed ? (
-          <div className="ws-card ws-empty" role="alert">
-            <h3>Não foi possível carregar o acervo</h3>
-            <button className="underline font-semibold" onClick={load}>
-              Tentar novamente
-            </button>
-          </div>
+          <ErrorState title="Não deu para carregar o acervo" onRetry={load} />
         ) : !books ? (
           <PageSkeleton cards={3} rows={4} label="Carregando acervo…" />
         ) : (

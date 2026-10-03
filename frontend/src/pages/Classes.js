@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import Face from '@/components/Face';
+import ErrorState from '@/components/ErrorState';
 import { PageSkeleton } from '@/components/Skeleton';
 import OwlEmpty from '@/components/OwlEmpty';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
@@ -34,14 +36,6 @@ import { toast } from 'sonner';
 const normalize = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const num = v => (v == null ? '—' : v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }));
 const tone = v => (v == null ? 'is-none' : v >= 7 ? 'is-high' : v >= 5 ? 'is-mid' : 'is-low');
-const initials = name =>
-  (name || 'A')
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map(n => n[0])
-    .join('')
-    .toUpperCase();
 const avg = list => (list.length ? list.reduce((s, v) => s + v, 0) / list.length : null);
 const COVERS = ['qz-cover-violet', 'qz-cover-blue', 'qz-cover-teal', 'qz-cover-amber', 'qz-cover-pink'];
 
@@ -201,16 +195,11 @@ export default function Classes() {
       </PageIntro>
 
       {!valid ? (
-        <div role="alert" className="ws-card ws-empty">
-          <h3>Esta turma não está atribuída à sua conta.</h3>
+        <div className="ws-card">
+          <OwlEmpty compact mood="search" title="Turma não atribuída" text="Esta turma não está vinculada à sua conta. Peça à coordenação para incluí-la." action="Ver minhas turmas" to="/admin/classes" />
         </div>
       ) : failed ? (
-        <div role="alert" className="ws-card ws-empty">
-          <h3>Não foi possível carregar as turmas</h3>
-          <button className="underline font-semibold" onClick={load}>
-            Tentar novamente
-          </button>
-        </div>
+        <ErrorState title="Não deu para carregar as turmas" onRetry={load} />
       ) : !data ? (
         <PageSkeleton cards={3} rows={0} label="Carregando suas turmas…" />
       ) : !turma ? (
@@ -300,7 +289,7 @@ export default function Classes() {
                       <tr key={a.id}>
                         <td>
                           <button type="button" className="ws-person sh-trigger" onClick={() => setStudent(a.id)} title="Ver histórico completo">
-                            <span className="ws-avatar">{initials(a.nome)}</span>
+                            <Face url={a.avatar_url} name={a.nome} frame={a.moldura} />
                             <div className="min-w-0">
                               <strong>{a.nome}</strong>
                               <small>

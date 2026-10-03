@@ -8,7 +8,7 @@ import ActivityForm from '@/components/ActivityForm';
 import useDraft, { readDraft, clearDraft } from '@/hooks/useDraft';
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, Award, BookOpen, Calendar, ChevronDown, ChevronUp, Paperclip, RotateCcw, Clock3, MessageSquareText, User, Pencil, Lock, LockOpen, Copy, BookmarkPlus, Trash2, Inbox } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Award, BookOpen, Calendar, ChevronDown, ChevronUp, Paperclip, RotateCcw, Clock3, MessageSquareText, User, Pencil, Lock, LockOpen, Copy, BookmarkPlus, Trash2, Inbox, Printer } from 'lucide-react';
 import OwlEmpty from '@/components/OwlEmpty';
 import { PageSkeleton } from '@/components/Skeleton';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -205,6 +205,9 @@ function TeacherActivity({ activity, responses, setResponses, canManage, busy, e
           <button type="button" onClick={onSaveModel} disabled={busy}>
             <BookmarkPlus size={14} /> Salvar como modelo
           </button>
+          <button type="button" onClick={() => window.print()}>
+            <Printer size={14} /> Imprimir
+          </button>
           {canManage && !responses.length && (
             <button type="button" className="is-danger" onClick={onRemove} disabled={busy}>
               <Trash2 size={14} /> Excluir
@@ -243,8 +246,7 @@ function TeacherActivity({ activity, responses, setResponses, canManage, busy, e
           </span>
           {showQuestions ? <ChevronUp size={17} /> : <ChevronDown size={17} />}
         </button>
-        {showQuestions && (
-          <ol>
+          <ol className={showQuestions ? '' : 'is-collapsed'}>
             {activity.perguntas.map((q, i) => (
               <li key={q.id}>
                 <span className="qz-q-number">{i + 1}</span>
@@ -263,7 +265,6 @@ function TeacherActivity({ activity, responses, setResponses, canManage, busy, e
               </li>
             ))}
           </ol>
-        )}
       </section>
 
       <section className="adm-responses">

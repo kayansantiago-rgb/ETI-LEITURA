@@ -1,4 +1,5 @@
 import { confirmAction } from '@/components/ConfirmHost';
+import Face from '@/components/Face';
 import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Search, CheckCircle2, Clock3, Sparkles, ListChecks, MessageSquareText, Trash2, BookOpen, PenTool } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,14 +9,6 @@ import QuickComments from '@/components/QuickComments';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 
-const initials = name =>
-  (name || 'Estudante')
-    .split(' ')
-    .filter(Boolean)
-    .map(n => n[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
 const normalize = text => String(text || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const fmt = value => Number(value).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
 const stateOf = item => (item.nota != null ? 'graded' : 'pending');
@@ -272,7 +265,7 @@ export default function TextCorrectionWorkspace({ items, kind, canDelete, onSave
             return (
               <li key={i.id}>
                 <button type="button" className={i.id === current?.id ? 'is-active' : ''} onClick={() => select(i.id)}>
-                  <span className={`cx-avatar state-${state}`}>{initials(i.user_nome)}</span>
+                  <Face className={`cx-avatar state-${state}`} url={i.user_avatar} name={i.user_nome} frame={i.user_moldura} />
                   <span className="cx-student-name">
                     <strong>{i.user_nome}</strong>
                     <small>{config.title(i)}</small>
@@ -300,7 +293,7 @@ export default function TextCorrectionWorkspace({ items, kind, canDelete, onSave
         <>
           <section className="cx-main" ref={mainRef} aria-label="Texto do aluno">
             <header className="cx-student">
-              <span className={`cx-avatar is-lg state-${stateOf(current)}`}>{initials(current.user_nome)}</span>
+              <Face className={`cx-avatar is-lg state-${stateOf(current)}`} url={current.user_avatar} name={current.user_nome} frame={current.user_moldura} />
               <div className="min-w-0">
                 <h3>{current.user_nome}</h3>
                 <p>

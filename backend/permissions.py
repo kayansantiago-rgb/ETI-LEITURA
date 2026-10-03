@@ -19,5 +19,17 @@ async def ensure_student_scope(db,user,student_id):
         student=await db.users.find_one({'id':student_id,'role':'student','turma':{'$in':user.get('turmas',[])}})
         if not student:raise HTTPException(404,'Aluno ou trabalho não encontrado')
 
+async def with_avatars(db, rows, field='user_id'):
+    """Acrescenta user_avatar e user_moldura em cada linha (uma única consulta ao banco)."""
+    ids = list({r.get(field) for r in rows if r.get(field)})
+    if not ids:
+        return rows
+    people = {u['id']: u for u in await db.users.find({'id': {'$in': ids}}, {'_id': 0, 'id': 1, 'avatar_url': 1, 'moldura': 1}).to_list(len(ids))}
+    for r in rows:
+        person = people.get(r.get(field), {})
+        r['user_avatar'] = person.get('avatar_url')
+        r['user_moldura'] = person.get('moldura')
+    return rows
+
 async def scoped_ids(db,user,turma=None):
     return [u['id'] for u in await db.users.find(class_query(user,turma),{'id':1,'_id':0}).to_list(10000)]

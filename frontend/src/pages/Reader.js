@@ -230,6 +230,7 @@ export default function Reader() {
             if (!active) return;
             setSync('saved');
             if (r.data?.percentage != null) setProgress(r.data.percentage);
+            window.dispatchEvent(new Event('eti-progress'));
           })
           .catch(() => active && setSync('offline')),
       500

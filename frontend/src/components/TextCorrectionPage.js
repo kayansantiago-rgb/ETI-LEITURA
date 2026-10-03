@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import ErrorState from '@/components/ErrorState';
 import { PageSkeleton } from '@/components/Skeleton';
 import { Clock3, CheckCircle2, TrendingUp, Users } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -47,12 +48,7 @@ export default function TextCorrectionPage({ kind, path, section, title, descrip
         </PageIntro>
 
         {failed ? (
-          <div className="ws-card ws-empty" role="alert">
-            <h3>Não foi possível carregar os textos</h3>
-            <button className="underline font-semibold" onClick={load}>
-              Tentar novamente
-            </button>
-          </div>
+          <ErrorState title="Não deu para carregar os textos" onRetry={load} />
         ) : !items ? (
           <PageSkeleton cards={3} rows={4} label="Carregando textos…" />
         ) : (

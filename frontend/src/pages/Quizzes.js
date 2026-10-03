@@ -1,4 +1,5 @@
 import { confirmAction } from '@/components/ConfirmHost';
+import ErrorState from '@/components/ErrorState';
 import { PageSkeleton } from '@/components/Skeleton';
 import OwlEmpty from '@/components/OwlEmpty';
 import QuizRanking from '@/components/QuizRanking';
@@ -777,12 +778,7 @@ export default function Quizzes() {
             )}
 
             {failed ? (
-              <div className="ws-card ws-empty" role="alert">
-                <h3>Não foi possível carregar os quizzes</h3>
-                <button onClick={load} className="underline font-semibold">
-                  Tentar novamente
-                </button>
-              </div>
+              <ErrorState title="Não deu para carregar os quizzes" onRetry={load} />
             ) : !items ? (
               <PageSkeleton cards={3} rows={0} label="Carregando quizzes…" />
             ) : !visible.length ? (

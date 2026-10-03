@@ -139,6 +139,8 @@ class Summary(BaseModel):
     book_titulo: Optional[str] = None
     user_nome: Optional[str] = None
     user_turma: Optional[str] = None
+    user_avatar: Optional[str] = None
+    user_moldura: Optional[str] = None
     # Campos de correção
     nota: Optional[float] = None
     feedback: Optional[str] = None
@@ -174,6 +176,8 @@ class TextProduction(BaseModel):
     updated_at: str
     user_nome: Optional[str] = None
     user_turma: Optional[str] = None
+    user_avatar: Optional[str] = None
+    user_moldura: Optional[str] = None
     # Campos de correção
     nota: Optional[float] = None
     feedback: Optional[str] = None
@@ -785,6 +789,8 @@ async def get_all_summaries(turma: Optional[str] = None, admin_user: dict = Depe
         if user:
             summary["user_nome"] = user["nome"]
             summary["user_turma"] = user.get("turma")
+            summary["user_avatar"] = user.get("avatar_url")
+            summary["user_moldura"] = user.get("moldura")
 
     return summaries
 
@@ -994,6 +1000,8 @@ async def get_all_productions(turma: Optional[str] = None, admin_user: dict = De
         if user:
             production["user_nome"] = user["nome"]
             production["user_turma"] = user.get("turma")
+            production["user_avatar"] = user.get("avatar_url")
+            production["user_moldura"] = user.get("moldura")
 
     return productions
 

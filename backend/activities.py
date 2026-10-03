@@ -244,7 +244,9 @@ def create_activity_router(db, get_current_user, require_admin):
     @router.get('/admin/activities/{activity_id}/responses')
     async def list_responses(activity_id: str, user=Depends(require_admin)):
         await visible(activity_id, user)
-        return await db.activity_submissions.find(await response_query(activity_id,user), {'_id': 0}).sort('updated_at', -1).to_list(1000)
+        rows = await db.activity_submissions.find(await response_query(activity_id,user), {'_id': 0}).sort('updated_at', -1).to_list(1000)
+        from backend.permissions import with_avatars
+        return await with_avatars(db, rows)
 
     @router.put('/admin/activities/{activity_id}/responses/{response_id}/correction')
     async def grade_response(activity_id: str, response_id: str, data: ActivityGrade, user=Depends(require_admin)):

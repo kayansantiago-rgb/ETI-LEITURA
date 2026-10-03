@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import ErrorState from '@/components/ErrorState';
 import { PageSkeleton } from '@/components/Skeleton';
 import { createPortal } from 'react-dom';
 import { Play, Plus, FileText, Search, X, Pencil, Trash2, ExternalLink, Paperclip, Youtube, Captions } from 'lucide-react';
@@ -332,14 +333,7 @@ export function Videos() {
 
       {!items ? (
         failed ? (
-          <div className="ws-card ws-empty" role="alert">
-            <>
-              Não foi possível carregar.{' '}
-              <button className="underline font-semibold" onClick={load}>
-                Tentar novamente
-              </button>
-            </>
-          </div>
+          <ErrorState onRetry={load} />
         ) : (
           <PageSkeleton cards={3} rows={0} label="Carregando materiais…" />
         )

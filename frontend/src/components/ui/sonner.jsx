@@ -1,26 +1,23 @@
 import { useTheme } from "next-themes"
 import { Toaster as Sonner, toast } from "sonner"
+import { CheckCircle2, AlertTriangle, XCircle, Info, Loader2 } from "lucide-react"
 
-const Toaster = ({
-  ...props
-}) => {
+// Avisos rápidos ("Salvo!", "Erro…") com o visual da ETI LEITURA: ícone em bloco colorido e barra lateral.
+const Toaster = ({ ...props }) => {
   const { theme = "system" } = useTheme()
 
   return (
     <Sonner
       theme={theme}
       className="toaster group"
-      toastOptions={{
-        classNames: {
-          toast:
-            "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
-          description: "group-[.toast]:text-muted-foreground",
-          actionButton:
-            "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
-          cancelButton:
-            "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
-        },
+      icons={{
+        success: <CheckCircle2 size={18} />,
+        error: <XCircle size={18} />,
+        warning: <AlertTriangle size={18} />,
+        info: <Info size={18} />,
+        loading: <Loader2 size={18} className="animate-spin" />,
       }}
+      toastOptions={{ classNames: { toast: "eti-toast", title: "eti-toast-title", description: "eti-toast-desc", icon: "eti-toast-icon", closeButton: "eti-toast-close" } }}
       {...props} />
   );
 }

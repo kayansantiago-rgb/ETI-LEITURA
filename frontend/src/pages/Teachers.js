@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import ErrorState from '@/components/ErrorState';
 import { PageSkeleton } from '@/components/Skeleton';
 import { createPortal } from 'react-dom';
 import { Plus, Search, X, Check, KeyRound, Pencil, Power, Copy, Mail, Users, UserCheck, UserX, School, AlertTriangle, Eye, EyeOff } from 'lucide-react';
@@ -402,14 +403,7 @@ export default function Teachers() {
 
       {!items ? (
         failed ? (
-          <div className="ws-card ws-empty" role="alert">
-            <>
-              Não foi possível carregar.{' '}
-              <button className="underline font-semibold" onClick={load}>
-                Tentar novamente
-              </button>
-            </>
-          </div>
+          <ErrorState onRetry={load} />
         ) : (
           <PageSkeleton cards={3} rows={0} label="Carregando professores…" />
         )

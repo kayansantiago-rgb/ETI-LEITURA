@@ -1,4 +1,6 @@
 import { Bell, CheckCheck, ArrowUpRight, Inbox, TrendingUp, Users, BookOpen, AlertTriangle, Search, FileDown, FileSpreadsheet, ArrowUp, ArrowDown, ClipboardList, AlarmClock, RotateCcw, CheckCircle2, PlayCircle, Megaphone, Sparkles, PenLine, Check, Clock3, ChevronDown } from 'lucide-react';
+import Face from '@/components/Face';
+import ErrorState from '@/components/ErrorState';
 import { PageSkeleton } from '@/components/Skeleton';
 import OwlEmpty from '@/components/OwlEmpty';
 import CorrectionDrawer from '@/components/CorrectionDrawer';
@@ -104,7 +106,7 @@ export function Notifications() {
           </div>
           {!data ? (
             failed ? (
-            <div className="ws-card ws-empty" role="alert">Não foi possível carregar. Atualize a página para tentar novamente.</div>
+            <ErrorState />
           ) : (
             <PageSkeleton cards={0} rows={5} label="Carregando avisos…" />
           )
@@ -389,7 +391,7 @@ export function Workspace() {
       />
       {!data ? (
         failed ? (
-            <div className="ws-card ws-empty" role="alert">Não foi possível carregar. Atualize a página para tentar novamente.</div>
+            <ErrorState />
           ) : (
             <PageSkeleton cards={0} rows={5} label="Carregando pendências…" />
           )
@@ -405,7 +407,6 @@ export function Workspace() {
 const MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 const brNum = (value, digits = 1) => (value == null ? '—' : Number(value).toLocaleString('pt-BR', { minimumFractionDigits: digits, maximumFractionDigits: digits }));
 const gradeTone = value => (value == null ? 'is-none' : value >= 7 ? 'is-high' : value >= 5 ? 'is-mid' : 'is-low');
-const nameInitials = name => (name || 'A').split(' ').filter(Boolean).slice(0, 2).map(n => n[0]).join('').toUpperCase();
 const plain = text => String(text || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 function EvolutionChart({ data }) {
@@ -566,7 +567,7 @@ export function Reports() {
       </PageIntro>
       {!data ? (
         failed ? (
-            <div className="ws-card ws-empty" role="alert">Não foi possível carregar. Atualize a página para tentar novamente.</div>
+            <ErrorState />
           ) : (
             <PageSkeleton cards={0} rows={5} label="Carregando relatório…" />
           )
@@ -664,7 +665,7 @@ export function Reports() {
                     <tr key={a.id}>
                       <td>
                         <div className="ws-person">
-                          <span className="ws-avatar">{nameInitials(a.nome)}</span>
+                          <Face url={a.avatar_url} name={a.nome} frame={a.moldura} />
                           <div className="min-w-0">
                             <strong>{a.nome}</strong>
                             <small>{a.atividades_entregues} atividade(s) entregue(s)</small>

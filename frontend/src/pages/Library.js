@@ -1,4 +1,5 @@
 import { confirmAction } from '@/components/ConfirmHost';
+import ErrorState from '@/components/ErrorState';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, BookOpen, BookMarked, CheckCircle2, Trophy, ArrowRight, Library as LibraryIcon } from 'lucide-react';
@@ -182,12 +183,7 @@ const Library = () => {
             ))}
           </div>
         ) : failed ? (
-          <div className="ws-card ws-empty" role="alert">
-            <h3>Não foi possível carregar os livros</h3>
-            <button onClick={loadBooks} className="underline font-semibold">
-              Tentar novamente
-            </button>
-          </div>
+          <ErrorState title="Não deu para carregar os livros" onRetry={loadBooks} />
         ) : filtered.length === 0 ? (
           <EmptyCollection
             icon={BookOpen}

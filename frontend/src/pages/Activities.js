@@ -1,4 +1,5 @@
 import { confirmAction } from '@/components/ConfirmHost';
+import ErrorState from '@/components/ErrorState';
 import { PageSkeleton } from '@/components/Skeleton';
 import OwlEmpty from '@/components/OwlEmpty';
 import { publicationLabel } from '@/lib/publication';
@@ -364,12 +365,7 @@ export default function Activities() {
       ) : loading ? (
         <PageSkeleton cards={3} rows={0} label="Carregando atividades…" />
       ) : failed ? (
-        <div className="ws-card ws-empty" role="alert">
-          <h3>Não foi possível carregar as atividades</h3>
-          <button className="underline font-semibold" onClick={load}>
-            Tentar novamente
-          </button>
-        </div>
+        <ErrorState title="Não deu para carregar as atividades" onRetry={load} />
       ) : !visible.length ? (
         <div className="ws-card">
           <OwlEmpty

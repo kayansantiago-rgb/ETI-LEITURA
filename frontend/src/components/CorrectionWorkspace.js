@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import Face from '@/components/Face';
 import { ChevronLeft, ChevronRight, Search, CheckCircle2, Clock3, RotateCcw, Undo2, Sparkles, ListChecks, MessageSquareText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AttemptHistory from '@/components/AttemptHistory';
@@ -19,14 +20,6 @@ const FILTERS = [
   ['all', 'Todas']
 ];
 
-const initials = name =>
-  (name || 'Estudante')
-    .split(' ')
-    .filter(Boolean)
-    .map(n => n[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
 
 const normalize = text => String(text || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const todayInBrasilia = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
@@ -358,7 +351,7 @@ export default function CorrectionWorkspace({ activity, responses, onGraded }) {
             return (
               <li key={r.id}>
                 <button type="button" className={r.id === current?.id ? 'is-active' : ''} onClick={() => select(r.id)}>
-                  <span className={`cx-avatar state-${state}`}>{initials(r.user_nome)}</span>
+                  <Face className={`cx-avatar state-${state}`} url={r.user_avatar} name={r.user_nome} frame={r.user_moldura} />
                   <span className="cx-student-name">
                     <strong>{r.user_nome}</strong>
                     <small>
@@ -392,7 +385,7 @@ export default function CorrectionWorkspace({ activity, responses, onGraded }) {
         <>
           <section className="cx-main" ref={mainRef} aria-label="Respostas do aluno">
             <header className="cx-student">
-              <span className={`cx-avatar is-lg state-${responseState(current)}`}>{initials(current.user_nome)}</span>
+              <Face className={`cx-avatar is-lg state-${responseState(current)}`} url={current.user_avatar} name={current.user_nome} frame={current.user_moldura} />
               <div className="min-w-0">
                 <h3>{current.user_nome}</h3>
                 <p>

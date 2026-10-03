@@ -24,6 +24,7 @@ def attention_row(student, last_day, overdue, retries, nudged):
         return None
     return {
         'id': student['id'], 'nome': student['nome'], 'turma': student.get('turma'),
+        'avatar_url': student.get('avatar_url'), 'moldura': student.get('moldura'),
         'dias_sem_ler': quiet, 'ultima_leitura': last_day,
         'atrasadas': overdue, 'refazer': retries, 'lembrado_hoje': nudged,
     }
@@ -102,7 +103,7 @@ def create_students_router(db, staff):
 
     @router.get('/admin/students/attention')
     async def attention(turma: Optional[str] = None, user=Depends(staff)):
-        students = await db.users.find(class_query(user, turma), {'_id': 0, 'id': 1, 'nome': 1, 'turma': 1}).to_list(10000)
+        students = await db.users.find(class_query(user, turma), {'_id': 0, 'id': 1, 'nome': 1, 'turma': 1, 'avatar_url': 1, 'moldura': 1}).to_list(10000)
         if not students:
             return []
         ids = [s['id'] for s in students]

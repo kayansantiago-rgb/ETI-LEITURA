@@ -1,18 +1,11 @@
 import { useEffect, useState } from 'react';
+import Face from '@/components/Face';
 import { createPortal } from 'react-dom';
 import { AlertTriangle, BellRing, BookX, CalendarX2, RotateCcw, Check, X, ChevronDown, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 
-const initials = name =>
-  (name || 'A')
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map(n => n[0])
-    .join('')
-    .toUpperCase();
 const first = name => (name || '').split(' ')[0];
 const PREVIEW = 4;
 
@@ -138,7 +131,7 @@ export default function AttentionPanel({ turma, onOpen }) {
         {visible.map(row => (
           <li key={row.id}>
             <button type="button" className="ap-person" onClick={() => onOpen?.(row.id)} title="Ver histórico completo">
-              <span className="ws-avatar">{initials(row.nome)}</span>
+              <Face url={row.avatar_url} name={row.nome} frame={row.moldura} />
               <span className="min-w-0">
                 <strong>{row.nome}</strong>
                 {!turma && <small>{row.turma}</small>}

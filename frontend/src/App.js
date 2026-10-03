@@ -187,7 +187,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
-      <Toaster position="top-right" richColors />
+      <Toaster position="top-right" closeButton />
       <ConfirmHost />
     </div></SplashScreen></ThemeProvider>
   );
