@@ -3555,9 +3555,27 @@ html.reduce-motion .eti-logo *, .reduce-motion .eti-logo * { animation: none !im
 .atlas-shell .mobile-dock .mobile-dock-item.active .mobile-dock-icon { background: var(--eti-gradient); color: #fff; box-shadow: var(--eti-shadow-glow); }
 
 /* ===== Avisos rápidos (toasts) no visual da plataforma ===== */
-[data-sonner-toast][data-styled="true"].eti-toast { --g: var(--eti-gradient); --t: hsl(var(--primary)); position: relative; overflow: hidden; display: flex; align-items: center; gap: 12px; padding: 12px 42px 15px 12px; border-radius: 20px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); color: hsl(var(--foreground)); box-shadow: 0 24px 60px -24px hsl(250 50% 20% / .55); font-family: inherit; }
+[data-sonner-toast][data-styled="true"].eti-toast { --g: var(--eti-gradient); --t: hsl(var(--primary)); position: relative; overflow: hidden; width: min(360px, calc(100vw - 32px)); display: flex; align-items: center; gap: 12px; padding: 12px 40px 13px 12px; border-radius: 18px; border: 1px solid hsl(var(--border) / .9); background: hsl(var(--card) / .94); -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%); color: hsl(var(--foreground)); box-shadow: 0 18px 44px -20px hsl(250 50% 18% / .45), 0 2px 6px -2px hsl(250 50% 18% / .12); font-family: inherit; }
 [data-sonner-toast][data-styled="true"].eti-toast[data-type="error"] { --g: linear-gradient(135deg, #e11d48, #f97316); --t: #e11d48; }
 [data-sonner-toast][data-styled="true"].eti-toast[data-type="warning"] { --g: linear-gradient(135deg, #f59e0b, #f97316); --t: #d97706; }
+/* Ícone: círculo pequeno com o degradê da marca */
+[data-sonner-toast][data-styled="true"].eti-toast .eti-toast-icon { flex: none; width: 34px !important; height: 34px !important; margin: 0 !important; display: grid; place-items: center; border-radius: 50%; color: #fff; background: var(--g); box-shadow: 0 6px 14px -6px var(--t); }
+[data-sonner-toast][data-styled="true"].eti-toast .eti-toast-icon svg { width: 17px; height: 17px; margin: 0 !important; }
+[data-sonner-toast][data-styled="true"].eti-toast [data-content] { min-width: 0; gap: 1px; }
+/* Rótulo pequeno + mensagem leve */
+[data-sonner-toast][data-styled="true"].eti-toast .eti-toast-title::before { content: 'ETI Leitura'; display: block; margin-bottom: 1px; font-size: .6rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--t); }
+[data-sonner-toast][data-styled="true"].eti-toast[data-type="success"] .eti-toast-title::before { content: 'Tudo certo'; }
+[data-sonner-toast][data-styled="true"].eti-toast[data-type="error"] .eti-toast-title::before { content: 'Ops!'; }
+[data-sonner-toast][data-styled="true"].eti-toast[data-type="warning"] .eti-toast-title::before { content: 'Atenção'; }
+[data-sonner-toast][data-styled="true"].eti-toast[data-type="info"] .eti-toast-title::before { content: 'Aviso'; }
+[data-sonner-toast][data-styled="true"].eti-toast .eti-toast-title { font-size: .82rem; font-weight: 600; letter-spacing: 0; line-height: 1.4; color: hsl(var(--foreground)); }
+[data-sonner-toast][data-styled="true"].eti-toast .eti-toast-desc { font-size: .76rem; color: hsl(var(--muted-foreground)); }
+/* Barra de tempo fininha no rodapé */
+[data-sonner-toast][data-styled="true"].eti-toast::after { content: ''; position: absolute; left: 14px; right: 14px; bottom: 5px; height: 2px; border-radius: 99px; background: var(--g); opacity: .7; transform-origin: left; animation: wt-bar 4s linear forwards; }
+[data-sonner-toast][data-styled="true"].eti-toast[data-type="loading"]::after { animation: none; opacity: .3; }
+[data-sonner-toast][data-styled="true"].eti-toast .eti-toast-close { left: auto !important; right: 8px; top: 50%; transform: translateY(-50%); width: 26px; height: 26px; border: 0; border-radius: 8px; background: transparent; color: hsl(var(--muted-foreground)); }
+[data-sonner-toast][data-styled="true"].eti-toast .eti-toast-close:hover { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+
 /* Ícone num bloco com o degradê da marca */
 [data-sonner-toast][data-styled="true"].eti-toast .eti-toast-icon { flex: none; width: 46px; height: 46px; margin: 0 !important; display: grid; place-items: center; border-radius: 15px; color: #fff; background: var(--g); box-shadow: 0 10px 22px -10px var(--t); }
 [data-sonner-toast][data-styled="true"].eti-toast .eti-toast-icon svg { width: 20px; height: 20px; margin: 0 !important; }

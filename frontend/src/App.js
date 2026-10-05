@@ -187,7 +187,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
-      <Toaster position="top-right" closeButton />
+      <Toaster position="top-right" closeButton offset={{ top: 92, right: 20 }} mobileOffset={{ top: 72, left: 12, right: 12 }} />
       <ConfirmHost />
     </div></SplashScreen></ThemeProvider>
   );
