@@ -121,3 +121,54 @@ def test_student_receives_bell_notices_on_device(monkeypatch):
     assert asyncio.run(push.dispatch(db,AT))==1
     event=delivery.call_args.args[2]
     assert (event['id'],event['title'],event['body'],event['url'])==('grade:x:1','Atividade corrigida','Leitura','/activities/a')
+
+
+def test_streak_reminder_rules():
+    import asyncio
+    from datetime import datetime, timedelta, timezone
+    from types import SimpleNamespace
+    from unittest.mock import AsyncMock
+    from backend.push import streak_event, BRASILIA
+
+    class Cursor:
+        def __init__(self, rows): self.rows = rows
+        async def to_list(self, n): return self.rows
+
+    def make_db(days, book='b1'):
+        return SimpleNamespace(
+            reading_days=SimpleNamespace(find=lambda *a, **k: Cursor([{'dia': d} for d in days])),
+            reading_progress=SimpleNamespace(find_one=AsyncMock(return_value={'book_id': book} if book else None)))
+
+    evening = datetime(2026, 10, 5, 19, 30, tzinfo=BRASILIA).astimezone(timezone.utc)
+    today = evening.astimezone(BRASILIA).date()
+    day = lambda n: (today - timedelta(days=n)).isoformat()
+    student = {'id': 's', 'role': 'student'}
+    run = lambda db, user=student, at=evening: asyncio.run(streak_event(db, user, at))
+
+    event = run(make_db([day(1), day(2)]))
+    assert event['id'] == f'streak:{today.isoformat()}' and '2 dias' in event['title'] and event['url'] == '/reader/b1'
+    assert run(make_db([day(0), day(1)])) is None                      # já leu hoje
+    assert run(make_db([day(3)])) is None                              # sem sequência ativa
+    assert run(make_db([day(1)]), at=evening - timedelta(hours=3)) is None  # antes das 19h
+    assert run(make_db([day(1)]), user={**student, 'lembrete_leitura': False}) is None  # desligou o lembrete
+    assert run(make_db([day(1)]), user={'id': 't', 'role': 'teacher'}) is None
+    assert run(make_db([day(1)], book=None))['url'] == '/library'
+
+@pytest.mark.parametrize('role',['admin','teacher','student'])
+def test_config_diagnostics_only_for_admin(monkeypatch, role):
+    import asyncio
+    import httpx
+    from fastapi import FastAPI
+    from backend.push import create_push_router
+    for name in ('VAPID_PRIVATE_KEY','VAPID_PUBLIC_KEY','VAPID_SUBJECT','PUBLIC_APP_URL'):
+        monkeypatch.delenv(name,raising=False)
+    monkeypatch.setenv('PUSH_ENABLED','false')
+    async def current():return {'id':'u','role':role}
+    app=FastAPI();app.include_router(create_push_router(None,current))
+    async def run():
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),base_url='http://test') as client:
+            return (await client.get('/push/config')).json()
+    result=asyncio.run(run())
+    assert result['configured'] is False
+    assert ('missing' in result)==(role=='admin')
+    if role=='admin':assert set(result['missing'])=={'VAPID_PRIVATE_KEY','VAPID_PUBLIC_KEY','PUBLIC_APP_URL ou VAPID_SUBJECT','PUSH_ENABLED=true'}

@@ -3815,3 +3815,24 @@ html.reduce-motion .eti-logo *, .reduce-motion .eti-logo * { animation: none !im
   .tq-question { padding: 12px 14px !important; }
   .qz-arena:has(.tq) .qz-arena-stage { padding: 8px 14px; }
 }
+
+/* ===== Cópia de segurança (coordenação) ===== */
+.bk { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 16px 18px; }
+.bk-icon { flex: none; width: 46px; height: 46px; display: grid; place-items: center; border-radius: 14px; color: #fff; background: linear-gradient(135deg, #0d9488, #2563eb); box-shadow: 0 10px 22px -12px #2563eb; }
+.bk-copy { flex: 1; min-width: 220px; display: grid; gap: 3px; }
+.bk-copy h3 { font-size: 1rem; font-weight: 800; }
+.bk-copy p { display: flex; align-items: center; gap: 6px; font-size: .8rem; color: hsl(var(--muted-foreground)); }
+.bk-copy .bk-ok { color: hsl(152 55% 34%); font-weight: 700; }
+.dark .bk-copy .bk-ok { color: hsl(152 55% 62%); }
+.bk-copy .bk-warn { color: hsl(30 85% 38%); font-weight: 700; }
+.dark .bk-copy .bk-warn { color: hsl(40 95% 65%); }
+.bk-copy small { font-size: .74rem; color: hsl(var(--muted-foreground)); }
+.bk-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.bk-actions button { display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px; border-radius: 12px !important; font-size: .8rem; font-weight: 700; color: hsl(var(--foreground)); background: hsl(var(--muted) / .8); }
+.bk-actions button.is-primary { color: #fff; background: var(--eti-gradient); box-shadow: var(--eti-shadow-glow); }
+.bk-actions button:disabled { opacity: .6; }
+/* Lembrete de sequência dentro do cartão de notificações */
+.ps:has(.ps-extra) { flex-wrap: wrap; }
+.ps-extra { flex: 1 1 100%; display: flex; align-items: center; gap: 12px; margin-top: 4px; padding-top: 12px; border-top: 1px dashed hsl(var(--border)); }
+.ps-icon.is-small { width: 32px; height: 32px; border-radius: 10px; }
+.ps-icon.is-streak { color: #fff; background: linear-gradient(135deg, #f97316, #ef4444); }

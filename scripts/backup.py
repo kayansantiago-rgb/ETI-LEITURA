@@ -15,7 +15,7 @@ load_dotenv(ROOT/'backend'/'.env')
 
 def digest(data):return hashlib.sha256(data).hexdigest()
 
-def backup(destination):
+def backup(destination, include_files=True):
     destination=Path(destination);destination.parent.mkdir(parents=True,exist_ok=True)
     manifest={'version':1,'created_at':datetime.now(timezone.utc).isoformat(),'database':os.environ['DB_NAME'],'files':{},'collections':{}}
     with MongoClient(os.environ['MONGO_URL']) as client, zipfile.ZipFile(destination,'x',zipfile.ZIP_DEFLATED) as archive:
@@ -27,7 +27,9 @@ def backup(destination):
             docs=list(db[name].find({}));indexes=list(db[name].list_indexes())
             add('database/'+name+'.json',json_util.dumps({'documents':docs,'indexes':indexes}).encode('utf-8'))
             manifest['collections'][name]=len(docs)
-        if os.environ.get('STORAGE_BACKEND','local')=='s3':
+        if not include_files:
+            manifest['sem_arquivos']=True
+        elif os.environ.get('STORAGE_BACKEND','local')=='s3':
             from backend.storage import s3_client
             s3=s3_client();bucket=os.environ['S3_BUCKET']
             for page in s3.get_paginator('list_objects_v2').paginate(Bucket=bucket):
@@ -79,8 +81,8 @@ def restore(source,database,uploads):
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__);sub=parser.add_subparsers(dest='command',required=True)
-    create=sub.add_parser('create');create.add_argument('--output',required=True)
+    create=sub.add_parser('create');create.add_argument('--output',required=True);create.add_argument('--sem-arquivos',action='store_true',help='Copia só o banco (sem PDFs e imagens)')
     recover=sub.add_parser('restore');recover.add_argument('archive');recover.add_argument('--database',required=True);recover.add_argument('--uploads',required=True)
     args=parser.parse_args()
-    if args.command=='create':backup(args.output)
+    if args.command=='create':backup(args.output,include_files=not args.sem_arquivos)
     else:restore(args.archive,args.database,args.uploads)

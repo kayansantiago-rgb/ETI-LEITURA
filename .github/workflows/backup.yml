@@ -1,0 +1,95 @@
+# Backup automático da ETI LEITURA.
+# Todo dia às 3h (Brasília) baixa uma cópia do banco; aos domingos, inclui também os PDFs e imagens.
+# O arquivo é criptografado com BACKUP_PASSPHRASE antes de ser guardado no GitHub.
+# Segredos necessários (GitHub → Settings → Secrets and variables → Actions):
+#   APP_URL            endereço do site, ex.: https://eti-leitura-production.up.railway.app
+#   BACKUP_TOKEN       o mesmo valor configurado no Railway (mínimo 32 caracteres)
+#   BACKUP_PASSPHRASE  senha para abrir os backups (guarde fora do GitHub!)
+name: Backup automático
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      arquivos:
+        description: 'Incluir PDFs e imagens?'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Conferir segredos
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          BACKUP_TOKEN: ${{ secrets.BACKUP_TOKEN }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          for name in APP_URL BACKUP_TOKEN BACKUP_PASSPHRASE; do
+            if [ -z "${!name}" ]; then echo "::error::Configure o segredo $name no GitHub."; exit 1; fi
+          done
+
+      - name: Definir tipo de cópia
+        id: tipo
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            full="${{ inputs.arquivos }}"
+          elif [ "$(date -u +%u)" = "7" ]; then
+            full=true
+          else
+            full=false
+          fi
+          if [ "$full" = "true" ]; then echo "arquivos=1" >> "$GITHUB_OUTPUT"; echo "nome=completo" >> "$GITHUB_OUTPUT"; dias=14
+          else echo "arquivos=0" >> "$GITHUB_OUTPUT"; echo "nome=banco" >> "$GITHUB_OUTPUT"; dias=30; fi
+          echo "dias=$dias" >> "$GITHUB_OUTPUT"
+          echo "data=$(TZ=America/Sao_Paulo date +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Acordar o servidor
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+        run: curl -fsS --retry 5 --retry-delay 15 --retry-all-errors --max-time 120 "$APP_URL/api/health" -o /dev/null
+
+      - name: Baixar backup
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          BACKUP_TOKEN: ${{ secrets.BACKUP_TOKEN }}
+        run: |
+          curl -fsS --retry 3 --retry-delay 30 --retry-all-errors --max-time 1500 \
+            -H "X-Backup-Token: $BACKUP_TOKEN" \
+            "$APP_URL/api/admin/backup?arquivos=${{ steps.tipo.outputs.arquivos }}" -o backup.zip
+          python3 - <<'PY'
+          import json, zipfile
+          with zipfile.ZipFile('backup.zip') as z:
+              bad = z.testzip()
+              if bad: raise SystemExit(f'Arquivo corrompido no backup: {bad}')
+              manifest = json.loads(z.read('manifest.json'))
+          total = sum(manifest['collections'].values())
+          print(f"Backup OK: {len(manifest['collections'])} coleções, {total} documentos, {len(manifest['files'])} arquivos verificados.")
+          if total == 0: raise SystemExit('Backup vazio: confira o banco antes de confiar nesta cópia.')
+          PY
+          ls -lh backup.zip
+
+      - name: Criptografar
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          gpg --batch --yes --symmetric --cipher-algo AES256 --passphrase-fd 0 --output "eti-leitura-${{ steps.tipo.outputs.data }}-${{ steps.tipo.outputs.nome }}.zip.gpg" backup.zip <<< "$BACKUP_PASSPHRASE"
+          shred -u backup.zip
+
+      - name: Guardar no GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: eti-leitura-${{ steps.tipo.outputs.data }}-${{ steps.tipo.outputs.nome }}
+          path: eti-leitura-*.zip.gpg
+          retention-days: ${{ steps.tipo.outputs.dias }}
+          if-no-files-found: error

@@ -1266,6 +1266,8 @@ from backend.book_quiz import create_book_quiz_router, ensure_indexes as ensure_
 api_router.include_router(create_book_quiz_router(db, get_current_user, require_staff))
 from backend.students import create_students_router
 api_router.include_router(create_students_router(db, require_staff))
+from backend.backup_api import create_backup_router
+api_router.include_router(create_backup_router(db, get_current_user))
 from backend.account import create_account_router
 api_router.include_router(create_account_router(db, get_current_user, require_admin, public_user, issue_token, get_password_hash, SECRET_KEY, ALL_CLASSES))
 from backend.reading import create_reading_router, ensure_indexes as ensure_reading_indexes

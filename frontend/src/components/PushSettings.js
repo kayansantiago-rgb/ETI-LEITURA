@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BellRing, BellOff } from 'lucide-react';
+import { BellRing, BellOff, Flame } from 'lucide-react';
 import { getUser } from '@/lib/auth';
 import { pushSupported, savedDevice, detachPush, subscribeDevice, isIOS, isStandalone } from '@/lib/push';
 import api from '@/lib/api';
@@ -9,8 +9,11 @@ import { toast } from 'sonner';
 export default function PushSettings() {
   const user = getUser();
   const [config, setConfig] = useState(null);
+  const [revision, setRevision] = useState(0);
   const [active, setActive] = useState(false);
   const [busy, setBusy] = useState(false);
+  const student = user?.role === 'student';
+  const [reminder, setReminder] = useState(null);
   const [permission, setPermission] = useState(() => (typeof Notification === 'undefined' ? 'default' : Notification.permission));
   const supported = pushSupported();
   const iosNeedsInstall = isIOS() && !isStandalone();
@@ -22,6 +25,8 @@ export default function PushSettings() {
         const cfg = (await api.get('/push/config')).data;
         if (!alive) return;
         setConfig(cfg);
+        setActive(false);
+        setPermission(window.Notification?.permission || 'default');
         const device = savedDevice();
         if (device?.userId === user.id && supported && Notification.permission === 'granted') {
           const reg = await navigator.serviceWorker.getRegistration('/');
@@ -32,10 +37,42 @@ export default function PushSettings() {
         if (alive) setConfig({ configured: false, failed: true });
       }
     })();
-    return () => {
+    const test = async () => {
+    setBusy(true);
+    try {
+      const endpoint = savedDevice()?.endpoint;
+      if (!endpoint) throw Error();
+      const {data} = await api.post('/push/test', {endpoint});
+      toast.success(data.message);
+    } catch (e) {
+      toast.error(typeof e.response?.data?.detail === 'string' ? e.response.data.detail : 'Não foi possível enviar o teste. Atualize o estado e tente novamente.');
+    } finally { setBusy(false); }
+  };
+
+  return () => {
       alive = false;
     };
-  }, []);
+  }, [revision, user.id, supported]);
+
+  useEffect(() => {
+    if (!student) return;
+    api
+      .get('/reading/stats')
+      .then(r => setReminder(r.data.lembrete_leitura !== false))
+      .catch(() => {});
+  }, [student]);
+
+  const toggleReminder = async () => {
+    const next = !reminder;
+    setReminder(next);
+    try {
+      await api.put('/reading/reminder', { ativo: next });
+      toast.success(next ? 'Lembrete de leitura ligado.' : 'Lembrete de leitura desligado.');
+    } catch {
+      setReminder(!next);
+      toast.error('Não foi possível alterar agora.');
+    }
+  };
 
   const reason = iosNeedsInstall
     ? 'No iPhone: Compartilhar → Adicionar à Tela de Início e abra pelo ícone.'
@@ -48,7 +85,7 @@ export default function PushSettings() {
             ? 'Não foi possível verificar agora.'
             : 'A escola ainda não ativou o envio de notificações.'
           : '';
-  const disabled = busy || !config || !!reason;
+  const disabled = busy || (!active && (!config || !!reason));
 
   const toggle = async () => {
     setBusy(true);
@@ -75,8 +112,20 @@ export default function PushSettings() {
     }
   };
 
+  const test = async () => {
+    setBusy(true);
+    try {
+      const endpoint = savedDevice()?.endpoint;
+      if (!endpoint) throw Error();
+      const {data} = await api.post('/push/test', {endpoint});
+      toast.success(data.message);
+    } catch (e) {
+      toast.error(typeof e.response?.data?.detail === 'string' ? e.response.data.detail : 'Não foi possível enviar o teste. Atualize o estado e tente novamente.');
+    } finally { setBusy(false); }
+  };
+
   return (
-    <section className="ps" aria-label="Notificações neste aparelho">
+    <div><section className="ps" aria-label="Notificações neste aparelho">
       <span className={`ps-icon ${active ? 'is-on' : ''}`}>{active ? <BellRing size={18} /> : <BellOff size={18} />}</span>
       <div className="ps-copy">
         <strong>Notificações no aparelho</strong>
@@ -93,6 +142,26 @@ export default function PushSettings() {
       >
         <span />
       </button>
+      {student && reminder !== null && (
+        <div className="ps-extra">
+          <span className={`ps-icon is-small ${reminder ? 'is-streak' : ''}`}>
+            <Flame size={15} />
+          </span>
+          <div className="ps-copy">
+            <strong>Lembrete para não perder a sequência</strong>
+            <small>{active ? 'Às 19h, se você ainda não tiver lido no dia.' : 'Chega às 19h quando as notificações estiverem ligadas.'}</small>
+          </div>
+          <button type="button" role="switch" aria-checked={reminder} aria-label="Lembrete de leitura às 19h" className="qz-switch ps-switch" onClick={toggleReminder}>
+            <span />
+          </button>
+        </div>
+      )}
     </section>
+    <div className="push-help" style={{padding:'12px 0',display:'flex',gap:12,flexWrap:'wrap',alignItems:'center'}}>
+      <button type="button" className="ws-btn" disabled={busy} onClick={()=>setRevision(v=>v+1)}>Verificar novamente</button>
+      {active && <button type="button" className="ws-btn" disabled={busy||!config?.configured} onClick={test}>{busy?'Aguarde…':'Enviar notificação de teste'}</button>}
+      {user.role==='admin' && config?.missing?.length>0 && <p role="status" style={{width:'100%',fontSize:13}}>Configuração pendente no Railway: {config.missing.join(', ')}. Após salvar e publicar as variáveis, clique em Verificar novamente.</p>}
+      <small style={{width:'100%'}}>Ative separadamente em cada computador ou celular. No iPhone, abra a plataforma pelo ícone adicionado à Tela de Início. Os avisos anteriores à ativação continuam disponíveis no sininho.</small>
+    </div></div>
   );
 }

@@ -16,6 +16,10 @@ class Goal(BaseModel):
     paginas_dia: int = Field(ge=1, le=200)
 
 
+class Reminder(BaseModel):
+    ativo: bool
+
+
 async def record_page(db, user_id, previous_page, page):
     """Conta uma página lida no dia quando o aluno avança no leitor (voltar não conta)."""
     if previous_page is not None and page <= previous_page:
@@ -101,12 +105,18 @@ def create_reading_router(db, current):
             'livros_concluidos': finished,
             'certificados': certificates,
             'medalhas': medals(total, best, finished, certificates),
+            'lembrete_leitura': user.get('lembrete_leitura') is not False,
         }
 
     @router.put('/reading/goal')
     async def set_goal(data: Goal, user=Depends(current)):
         await db.reading_goals.update_one({'user_id': user['id']}, {'$set': {'paginas_dia': data.paginas_dia}}, upsert=True)
         return {'meta_paginas': data.paginas_dia}
+
+    @router.put('/reading/reminder')
+    async def set_reminder(data: Reminder, user=Depends(current)):
+        await db.users.update_one({'id': user['id']}, {'$set': {'lembrete_leitura': data.ativo}})
+        return {'lembrete_leitura': data.ativo}
 
     @router.get('/reading/ranking')
     async def ranking(turma: str = None, user=Depends(current)):

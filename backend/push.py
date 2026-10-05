@@ -107,6 +107,38 @@ def events_for(activity, submission, subscription, at):
     return events[-1:]
 
 
+def reminder_hour():
+    try:
+        return max(12, min(21, int(os.getenv('STREAK_REMINDER_HOUR', '19'))))
+    except ValueError:
+        return 19
+
+
+async def streak_event(db, user, at):
+    """Às 19h (Brasília), avisa quem tem sequência de leitura e ainda não leu hoje. Um aviso por dia."""
+    if user.get('role') != 'student' or user.get('lembrete_leitura') is False:
+        return None
+    local = at.astimezone(BRASILIA)
+    if not reminder_hour() <= local.hour < 23:
+        return None
+    from backend.reading import streaks
+    today = local.date()
+    since = (today - timedelta(days=400)).isoformat()
+    days = [d['dia'] for d in await db.reading_days.find({'user_id': user['id'], 'dia': {'$gte': since}}, {'_id': 0, 'dia': 1}).to_list(500)]
+    if today.isoformat() in days:
+        return None
+    current, _ = streaks(days)
+    if current < 1:
+        return None
+    # Leva direto ao livro que o aluno está lendo, se houver.
+    book = await db.reading_progress.find_one({'user_id': user['id'], 'percentage': {'$lt': 100}}, {'_id': 0, 'book_id': 1}, sort=[('updated_at', -1)])
+    end = datetime.combine(today, datetime.max.time()).replace(tzinfo=BRASILIA)
+    plural = 'dia' if current == 1 else 'dias'
+    return {'id': f'streak:{today.isoformat()}', 'title': f'Sua sequência de {current} {plural} está em risco! 🔥',
+            'body': 'Leia algumas páginas antes de dormir para não perder sua sequência.',
+            'url': f"/reader/{book['book_id']}" if book else '/library', 'ttl': max(60, int((end - at).total_seconds()))}
+
+
 def notice_event(notice, staff=False):
     """Converte um aviso do sininho ("Tipo: detalhe") em título e texto da notificação."""
     text = notice.get('titulo') or 'Novo aviso na plataforma'
@@ -193,6 +225,9 @@ async def dispatch(db, at=None, sender=send_push):
             sub = await db.activity_submissions.find_one({'activity_id':activity['id'], 'user_id':user['id']})
             for event in events_for(activity, sub, subscription, at):
                 sent += int(await deliver(db, subscription, event, at, sender))
+        reminder = await streak_event(db, user, at)
+        if reminder:
+            sent += int(await deliver(db, subscription, reminder, at, sender))
     return sent
 
 
@@ -215,7 +250,16 @@ def create_push_router(db, current):
     @router.get('/push/config')
     async def config(user=Depends(current)):
         student(user)
-        return configuration()
+        result = configuration()
+        if user['role'] == 'admin':
+            missing = [name for name in ('VAPID_PRIVATE_KEY', 'VAPID_PUBLIC_KEY') if not os.getenv(name, '').strip()]
+            subject = os.getenv('VAPID_SUBJECT', '') or os.getenv('PUBLIC_APP_URL', '')
+            if not subject.startswith(('https://', 'mailto:')):
+                missing.append('PUBLIC_APP_URL ou VAPID_SUBJECT')
+            if os.getenv('PUSH_ENABLED', 'true').lower() != 'true':
+                missing.append('PUSH_ENABLED=true')
+            result['missing'] = missing
+        return result
 
     @router.post('/push/status')
     async def device_status(data:Endpoint, user=Depends(current)):

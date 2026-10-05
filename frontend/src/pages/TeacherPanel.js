@@ -4,6 +4,7 @@ import { Users, BookOpen, FileText, ClipboardList, ImageIcon, Library, ArrowUpRi
 import DashboardLayout from '@/components/DashboardLayout';
 import PageIntro from '@/components/PageIntro';
 import { Skeleton } from '@/components/Skeleton';
+import BackupCard from '@/components/BackupCard';
 import { getUser } from '@/lib/auth';
 import api from '@/lib/api';
 
@@ -86,6 +87,8 @@ export default function TeacherPanel() {
             </div>
           ))}
         </section>
+
+        {admin && <BackupCard />}
 
         {groups.map(([title, text, tools]) => (
           <section key={title} className="pn-group">

@@ -46,6 +46,10 @@ def initialize():
         db.password_resets.create_index('expires_at',expireAfterSeconds=0)
         db.recovery_requests.create_index('digest',unique=True)
         db.recovery_requests.create_index('expires_at',expireAfterSeconds=0)
+        # Lembretes do professor (um por aluno por dia) e pedidos de exclusão de dados (LGPD).
+        db.student_nudges.create_index([('user_id',1),('dia',1)])
+        db.deletion_requests.create_index('user_id',unique=True)
+        db.certificates.create_index('codigo')
         print(f'Banco {db.name} pronto: {len(db.list_collection_names())} colecoes.')
 
 if __name__ == '__main__':

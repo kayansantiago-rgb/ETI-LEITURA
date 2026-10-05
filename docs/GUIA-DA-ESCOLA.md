@@ -48,7 +48,7 @@ Cada arquivo recebe uma assinatura SHA-256. O nome de saída deve ser novo. Para
 
 A restauração exige um banco novo com prefixo `eti_restore_` e uma pasta vazia; verifica assinaturas, contagens e arquivos restaurados. A troca do banco usado pela aplicação é uma operação posterior, deliberada. Em S3, os arquivos restaurados vão para a pasta indicada; para uma recuperação online será necessário enviá-los ao bucket preservando os caminhos.
 
-Rotina sugerida: cópia diária, cópia em outro dispositivo/local privado e teste de restauração mensal. O utilitário está pronto; **não há agendamento automático de backup configurado no computador nem no serviço de hospedagem**. Não use o armazenamento temporário de uma hospedagem gratuita como único destino de backup.
+Rotina sugerida: cópia diária, cópia em outro dispositivo/local privado e teste de restauração mensal. O **backup automático diário** pelo GitHub está descrito em [BACKUP.md](BACKUP.md). Não use o armazenamento temporário de uma hospedagem gratuita como único destino de backup.
 
 ## Piloto antes da abertura para toda a escola
 
