@@ -3836,3 +3836,5 @@ html.reduce-motion .eti-logo *, .reduce-motion .eti-logo * { animation: none !im
 .ps-extra { flex: 1 1 100%; display: flex; align-items: center; gap: 12px; margin-top: 4px; padding-top: 12px; border-top: 1px dashed hsl(var(--border)); }
 .ps-icon.is-small { width: 32px; height: 32px; border-radius: 10px; }
 .ps-icon.is-streak { color: #fff; background: linear-gradient(135deg, #f97316, #ef4444); }
+.ps-why { display: inline; padding: 0; text-align: left; font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+.ps-why b { color: hsl(var(--primary)); text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; }
