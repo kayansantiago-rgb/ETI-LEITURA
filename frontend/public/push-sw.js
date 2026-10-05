@@ -87,13 +87,17 @@ self.addEventListener('push',event=>{
     const binding=await bindingStore();
     if(!binding||binding!==payload.binding||payload.expires<Date.now())return;
     await self.registration.showNotification(payload.title||'ETI LEITURA',{
-      body:payload.body,icon:'/icons/eti-192.png',badge:'/icons/eti-badge.png',
-      tag:payload.tag,renotify:false,vibrate:[120,60,120],timestamp:Date.now(),data:{url:payload.url,binding},
+      body:payload.body,icon:'/icons/eti-192.png',badge:'/icons/eti-badge.png',lang:'pt-BR',dir:'ltr',
+      tag:payload.tag,renotify:false,vibrate:[80,40,80,40,160],timestamp:Date.now(),data:{url:payload.url,binding},
+      // Imagem grande (foto do mural, miniatura do vídeo, capa do livro) e botões: só Android/Windows mostram.
+      ...(typeof payload.image==='string'&&payload.image?{image:new URL(payload.image,self.location.origin).href}:{}),
+      ...(Array.isArray(payload.actions)?{actions:payload.actions.slice(0,2).map(a=>({action:String(a.action),title:String(a.title)}))}:{}),
     });
   })());
 });
 self.addEventListener('notificationclick',event=>{
   event.notification.close();
+  if(event.action==='later')return; // "Mais tarde" só dispensa o aviso; ele continua no sininho.
   event.waitUntil((async()=>{
     if(await bindingStore()!==event.notification.data?.binding)return;
     const target=new URL(event.notification.data?.url||'/notifications',self.location.origin);

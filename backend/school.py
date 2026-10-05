@@ -35,9 +35,11 @@ async def notifications(db,user):
     notices=[]
     if user['role']=='student':
         for material in await db.study_materials.find({'turma':{'$in':['TODAS',user.get('turma')]}},{'_id':0}).sort('created_at',-1).to_list(1000):
-            notices.append({'id':'material:'+material['id'],'titulo':'Novo material: '+material['titulo'],'link':'/videos#material-'+material['id'],'data':material['created_at']})
+            notices.append({'id':'material:'+material['id'],'titulo':'Novo material: '+material['titulo'],'link':'/videos#material-'+material['id'],'data':material['created_at'],
+                            'imagem':f"https://i.ytimg.com/vi/{material['video_id']}/hqdefault.jpg" if material.get('video_id') else None})
         for post in await db.mural.find({},{'_id':0}).sort('created_at',-1).to_list(50):
-            notices.append({'id':'mural:'+post['id'],'titulo':'Novo no mural: '+post.get('titulo','Aviso da escola'),'link':'/dashboard','data':post['created_at']})
+            notices.append({'id':'mural:'+post['id'],'titulo':'Novo no mural: '+post.get('titulo','Aviso da escola'),'link':'/dashboard','data':post['created_at'],
+                            'imagem':post.get('url_media') if post.get('tipo')=='foto' else None})
         for quiz in await db.quizzes.find({'turma':user.get('turma'),'rascunho':{'$ne':True}},{'_id':0,'id':1,'titulo':1,'criado_em':1,'publicado_em':1}).sort('criado_em',-1).to_list(200):
             notices.append({'id':'quiz:'+quiz['id'],'titulo':'Novo quiz: '+quiz['titulo'],'link':'/quizzes','data':quiz.get('publicado_em') or quiz.get('criado_em') or now()})
         acts=await db.activities.find({'turma':{'$in':['TODAS',user.get('turma')]},**published_query()},{'_id':0}).sort('created_at',-1).to_list(1000)

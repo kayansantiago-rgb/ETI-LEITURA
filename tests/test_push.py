@@ -137,7 +137,8 @@ def test_streak_reminder_rules():
     def make_db(days, book='b1'):
         return SimpleNamespace(
             reading_days=SimpleNamespace(find=lambda *a, **k: Cursor([{'dia': d} for d in days])),
-            reading_progress=SimpleNamespace(find_one=AsyncMock(return_value={'book_id': book} if book else None)))
+            reading_progress=SimpleNamespace(find_one=AsyncMock(return_value={'book_id': book} if book else None)),
+            books=SimpleNamespace(find_one=AsyncMock(return_value={'titulo': 'Dom Casmurro', 'capa_url': '/api/uploads/books/covers/c.jpg'})))
 
     evening = datetime(2026, 10, 5, 19, 30, tzinfo=BRASILIA).astimezone(timezone.utc)
     today = evening.astimezone(BRASILIA).date()
@@ -153,6 +154,18 @@ def test_streak_reminder_rules():
     assert run(make_db([day(1)]), user={**student, 'lembrete_leitura': False}) is None  # desligou o lembrete
     assert run(make_db([day(1)]), user={'id': 't', 'role': 'teacher'}) is None
     assert run(make_db([day(1)], book=None))['url'] == '/library'
+    assert 'Dom Casmurro' in event['body'] and event['image'] == '/api/uploads/books/covers/c.jpg'
+
+
+def test_dress_adds_emoji_actions_and_safe_image():
+    from backend.push import dress
+    quiz = dress({'id': 'quiz:1', 'title': 'Novo quiz', 'body': 'x', 'url': '/quizzes', 'ttl': 60, 'image': 'https://i.ytimg.com/vi/abcdefghijk/hqdefault.jpg'})
+    assert quiz['title'] == '🧩 Novo quiz' and quiz['actions'][0]['title'] == 'Jogar agora' and quiz['actions'][1]['action'] == 'later'
+    assert quiz['image'].startswith('https://i.ytimg.com/')
+    assert dress({'id': 'mural:1', 'title': 'Aviso', 'body': '', 'url': '/', 'ttl': 1, 'image': 'https://evil.example/x.png'})['image'] is None
+    streak = dress({'id': 'streak:2026-10-05', 'title': 'Sequência em risco! 🔥', 'body': '', 'url': '/', 'ttl': 1})
+    assert streak['title'].count('🔥') == 1
+    assert dress({'id': 'xyz', 'title': 'Oi', 'body': '', 'url': '/', 'ttl': 1})['title'] == '📚 Oi'
 
 @pytest.mark.parametrize('role',['admin','teacher','student'])
 def test_config_diagnostics_only_for_admin(monkeypatch, role):

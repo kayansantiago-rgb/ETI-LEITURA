@@ -132,10 +132,12 @@ async def streak_event(db, user, at):
         return None
     # Leva direto ao livro que o aluno está lendo, se houver.
     book = await db.reading_progress.find_one({'user_id': user['id'], 'percentage': {'$lt': 100}}, {'_id': 0, 'book_id': 1}, sort=[('updated_at', -1)])
+    cover = (await db.books.find_one({'id': book['book_id']}, {'_id': 0, 'capa_url': 1, 'titulo': 1}) or {}) if book else {}
     end = datetime.combine(today, datetime.max.time()).replace(tzinfo=BRASILIA)
     plural = 'dia' if current == 1 else 'dias'
     return {'id': f'streak:{today.isoformat()}', 'title': f'Sua sequência de {current} {plural} está em risco! 🔥',
-            'body': 'Leia algumas páginas antes de dormir para não perder sua sequência.',
+            'body': f"Que tal algumas páginas de “{cover['titulo']}” antes de dormir?" if cover.get('titulo') else 'Leia algumas páginas antes de dormir para não perder sua sequência.',
+            'image': cover.get('capa_url'),
             'url': f"/reader/{book['book_id']}" if book else '/library', 'ttl': max(60, int((end - at).total_seconds()))}
 
 
@@ -148,7 +150,38 @@ def notice_event(notice, staff=False):
     if staff:
         # Nomes de alunos não aparecem na tela de bloqueio do professor.
         body = 'Uma nova entrega está disponível na ETI LEITURA.'
-    return {'id': notice['id'], 'title': title[:80], 'body': body[:180], 'url': notice['link'], 'ttl': 24 * 3600}
+    return {'id': notice['id'], 'title': title[:80], 'body': body[:180], 'url': notice['link'], 'ttl': 24 * 3600, 'image': None if staff else notice.get('imagem')}
+
+
+# Emoji do título e texto do botão principal, conforme o tipo do aviso (prefixo do id).
+STYLES = {
+    'new': ('📝', 'Abrir atividade'), 'activity': ('📝', 'Abrir atividade'),
+    'due': ('⏰', 'Ver atividade'), 'deadline': ('⏰', 'Ver atividade'),
+    'retry': ('🔁', 'Refazer agora'),
+    'grade': ('✅', 'Ver correção'), 'summaries': ('✅', 'Ver correção'), 'text_productions': ('✅', 'Ver correção'),
+    'quiz': ('🧩', 'Jogar agora'),
+    'material': ('🎬', 'Assistir'),
+    'mural': ('📣', 'Ver no mural'),
+    'nudge': ('💬', 'Abrir'),
+    'streak': ('🔥', 'Ler agora'),
+    'pending': ('📥', 'Corrigir'), 'submission': ('📥', 'Corrigir'),
+    'deletion': ('🛡️', 'Ver pedido'),
+    'test': ('🔔', 'Abrir avisos'),
+}
+
+
+def dress(event):
+    """Deixa a notificação mais bonita: emoji no título, botões de ação e imagem grande quando houver."""
+    kind = event['id'].split(':')[0]
+    emoji, action = STYLES.get(kind, ('📚', 'Abrir'))
+    title = event['title']
+    if not title.startswith(emoji) and not title.endswith(emoji):
+        title = f'{emoji} {title}'
+    image = event.get('image')
+    # Só imagens da própria plataforma (caminho relativo) ou de endereços https conhecidos.
+    if image and not (image.startswith('/api/uploads/') or image.startswith('https://i.ytimg.com/')):
+        image = None
+    return {**event, 'title': title[:90], 'image': image, 'actions': [{'action': 'open', 'title': action}, {'action': 'later', 'title': 'Mais tarde'}]}
 
 
 class NoRedirectSession(requests.Session):
@@ -183,8 +216,10 @@ async def deliver(db, subscription, event, at, sender=send_push):
     # Recheck device ownership after claiming; unsubscribe and account switches win.
     if not await db.push_subscriptions.find_one({'_id':subscription['_id'], 'binding':subscription['binding'], 'user_id':subscription['user_id']}):
         return False
+    event = dress(event)
     payload = {'title':event['title'], 'body':event['body'], 'url':event['url'], 'tag':identity,
-               'binding':subscription['binding'], 'expires':int((at+timedelta(seconds=event['ttl'])).timestamp()*1000)}
+               'binding':subscription['binding'], 'expires':int((at+timedelta(seconds=event['ttl'])).timestamp()*1000),
+               'image':event.get('image'), 'actions':event['actions']}
     try:
         await asyncio.to_thread(sender, subscription, payload, event['ttl'])
     except Exception as exc:
