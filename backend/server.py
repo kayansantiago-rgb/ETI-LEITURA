@@ -205,7 +205,7 @@ class MuralPost(BaseModel):
 
 class MuralPostCreate(BaseModel):
     tipo: str
-    titulo: str
+    titulo: str = Field(default='', max_length=160)
     url_media: str
     descricao: Optional[str] = None
 
@@ -1121,7 +1121,7 @@ async def create_mural_post(post_data: MuralPostCreate, admin_user: dict = Depen
     post_doc = {
         "id": post_id,
         "tipo": post_data.tipo,
-        "titulo": post_data.titulo,
+        "titulo": post_data.titulo.strip(),
         "url_media": post_data.url_media,
         "descricao": post_data.descricao,
         "created_at": datetime.now(timezone.utc).isoformat(),

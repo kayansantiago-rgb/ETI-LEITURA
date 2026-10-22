@@ -65,7 +65,7 @@ function Lightbox({ post, onClose }) {
           <img className="mu-full" src={post.url_media} alt={post.titulo} />
         )}
         <div className="vd-viewer-body">
-          <h2>{post.titulo}</h2>
+          {post.titulo && <h2>{post.titulo}</h2>}
           <p className="vd-author">
             {post.autor_nome || 'Escola'} · {date(post.created_at)}
           </p>
@@ -210,8 +210,8 @@ function PostForm({ onClose, onSaved }) {
           )}
 
           <label className="qz-field">
-            <span>Título</span>
-            <input id="titulo" required maxLength={160} placeholder="Ex.: Dia da Leitura 2026" value={form.titulo} onChange={e => set('titulo', e.target.value)} />
+            <span>Legenda (opcional)</span>
+            <input id="titulo" maxLength={160} placeholder="Ex.: Dia da Leitura 2026" value={form.titulo} onChange={e => set('titulo', e.target.value)} />
           </label>
           <label className="qz-field">
             <span>Descrição (opcional)</span>
@@ -255,7 +255,7 @@ export default function AdminMural() {
   }, []);
 
   const remove = async post => {
-    if (!(await confirmAction({ title: 'Excluir publicação?', message: `“${post.titulo}” sairá do mural e da página inicial.`, confirmLabel: 'Excluir' }))) return;
+    if (!(await confirmAction({ title: 'Excluir publicação?', message: post.titulo ? `“${post.titulo}” sairá do mural e da página inicial.` : 'A publicação sairá do mural e da página inicial.', confirmLabel: 'Excluir' }))) return;
     try {
       await api.delete(`/admin/mural/${post.id}`);
       setPosts(list => list.filter(p => p.id !== post.id));
@@ -327,7 +327,7 @@ export default function AdminMural() {
               const canDelete = user?.role === 'admin' || post.autor_id === user?.id;
               return (
                 <article key={post.id} className={`mu-card ${i === 0 && filter === 'todos' ? 'is-featured' : ''}`} style={{ '--d': `${Math.min(i, 8) * 50}ms` }}>
-                  <button type="button" className="mu-media" onClick={() => setOpen(post)} aria-label={`Abrir ${post.titulo}`}>
+                  <button type="button" className="mu-media" onClick={() => setOpen(post)} aria-label={`Abrir ${post.titulo || 'publicação'}`}>
                     {post.tipo === 'video' ? id ? <img src={`https://i.ytimg.com/vi/${id}/hqdefault.jpg`} alt="" loading="lazy" /> : <Video size={40} /> : <img src={post.url_media} alt="" loading="lazy" />}
                     {post.tipo === 'video' && (
                       <span className="vd-play">
@@ -337,7 +337,7 @@ export default function AdminMural() {
                     <span className="vd-kind">{post.tipo === 'video' ? 'Vídeo' : 'Foto'}</span>
                   </button>
                   <div className="mu-body">
-                    <h3>{post.titulo}</h3>
+                    {post.titulo && <h3>{post.titulo}</h3>}
                     {post.descricao && <p>{post.descricao}</p>}
                     <footer>
                       <span className="mu-author">
@@ -348,7 +348,7 @@ export default function AdminMural() {
                         </span>
                       </span>
                       {canDelete && (
-                        <button type="button" className="ws-icon-btn is-danger" onClick={() => remove(post)} aria-label={`Excluir ${post.titulo}`} title="Excluir" data-testid={`delete-mural-${post.id}`}>
+                        <button type="button" className="ws-icon-btn is-danger" onClick={() => remove(post)} aria-label={`Excluir ${post.titulo || 'publicação'}`} title="Excluir" data-testid={`delete-mural-${post.id}`}>
                           <Trash2 size={15} />
                         </button>
                       )}

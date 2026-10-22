@@ -31,13 +31,13 @@ export default function StudentDiscovery({ books = [], posts = [], stats = {} })
 
       <div className="hero-discovery-container">
         {/* Card Principal: Carrossel do Mural (Timeline) */}
-        <section className={`timeline-carousel-card ${currentPost ? '' : 'is-empty'}`} aria-label="Linha do tempo da escola">
+        <section className={`timeline-carousel-card ${currentPost ? 'has-photo' : 'is-empty'}`} aria-label="Linha do tempo da escola">
           <div className="timeline-photo-wrapper">
             {currentPost ? (
               <img
                 className="timeline-photo"
                 src={currentPost.url_media}
-                alt={currentPost.titulo || 'Mural da escola'}
+                alt={currentPost.titulo || currentPost.descricao || 'Foto do mural da escola'}
               />
             ) : (
               <div className="timeline-empty-art" aria-hidden="true">
@@ -52,7 +52,14 @@ export default function StudentDiscovery({ books = [], posts = [], stats = {} })
 
           <div className="timeline-overlay" />
 
-          {/* Conteúdo do Slide */}
+          {/* Conteúdo do Slide: com foto, só uma legenda discreta no canto */}
+          {currentPost ? (
+            <div className="timeline-caption-box is-photo">
+              <Sparkles size={12} aria-hidden="true" />
+              {currentPost.titulo && <strong>{currentPost.titulo}</strong>}
+              <span>{new Date(currentPost.created_at || currentPost.data).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })}</span>
+            </div>
+          ) : (
           <div className="timeline-caption-box">
             <span className="timeline-badge">
               <Sparkles size={12} /> {currentPost ? '• NOVIDADE NO MURAL' : '• ESPAÇO DO LEITOR'}
@@ -68,6 +75,7 @@ export default function StudentDiscovery({ books = [], posts = [], stats = {} })
                 : 'Acompanhe as publicações e produções textuais dos alunos.'}
             </p>
           </div>
+          )}
 
           {/* Setas de Navegação */}
           {photos.length > 1 && (
