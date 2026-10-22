@@ -1,5 +1,6 @@
 """Local uploads in development; private S3-compatible storage online."""
 import asyncio
+import logging
 import os
 from pathlib import Path
 from functools import lru_cache
@@ -57,8 +58,11 @@ async def upload_response(key, inline=False):
             url=client.generate_presigned_url('get_object', Params={'Bucket':os.environ['S3_BUCKET'],'Key':key}, ExpiresIn=3600)
             return RedirectResponse(url, headers={'Cache-Control':'private, no-store'})
         except ClientError as exc:
-            if str(exc.response.get('Error',{}).get('Code')) in ('404','NoSuchKey','NotFound'):
+            code = str(exc.response.get('Error',{}).get('Code'))
+            if code in ('404','NoSuchKey','NotFound'):
                 raise HTTPException(404, 'Arquivo não encontrado') from exc
+            # O código (ex.: InvalidAccessKeyId, AccessDenied, NoSuchBucket) aparece nos logs do Railway.
+            logging.getLogger('eti.storage').error('Falha no armazenamento S3 (%s) ao ler %s', code, key)
             raise HTTPException(503, 'Armazenamento temporariamente indisponível') from exc
     file_path=(UPLOAD_ROOT/key).resolve()
     if not file_path.is_relative_to(UPLOAD_ROOT) or not file_path.is_file():
