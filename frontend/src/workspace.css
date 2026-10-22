@@ -3875,3 +3875,21 @@ html.reduce-motion .eti-logo *, .reduce-motion .eti-logo * { animation: none !im
   left: auto; right: 14px; bottom: 20px; padding: 5px 8px; border-radius: 999px; overflow: visible;
   background: rgba(15, 12, 32, .45);
 }
+
+/* Gerenciar turmas (coordenação) */
+.cm { width: min(560px, calc(100vw - 32px)); }
+.cm-new { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 170px) auto; gap: 10px; align-items: end; padding: 14px; border-radius: 16px; background: hsl(var(--primary) / .06); border: 1px solid hsl(var(--primary) / .15); }
+.cm-new label { display: grid; gap: 5px; font-size: .74rem; font-weight: 700; color: hsl(var(--muted-foreground)); }
+.cm-new input, .cm-new select { height: 40px; padding: 0 12px; border-radius: 11px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); color: hsl(var(--foreground)); font-size: .9rem; }
+.cm-add { height: 40px; display: inline-flex; align-items: center; gap: 6px; }
+.cm-list { display: grid; gap: 8px; margin-top: 14px; }
+.cm-list li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); }
+.cm-icon { width: 34px; height: 34px; flex: none; display: grid; place-items: center; border-radius: 11px; color: #fff; background: var(--eti-gradient); }
+.cm-copy { min-width: 0; flex: 1; display: grid; gap: 2px; }
+.cm-copy strong { font-size: .92rem; }
+.cm-copy small { display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; font-size: .74rem; color: hsl(var(--muted-foreground)); }
+.cm-empty, .cm-note { margin-top: 12px; font-size: .78rem; color: hsl(var(--muted-foreground)); }
+.ws-icon-btn.is-danger:disabled { opacity: .35; cursor: not-allowed; }
+@media (max-width: 560px) { .cm-new { grid-template-columns: 1fr; } }
+.sh-move { display: inline-flex; align-items: center; gap: 8px; font-size: .78rem; font-weight: 700; color: hsl(var(--muted-foreground)); }
+.sh-move select { height: 38px; padding: 0 10px; border-radius: 11px; border: 1px solid hsl(var(--border)); background: hsl(var(--card)); color: hsl(var(--foreground)); font-weight: 600; }

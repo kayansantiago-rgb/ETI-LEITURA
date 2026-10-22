@@ -5,6 +5,8 @@ import { X, BookOpen, ClipboardList, PenTool, Sparkles, Trophy, Flame, TrendingU
 import { confirmAction } from '@/components/ConfirmHost';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import { getUser } from '@/lib/auth';
+import { useTurmas } from '@/constants/turmas';
 
 const num = (v, d = 1) => (v == null ? '—' : Number(v).toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d }));
 const date = v => (v ? new Date(v).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) : '');
@@ -23,11 +25,13 @@ function Empty({ children }) {
 }
 
 // Ficha completa do aluno: leituras, atividades, textos, quizzes e certificados.
-export default function StudentHistory({ studentId, onClose, onDeleted }) {
+export default function StudentHistory({ studentId, onClose, onDeleted, onMoved }) {
   const [data, setData] = useState(null);
   const [failed, setFailed] = useState(false);
   const [tab, setTab] = useState('leituras');
   const [busy, setBusy] = useState(false);
+  const admin = getUser()?.role === 'admin';
+  const turmas = useTurmas();
 
   useEffect(() => {
     api
@@ -62,6 +66,27 @@ export default function StudentHistory({ studentId, onClose, onDeleted }) {
       onClose();
     } catch (e) {
       toast.error(typeof e.response?.data?.detail === 'string' ? e.response.data.detail : 'Não foi possível excluir o aluno.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const move = async turma => {
+    if (!turma || turma === data.aluno.turma) return;
+    const ok = await confirmAction({
+      title: `Mudar ${data.aluno.nome} de turma?`,
+      message: `O aluno passa de ${data.aluno.turma || 'sem turma'} para ${turma}. As notas e o histórico continuam com ele.`,
+      confirmLabel: 'Mudar turma'
+    });
+    if (!ok) return;
+    setBusy(true);
+    try {
+      await api.put(`/admin/students/${studentId}/turma`, { turma });
+      setData(d => ({ ...d, aluno: { ...d.aluno, turma } }));
+      toast.success(`${data.aluno.nome} agora está na ${turma}.`);
+      onMoved?.(studentId);
+    } catch (e) {
+      toast.error(typeof e.response?.data?.detail === 'string' ? e.response.data.detail : 'Não foi possível mudar a turma.');
     } finally {
       setBusy(false);
     }
@@ -295,6 +320,19 @@ export default function StudentHistory({ studentId, onClose, onDeleted }) {
               <button type="button" className="sh-delete" disabled={busy} onClick={remove}>
                 <Trash2 size={15} /> {busy ? 'Excluindo…' : 'Excluir aluno'}
               </button>
+              {admin && (
+                <label className="sh-move">
+                  <span>Mudar turma</span>
+                  <select value={data.aluno.turma || ''} disabled={busy} onChange={e => move(e.target.value)}>
+                    {!data.aluno.turma && <option value="">Sem turma</option>}
+                    {turmas.map(t => (
+                      <option key={t.value} value={t.value}>
+                        {t.value}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               <span className="flex-1" />
               <button type="button" className="a11y-done" onClick={onClose}>
                 Fechar

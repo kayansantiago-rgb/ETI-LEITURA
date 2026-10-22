@@ -18,7 +18,8 @@ import {
   Clock3,
   FileDown,
   FileText,
-  CalendarClock
+  CalendarClock,
+  Settings2
 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import PageIntro from '@/components/PageIntro';
@@ -27,7 +28,8 @@ import StudentHistory from '@/components/StudentHistory';
 import AttentionPanel from '@/components/AttentionPanel';
 import SubjectBadge from '@/components/SubjectBadge';
 import { Button } from '@/components/ui/button';
-import { TURMAS } from '@/constants/turmas';
+import { useTurmas } from '@/constants/turmas';
+import ClassManager from '@/components/ClassManager';
 import { getUser } from '@/lib/auth';
 import { deadline } from '@/pages/Activities';
 import api from '@/lib/api';
@@ -109,7 +111,9 @@ export default function Classes() {
   const { turma } = useParams();
   const [params, setParams] = useSearchParams();
   const user = getUser();
-  const allowed = TURMAS.filter(t => user.role === 'admin' || user.turmas?.includes(t.value));
+  const turmas = useTurmas();
+  const [managing, setManaging] = useState(false);
+  const allowed = turmas.filter(t => user.role === 'admin' || user.turmas?.includes(t.value));
   const valid = !turma || allowed.some(t => t.value === turma);
   const [data, setData] = useState(null);
   const [failed, setFailed] = useState(false);
@@ -180,6 +184,11 @@ export default function Classes() {
         title={turma || 'Minhas turmas'}
         description={turma ? 'Alunos, atividades e materiais da turma em um só lugar.' : 'Escolha uma turma para acompanhar participação, médias e entregas.'}
       >
+        {!turma && user.role === 'admin' && (
+          <Button variant="outline" onClick={() => setManaging(true)}>
+            <Settings2 size={16} /> Gerenciar turmas
+          </Button>
+        )}
         {turma && valid && (
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" disabled={downloading || !data} onClick={downloadPdf}>
@@ -399,7 +408,8 @@ export default function Classes() {
             ))}
         </>
       )}
-      {student && <StudentHistory studentId={student} onClose={() => setStudent(null)} onDeleted={load} />}
+      {student && <StudentHistory studentId={student} onClose={() => setStudent(null)} onDeleted={load} onMoved={load} />}
+      {managing && <ClassManager onClose={() => { setManaging(false); load(); }} />}
       {correcting && <CorrectionDrawer activityId={correcting} onClose={() => setCorrecting(null)} onChanged={load} />}
     </DashboardLayout>
   );

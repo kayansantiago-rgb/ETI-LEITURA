@@ -231,15 +231,8 @@ class CorrectionCreate(BaseModel):
 # ========== AUTH HELPERS ==========
 
 def get_nivel_ensino_from_turma(turma: str) -> str:
-    """Determina o nível de ensino baseado na turma"""
-    turmas_fundamental = ["7º ANO", "8º ANO", "9º ANO"]
-    turmas_medio = ["1º SÉRIE A", "1º SÉRIE B", "2º SÉRIE", "2º SÉRIE A", "2º SÉRIE B", "3º SÉRIE A", "3º SÉRIE B"]
-
-    if turma in turmas_fundamental:
-        return "FUNDAMENTAL"
-    elif turma in turmas_medio:
-        return "MÉDIO"
-    return "AMBOS"
+    """Determina o nível de ensino baseado na turma (cadastrado junto com a turma)."""
+    return level_of(turma)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
@@ -293,6 +286,8 @@ async def register(user_data: UserRegister):
         raise HTTPException(status_code=400, detail="Email já cadastrado")
     if not user_data.turma:
         raise HTTPException(status_code=400, detail="Turma é obrigatória para estudantes")
+    if user_data.turma not in ALL_CLASSES:
+        raise HTTPException(status_code=400, detail="Turma inválida. Atualize a página e escolha uma turma da lista.")
     if not user_data.aceite_termos:
         raise HTTPException(status_code=400, detail="Aceite os termos de uso e a política de privacidade para criar a conta.")
     from backend.account import TERMS_VERSION
@@ -377,7 +372,7 @@ async def upload_avatar(
 
 # ========== BOOKS ROUTES ==========
 
-ALL_CLASSES = ["7º ANO", "8º ANO", "9º ANO", "1º SÉRIE A", "1º SÉRIE B", "2º SÉRIE", "2º SÉRIE A", "2º SÉRIE B", "3º SÉRIE A", "3º SÉRIE B"]
+from backend.classes import NAMES as ALL_CLASSES, level_of  # turmas vêm do banco (gerenciadas pela coordenação)
 
 
 def book_visible_query(user: dict) -> dict:
@@ -1270,6 +1265,8 @@ from backend.backup_api import create_backup_router
 api_router.include_router(create_backup_router(db, get_current_user))
 from backend.account import create_account_router
 api_router.include_router(create_account_router(db, get_current_user, require_admin, public_user, issue_token, get_password_hash, SECRET_KEY, ALL_CLASSES))
+from backend.classes import create_classes_router, ensure_classes
+api_router.include_router(create_classes_router(db, require_admin))
 from backend.reading import create_reading_router, ensure_indexes as ensure_reading_indexes
 api_router.include_router(create_reading_router(db, get_current_user))
 app.include_router(api_router)
@@ -1296,6 +1293,7 @@ logger = logging.getLogger(__name__)
 
 @app.on_event("startup")
 async def start_push_worker():
+    await ensure_classes(db)
     await ensure_push_indexes(db)
     await ensure_book_quiz_indexes(db)
     await ensure_reading_indexes(db)
