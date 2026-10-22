@@ -31,7 +31,7 @@ async def record_page(db, user_id, previous_page, page):
     )
 
 
-def streaks(days):
+def streaks(days, reference=None):
     """Retorna (sequência atual, melhor sequência) a partir das datas com leitura."""
     dates = sorted({date.fromisoformat(d) for d in days})
     best = run = 0
@@ -41,7 +41,7 @@ def streaks(days):
         best = max(best, run)
         previous = d
     current = 0
-    if dates and today() - dates[-1] <= timedelta(days=1):
+    if dates and (reference or today()) - dates[-1] <= timedelta(days=1):
         current, cursor = 0, dates[-1]
         lookup = set(dates)
         while cursor in lookup:

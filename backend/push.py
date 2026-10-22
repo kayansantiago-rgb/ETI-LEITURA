@@ -127,7 +127,7 @@ async def streak_event(db, user, at):
     days = [d['dia'] for d in await db.reading_days.find({'user_id': user['id'], 'dia': {'$gte': since}}, {'_id': 0, 'dia': 1}).to_list(500)]
     if today.isoformat() in days:
         return None
-    current, _ = streaks(days)
+    current, _ = streaks(days, today)
     if current < 1:
         return None
     # Leva direto ao livro que o aluno está lendo, se houver.

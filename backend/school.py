@@ -79,10 +79,24 @@ async def report_data(db,user,turma=None):
     students=await db.users.find(class_query(user,turma),{'_id':0,'id':1,'nome':1,'turma':1,'avatar_url':1,'moldura':1}).sort('nome',1).to_list(10000)
     rows=[];months={}
     scales={a['id']:a.get('valor_nota') for a in await db.activities.find({},{'_id':0,'id':1,'valor_nota':1}).to_list(10000)}
+    # Poucas consultas para a turma inteira (antes eram ~10 por aluno, o que deixava a página lenta).
+    ids=[u['id'] for u in students]
+    fields={'_id':0,'user_id':1,'activity_id':1,'nota':1,'corrigido_em':1,'updated_at':1,'created_at':1}
+    by_user={}
+    counts={}
+    submitted={}
+    for collection in ['summaries','text_productions','activity_submissions']:
+        for e in await db[collection].find({'user_id':{'$in':ids}},fields).to_list(None):
+            by_user.setdefault(e['user_id'],[]).append(e)
+            counts[(collection,e['user_id'])]=counts.get((collection,e['user_id']),0)+1
+            if collection=='activity_submissions':
+                submitted.setdefault(e['user_id'],[]).append(e.get('activity_id'))
+    turmas={u.get('turma') for u in students}
+    published=await db.activities.find({'turma':{'$in':['TODAS',*turmas]},**published_query()},{'_id':0,'id':1,'turma':1}).to_list(10000)
+    finished={r['_id']:r['n'] async for r in db.reading_progress.aggregate([
+        {'$match':{'user_id':{'$in':ids},'percentage':100}},{'$group':{'_id':'$user_id','n':{'$sum':1}}}])}
     for u in students:
-        entries=[]
-        for collection in ['summaries','text_productions','activity_submissions']:
-            entries+=await db[collection].find({'user_id':u['id']},{'_id':0}).to_list(10000)
+        entries=by_user.get(u['id'],[])
         def scaled(e):
             # Notas de atividades são convertidas para a escala 0 a 10 conforme o valor da atividade.
             maximo=(scales.get(e.get('activity_id')) or 10) if e.get('activity_id') else 10
@@ -92,11 +106,11 @@ async def report_data(db,user,turma=None):
             if e.get('nota') is not None:
                 month=(e.get('corrigido_em') or e.get('updated_at') or e.get('created_at',''))[:7]
                 if month:months.setdefault(month,[]).append(scaled(e))
-        assigned=await db.activities.find({'turma':{'$in':['TODAS',u.get('turma')]},**published_query()},{'id':1}).to_list(10000)
-        delivered=await db.activity_submissions.count_documents({'user_id':u['id'],'activity_id':{'$in':[a['id'] for a in assigned]}})
-        rows.append({**u,'atividades_disponiveis':len(assigned),'participacao':round(100*delivered/len(assigned)) if assigned else None,'leituras_concluidas':await db.reading_progress.count_documents({'user_id':u['id'],'percentage':100}),
-            'resumos':await db.summaries.count_documents({'user_id':u['id']}),'producoes':await db.text_productions.count_documents({'user_id':u['id']}),
-            'atividades_entregues':await db.activity_submissions.count_documents({'user_id':u['id']}),
+        assigned={a['id'] for a in published if a['turma'] in ('TODAS',u.get('turma'))}
+        delivered=sum(1 for a in submitted.get(u['id'],[]) if a in assigned)
+        rows.append({**u,'atividades_disponiveis':len(assigned),'participacao':round(100*delivered/len(assigned)) if assigned else None,'leituras_concluidas':finished.get(u['id'],0),
+            'resumos':counts.get(('summaries',u['id']),0),'producoes':counts.get(('text_productions',u['id']),0),
+            'atividades_entregues':counts.get(('activity_submissions',u['id']),0),
             'media':round(sum(grades)/len(grades),2) if grades else None,'avaliacoes':len(grades)})
     return {'alunos':rows,'evolucao':[{'mes':k,'media':round(sum(v)/len(v),2),'avaliacoes':len(v)} for k,v in sorted(months.items())]}
 
